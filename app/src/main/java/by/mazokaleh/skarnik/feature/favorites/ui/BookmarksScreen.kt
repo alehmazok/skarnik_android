@@ -25,9 +25,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalResources
@@ -49,6 +51,7 @@ import by.mazokaleh.skarnik.core.ui.SavedWordItem
 import by.mazokaleh.skarnik.core.ui.SavedWordList
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.launch
 
 object BookmarksTestTags {
@@ -184,8 +187,14 @@ private fun BookmarkItem(
     modifier: Modifier = Modifier
 ) {
     val state = rememberSwipeToDismissBoxState()
-    LaunchedEffect(state.currentValue) {
-        if (state.currentValue == SwipeToDismissBoxValue.EndToStart) onRemove(word)
+    val currentOnRemove by rememberUpdatedState(onRemove)
+    LaunchedEffect(state) {
+        // A lazy list restores saved item state by key, so a row brought back by «Вярнуць» would come back
+        // already dismissed and be removed again.
+        state.snapTo(SwipeToDismissBoxValue.Settled)
+        snapshotFlow { state.currentValue }
+            .filter { it == SwipeToDismissBoxValue.EndToStart }
+            .collect { currentOnRemove(word) }
     }
     val removeLabel = stringResource(R.string.action_bookmark_remove)
     SwipeToDismissBox(
