@@ -11,5 +11,6 @@ tags:
     visible:
       id: home_word_count
     timeout: 60000
-- assertVisible: ".*ў слоўніку.*"
+# The CI emulator runs in English: this checks that plurals use Belarusian rules (316235 → "many").
+- assertVisible: ".*слоў у слоўніку.*"
 - takeScreenshot: smoke-home
