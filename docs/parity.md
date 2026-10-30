@@ -60,7 +60,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
 | 3.1 | History tab (start screen): words opened, newest first, paged by 25 | `history/`, `home/domain/use_case/load_history.dart` | ⬜ |
-| 3.2 | Bookmarks tab: paged list, tap to open | `favorites/` | ⬜ |
+| 3.2 | Bookmarks tab: paged list, tap to open. Native: the list observes the history store (ObjectBox query as a Flow), so bookmarks added or removed elsewhere show at once. Flutter bug, not ported: the kept-alive tab never reloads after a bookmark changes on the translation screen | `favorites/` | ⬜ |
 | 3.3 | Bookmarks sort: by date added / alphabetical, remembered (`favorites_sort_order`) | `favorites/data/repository/shared_preferences_favorites_sort_repository.dart` | ⬜ |
 | 3.4 | Remove a bookmark with «Вярнуць» undo in the snackbar | `favorites/presentation/favorites_page.dart` | ⬜ |
 | 3.5 | Bottom navigation: History, Bookmarks, Dictionary; each tab keeps its own stack | `home/presentation/home_shell.dart` | ⬜ |
