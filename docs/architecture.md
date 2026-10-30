@@ -38,13 +38,14 @@ by.mazokaleh.skarnik
 │   ├── common/            dispatcher qualifiers, result helpers
 │   ├── model/             Dictionary and other shared domain types
 │   ├── database/          ObjectBox entities, store opener, SkarnikDatabase
-│   ├── network/           (planned) HTTP client, cache, Supabase client
+│   ├── network/           OkHttp client with disk cache, suspend calls
 │   └── analytics/         (planned) consent-gated event logger
 └── feature/
     ├── home/              (skeleton placeholder, becomes the History tab)
     ├── search/            word search
-    ├── translation/       (route and placeholder screen; translation PR fills it)
-    ├── history/ favorites/ vocabulary/ settings/ stress/ widget/   (planned)
+    ├── translation/       translation screen, source chain, HTML renderer
+    ├── history/ favorites/   repositories used by translation (tabs planned)
+    ├── vocabulary/ settings/ stress/ widget/   (planned)
 ```
 
 Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cases, feature models, only
@@ -106,19 +107,29 @@ Flutter's HTTP response cache `DioCache.db` is a cache, not user data, and is de
 query changes (`mapLatest`). The screen is a full-screen expanded M3 `SearchBar` opened from a collapsed bar on
 the start screen. `ObjectBoxSearchTest` runs the algorithm against the real bundled index.
 
-## Translation *(planned)*
+## Translation
 
-Fallback chain, ported from `GetTranslationUseCase` without its last step (the skarnik.by page scrape, dropped):
+`feature/translation`, ported from Flutter's `TranslationCubit` and `GetTranslationUseCase`
+([ADR 0003](adr/0003-translation-network-and-html.md)):
 
 ```mermaid
 flowchart LR
-    L["Local store<br/>(cache + offline dictionaries)"] -->|miss| A["Admin API<br/>/api/words/&lt;dict&gt;/&lt;id&gt;/"]
-    A -->|error| S["Supabase main_word"]
+    W["Search index<br/>(word by langId + wordId)"] --> L["Local store<br/>(offline dictionaries)"]
+    L -->|miss| A["Admin API<br/>/api/words/&lt;dict&gt;/&lt;id&gt;/"]
+    A -->|error or empty| S["Supabase main_word<br/>(PostgREST)"]
 ```
 
-Any source may answer with `redirectTo`, which navigates to the target word. Translation HTML is rendered
-natively (decision in an ADR with the translation PR). HTTP goes through one OkHttp client with a disk
-cache; cache lifetime comes from Remote Config like in Flutter.
+- `TranslationRoute(langId, wordId, word?, saveToHistory, redirectedFrom?)`; the ViewModel is assisted-injected
+  with the route. It looks the word up in the index (so links and redirects open by id), runs the chain, saves
+  the word to history (unless opened from history/bookmarks) and reads the bookmark state.
+- Any source may answer with `redirect_to` (a `WordLink`: `skarnik.by/<dict>/<id>`, `skarnik.app/r/...` or a bare
+  path); the target replaces the alias in the back stack and shows «Перанакіравана з «…»».
+- Both network sources go through one OkHttp client; a network interceptor makes successful GETs fresh for 24 h
+  in a 20 MB disk cache (`cache/http`). Remote Config takes over the lifetime later.
+- `translationHtmlToAnnotatedString` parses the HTML with jsoup and maps legacy colours to colour-scheme roles;
+  links are `LinkAnnotation`s. The text is selectable.
+- History and bookmark writes live in `feature/history/data` and `feature/favorites/data`; the tabs that list
+  them come with their own PRs.
 
 ## Background work and widget *(planned)*
 

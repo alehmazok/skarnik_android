@@ -38,8 +38,9 @@ JDK 17. The cloud environment has no Android SDK or Maven access, so CI is the b
 ## Technical rules
 
 **Stack.** Kotlin 2.x, Jetpack Compose + Material 3, single Activity, Navigation Compose with type-safe
-`@Serializable` routes. Hilt (KSP) for DI. Coroutines + Flow. kotlinx.serialization for JSON. Retrofit or
-Ktor on OkHttp with a disk cache (decided in the translation PR). DataStore instead of SharedPreferences.
+`@Serializable` routes. Hilt (KSP) for DI. Coroutines + Flow. kotlinx.serialization for JSON. Plain OkHttp
+with a disk cache, Supabase via PostgREST without its SDK, translation HTML via jsoup → `AnnotatedString`
+([ADR 0003](docs/adr/0003-translation-network-and-html.md)). DataStore instead of SharedPreferences.
 WorkManager for background work, Glance for the widget. Versions live only in `gradle/libs.versions.toml`.
 
 **Versions.** Use the latest stable SDK, AGP, Gradle, Kotlin and library versions. Check every version against
@@ -92,4 +93,5 @@ on any device. Dark theme, TalkBack labels, large fonts, edge-to-edge, predictiv
 
 **Analytics, crashes and secrets.** Same Firebase Analytics event names as Flutter (listed in parity
 register); nothing is sent before consent. Crash reporting is Sentry (org `skarnik`), not Crashlytics. Secrets
-(incl. the Sentry DSN) only via `local.properties` / GitHub Secrets, never in code or git.
+(incl. the Sentry DSN) only via `local.properties` / GitHub Secrets, never in code or git. The admin API host,
+Supabase URL and Supabase publishable key are public config, not secrets: they live in `gradle.properties`.
