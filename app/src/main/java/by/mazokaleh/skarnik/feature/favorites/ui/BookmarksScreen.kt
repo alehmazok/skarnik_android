@@ -122,7 +122,7 @@ private fun BookmarksContent(
                 CircularProgressIndicator()
             }
             is BookmarksUiState.Ready -> if (uiState.words.isEmpty()) {
-                ListMessage(stringResource(R.string.bookmarks_empty), modifier.testTag(BookmarksTestTags.EMPTY))
+                ListMessage(stringResource(R.string.bookmarks_empty), BookmarksTestTags.EMPTY, modifier)
             } else {
                 SavedWordList(
                     words = uiState.words,
@@ -135,7 +135,8 @@ private fun BookmarksContent(
             }
             BookmarksUiState.Error -> ListMessage(
                 text = stringResource(R.string.database_error),
-                modifier = modifier.testTag(BookmarksTestTags.ERROR),
+                testTag = BookmarksTestTags.ERROR,
+                modifier = modifier,
                 isError = true
             )
         }

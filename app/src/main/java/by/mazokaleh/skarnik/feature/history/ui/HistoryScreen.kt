@@ -68,7 +68,7 @@ private fun HistoryContent(
                 CircularProgressIndicator()
             }
             is HistoryUiState.Ready -> if (uiState.words.isEmpty()) {
-                ListMessage(stringResource(R.string.history_empty), modifier.testTag(HistoryTestTags.EMPTY))
+                ListMessage(stringResource(R.string.history_empty), HistoryTestTags.EMPTY, modifier)
             } else {
                 SavedWordList(
                     words = uiState.words,
@@ -85,7 +85,8 @@ private fun HistoryContent(
             }
             HistoryUiState.Error -> ListMessage(
                 text = stringResource(R.string.database_error),
-                modifier = modifier.testTag(HistoryTestTags.ERROR),
+                testTag = HistoryTestTags.ERROR,
+                modifier = modifier,
                 isError = true
             )
         }

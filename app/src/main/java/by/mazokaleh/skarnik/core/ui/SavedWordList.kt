@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,12 +58,16 @@ fun SavedWordItem(word: SavedWord, onClick: () -> Unit, modifier: Modifier = Mod
     )
 }
 
-/** Centered text for an empty list or an error. */
+/**
+ * Centered text for an empty list or an error. [testTag] goes on the text itself: a tagged empty container is
+ * not in the accessibility tree that Maestro reads.
+ */
 @Composable
-fun ListMessage(text: String, modifier: Modifier = Modifier, isError: Boolean = false) {
+fun ListMessage(text: String, testTag: String, modifier: Modifier = Modifier, isError: Boolean = false) {
     Box(modifier.fillMaxSize().padding(24.dp), contentAlignment = Alignment.Center) {
         Text(
             text = text,
+            modifier = Modifier.testTag(testTag),
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
             color = if (isError) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant
