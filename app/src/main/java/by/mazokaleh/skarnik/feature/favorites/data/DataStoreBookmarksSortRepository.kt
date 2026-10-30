@@ -21,9 +21,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 
 /** Flutter's `SharedPreferencesFavoritesSortRepository`, with the same key and values. */
-class DataStoreBookmarksSortRepository @Inject constructor(
-    private val settings: DataStore<Preferences>
-) : BookmarksSortRepository {
+class DataStoreBookmarksSortRepository @Inject constructor(private val settings: DataStore<Preferences>) :
+    BookmarksSortRepository {
     override val sortOrder: Flow<BookmarksSortOrder> = settings.data
         .map { BookmarksSortOrder.byKey(it[SORT_ORDER]) }
         .distinctUntilChanged()

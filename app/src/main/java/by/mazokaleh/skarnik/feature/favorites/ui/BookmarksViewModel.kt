@@ -27,11 +27,8 @@ import kotlinx.coroutines.launch
 sealed interface BookmarksUiState {
     data object Loading : BookmarksUiState
 
-    data class Ready(
-        val words: List<SavedWord>,
-        val hasMore: Boolean,
-        val sortOrder: BookmarksSortOrder
-    ) : BookmarksUiState
+    data class Ready(val words: List<SavedWord>, val hasMore: Boolean, val sortOrder: BookmarksSortOrder) :
+        BookmarksUiState
 
     data object Error : BookmarksUiState
 }
