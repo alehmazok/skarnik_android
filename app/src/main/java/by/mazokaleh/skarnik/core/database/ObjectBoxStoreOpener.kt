@@ -47,7 +47,13 @@ class ObjectBoxStoreOpener(private val documentsDir: File, private val openSeed:
         const val HISTORY_DIR = "objectbox_history"
         const val TRANSLATION_DIR = "objectbox_translation"
         const val DATA_FILE = "data.mdb"
-        const val SEED_ASSET = "objectbox/data.mdb.gz"
+
+        /**
+         * Gzip-compressed search index. Deliberately not `.gz`: AAPT silently un-gzips `*.gz` assets and drops
+         * the extension, so the file would be missing under its name at runtime.
+         */
+        const val SEED_ASSET = "objectbox/search_seed.mdb.gzip"
+
         private const val BUFFER_SIZE = 256 * 1024
     }
 }

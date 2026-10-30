@@ -59,6 +59,11 @@ android {
         unitTests.isReturnDefaultValues = true
     }
 
+    androidResources {
+        // The search seed is already gzip-compressed; don't compress it a second time in the APK.
+        noCompress += "gzip"
+    }
+
     lint {
         warningsAsErrors = false
         abortOnError = true

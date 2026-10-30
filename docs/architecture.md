@@ -81,7 +81,7 @@ UIDs ([ADR 0001](adr/0001-objectbox-on-flutter-stores.md)):
 
 | Store | Directory | Entities | Contents |
 |---|---|---|---|
-| search | `app_flutter/objectbox_search` | `ObjectboxSearchWord` | ~316k words, seeded on first launch from `assets/objectbox/data.mdb.gz` |
+| search | `app_flutter/objectbox_search` | `ObjectboxSearchWord` | ~316k words, seeded on first launch from `assets/objectbox/search_seed.mdb.gzip` |
 | history | `app_flutter/objectbox_history` | `ObjectboxHistoryWord`, `ObjectboxFavoriteWord` | search history and bookmarks |
 | translation | `app_flutter/objectbox_translation` | `ObjectboxTranslationWord` | cached translations and downloaded offline dictionaries |
 
@@ -127,4 +127,6 @@ Crash and error reporting goes to Sentry (sponsored org `skarnik`) in release bu
 - JVM unit tests for logic, repositories and ViewModels (fakes, coroutines-test, Turbine).
 - ObjectBox runs in JVM tests via `objectbox-linux`; `ObjectBoxStoreOpenerTest` opens the real Flutter seed DB.
 - Compose UI tests for key screens; screenshots of Flutter screens in `docs/screens/` as the visual reference.
-- CI (GitHub Actions): ktlint, detekt, Android Lint, unit tests, debug APK artifact, ObjectBox model drift check.
+- Maestro end-to-end flows (`.maestro/`) for user journeys and the Flutter → native upgrade, run on an emulator in CI.
+- CI (GitHub Actions): ktlint, detekt, Android Lint, unit tests, debug APK artifact, ObjectBox model drift check;
+  then an `e2e` job runs the Maestro flows on an emulator and uploads screenshots.

@@ -5,6 +5,9 @@ Every user-facing behaviour of skarnik-flutter 3.6.0, built from its Dart code, 
 **For Aleh:** strike out (`~~like this~~`) or delete any row we should not port, and add rows for things the
 Flutter app doesn't have. Everything not struck out is ported. Product questions are marked ❓.
 
+The Flutter app is the spec for behaviour and data, not for layout: screens follow Material 3, and a row notes
+where the native UI deliberately differs ("M3: …").
+
 Status: ⬜ not started · 🟨 in progress · ✅ done (PR link) · ➖ dropped
 
 Paths are relative to `skarnik-flutter/lib/features/`.

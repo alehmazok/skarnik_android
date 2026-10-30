@@ -11,6 +11,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -22,6 +23,11 @@ import kotlinx.serialization.Serializable
 
 @Serializable
 data object HomeRoute
+
+object HomeTestTags {
+    const val WORD_COUNT = "home_word_count"
+    const val ERROR = "home_error"
+}
 
 @Composable
 fun HomeScreen(viewModel: HomeViewModel = hiltViewModel()) {
@@ -44,10 +50,12 @@ private fun HomeContent(uiState: HomeUiState) {
                         uiState.wordCount.toInt(),
                         uiState.wordCount
                     ),
+                    modifier = Modifier.testTag(HomeTestTags.WORD_COUNT),
                     style = MaterialTheme.typography.titleMedium
                 )
                 HomeUiState.Error -> Text(
                     text = stringResource(R.string.database_error),
+                    modifier = Modifier.testTag(HomeTestTags.ERROR),
                     color = MaterialTheme.colorScheme.error
                 )
             }

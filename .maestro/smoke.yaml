@@ -1,0 +1,15 @@
+# Smoke test: a clean install starts, installs the search seed and opens the stores.
+appId: by.mazokaleh.skarnik.debug
+name: App starts and opens the dictionary
+tags:
+  - smoke
+---
+- launchApp:
+    clearState: true
+# First launch unpacks the 60 MB search index, so allow time on a slow CI emulator.
+- extendedWaitUntil:
+    visible:
+      id: home_word_count
+    timeout: 60000
+- assertVisible: ".*ў слоўніку.*"
+- takeScreenshot: smoke-home

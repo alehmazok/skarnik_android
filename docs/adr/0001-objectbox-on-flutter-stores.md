@@ -34,7 +34,7 @@ Use ObjectBox Kotlin and open the existing stores in place:
   retired UIDs). CI fails if the build changes it, so model drift is reviewed, not accidental.
 - Stores open at `Context.getDir("flutter")/objectbox_{search,history,translation}`, the directory Flutter's
   `path_provider` used as documents directory.
-- The search seed is bundled gzip-compressed (`assets/objectbox/data.mdb.gz`, ~9 MB instead of 60 MB in git)
+- The search seed is bundled gzip-compressed (`assets/objectbox/search_seed.mdb.gzip`, ~9 MB instead of 60 MB in git)
   and installed via a temp file + rename, so an interrupted first launch can't leave a broken store.
 
 ## Consequences

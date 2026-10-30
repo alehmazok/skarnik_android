@@ -17,7 +17,7 @@ asking. Product questions go to Aleh as a single multiple-choice question with a
 ## How work is done
 
 - One thread = one feature = one PR. Port behaviour from the Dart code, not from prose: the Flutter source
-  (and `skarnik_ios` for shared specs) is the spec. Write a short spec in `docs/` only for non-obvious
+  (and `skarnik_ios` for shared specs) is the spec for behaviour and data logic, not for screens. Write a short spec in `docs/` only for non-obvious
   algorithms (search, translation fallback chain, dictionary download).
 - Every PR: tests for the new logic, `docs/parity.md` updated, CI green. Self-review the diff before opening.
 - A decision that had real alternatives gets an ADR in `docs/adr/` (`NNNN-title.md`). Plain rules go here.
@@ -30,6 +30,7 @@ asking. Product questions go to Aleh as a single multiple-choice question with a
 ./gradlew ktlintFormat                   # auto-fix formatting
 ./gradlew testDebugUnitTest              # JVM unit tests, incl. ObjectBox against the real seed DB
 ./gradlew assembleDebug                  # debug APK (id by.mazokaleh.skarnik.debug)
+maestro test .maestro/                   # end-to-end flows on a running emulator (after installDebug)
 ```
 
 JDK 17. The cloud environment has no Android SDK or Maven access, so CI is the build of record there.
@@ -70,6 +71,8 @@ first real screens.
 
 **Quality.** ktlint (android_studio style) + detekt + Android Lint must pass. Unit tests for logic and
 ViewModels (JUnit4, kotlin.test, coroutines-test, Turbine, fakes over mocks). Compose UI tests for key screens.
+Maestro flows in `.maestro/` for every user journey a feature adds ([ADR 0002](docs/adr/0002-maestro-end-to-end-tests.md));
+CI runs them on an emulator. Give interactive and asserted elements a `Modifier.testTag`.
 `CancellationException` is always rethrown.
 
 **Theme (agreed with Aleh, 2026-10-30).** Material 3. Follows system light/dark by default, with a
@@ -79,7 +82,9 @@ No AMOLED theme. System font, sizes in `sp` via `MaterialTheme.typography`. Adap
 layer. Colours in translation HTML are mapped to theme roles, never rendered as fixed hex. Never hard-code
 colours in screens: use `MaterialTheme.colorScheme`.
 
-**UI.** All user-visible strings in Belarusian in `res/values/strings.xml` (use `plurals` for counts). Dark
+**UI.** Material 3 guidelines come first (Aleh, 2026-10-30): do not copy Flutter screen layouts, navigation
+or UX flows blindly. Where M3 has a better pattern (SearchBar, navigation bar/rail by window size, bottom
+sheets, etc.), use it and note the deviation in the feature's row in `docs/parity.md`. All user-visible strings in Belarusian in `res/values/strings.xml` (use `plurals` for counts). Dark
 theme, TalkBack labels, large fonts, edge-to-edge, predictive back. minSdk 24.
 
 **Analytics, crashes and secrets.** Same Firebase Analytics event names as Flutter (listed in parity

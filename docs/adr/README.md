@@ -9,3 +9,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | # | Decision | Status |
 |---|---|---|
 | [0001](0001-objectbox-on-flutter-stores.md) | Keep ObjectBox and open the Flutter stores in place | Accepted |
+| [0002](0002-maestro-end-to-end-tests.md) | Maestro for end-to-end tests | Accepted |
