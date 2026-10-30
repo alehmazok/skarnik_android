@@ -17,8 +17,9 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
 | 0.1 | Same app id `by.mazokaleh.skarnik`; installs as an update | `android/app/build.gradle` | ✅ skeleton PR |
-| 0.2 | Open existing ObjectBox stores (search, history, translation) at `app_flutter/objectbox_*`; seed the search index from the bundled asset on first launch | `app/data/repository/objectbox_database_repository.dart` | ✅ skeleton PR (emulator upgrade test pending) |
-| 0.3 | Migrate Flutter `shared_preferences` keys into DataStore (each key with its feature, listed below) | various `shared_preferences_*_repository.dart` | ⬜ |
+| 0.2 | Open existing ObjectBox stores (search, history, translation) at `app_flutter/objectbox_*`; seed the search index from the bundled asset on first launch | `app/data/repository/objectbox_database_repository.dart` | ✅ skeleton PR; emulator upgrade 3.6.0 → 4.0.0 passed 2026-10-30 (all stores byte-identical, no re-seed) |
+| 0.3 | Migrate Flutter settings into DataStore (each key with its feature, listed below). Source is `files/datastore/FlutterSharedPreferences.preferences_pb` (`SharedPreferencesAsync`), not the XML file | various `shared_preferences_*_repository.dart` | ⬜ |
+| 0.3a | Delete Flutter's HTTP cache `DioCache.db` once after the upgrade (cache only, not migrated) | `translation/data/http/skarnik_dio.dart` | ⬜ |
 | 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
 | 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | 🟨 theme done, settings toggles with the settings PR |
 | 0.5 | Adaptive layout: list + translation side by side on wide screens | `widgets/master_detail_view.dart`, `widgets/breakpoints.dart` | ⬜ |
@@ -45,7 +46,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 2.1 | Source chain: local store → admin API → Supabase `main_word` | `translation/domain/use_case/get_translation.dart` | ⬜ |
 | ~~2.2~~ | ~~skarnik.by page scrape as the last fallback~~ (dropped by Aleh, 2026-10-30) | `translation/data/repository/skarnik_translation_repository.dart` | ➖ |
 | 2.3 | Redirect words (`redirect_to`): open the target word with «Перанакіравана з «…»» | `translation_page.dart`, `core/exceptions.dart` | ⬜ |
-| 2.4 | Cache fetched translations in the translation store; HTTP cache with lifetime from Remote Config | `objectbox_translation_repository.dart`, `data/http/skarnik_dio.dart` | ⬜ |
+| 2.4 | HTTP cache for fetched translations with lifetime from Remote Config (the translation store holds only offline downloads) | `objectbox_translation_repository.dart`, `data/http/skarnik_dio.dart` | ⬜ |
 | 2.5 | Render translation HTML (colours, bold/italic, links to other words) | `translation/presentation/widgets/translation_html.dart` | ⬜ |
 | 2.6 | Tap a linked word inside a translation to open it | `translation_html.dart` | ⬜ |
 | 2.7 | Bookmark toggle with snackbar «Дададзена ў закладкі» / «Выдалена з закладак» | `widgets/action_favorites.dart` | ⬜ |
@@ -59,7 +60,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
 | 3.1 | History tab (start screen): words opened, newest first, paged by 25 | `history/`, `home/domain/use_case/load_history.dart` | ⬜ |
-| 3.2 | Bookmarks tab: paged list, tap to open | `favorites/` | ⬜ |
+| 3.2 | Bookmarks tab: paged list, tap to open. Native: the list observes the history store (ObjectBox query as a Flow), so bookmarks added or removed elsewhere show at once. Flutter bug, not ported: the kept-alive tab never reloads after a bookmark changes on the translation screen | `favorites/` | ⬜ |
 | 3.3 | Bookmarks sort: by date added / alphabetical, remembered (`favorites_sort_order`) | `favorites/data/repository/shared_preferences_favorites_sort_repository.dart` | ⬜ |
 | 3.4 | Remove a bookmark with «Вярнуць» undo in the snackbar | `favorites/presentation/favorites_page.dart` | ⬜ |
 | 3.5 | Bottom navigation: History, Bookmarks, Dictionary; each tab keeps its own stack | `home/presentation/home_shell.dart` | ⬜ |
