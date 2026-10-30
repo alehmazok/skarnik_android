@@ -81,7 +81,7 @@ UIDs ([ADR 0001](adr/0001-objectbox-on-flutter-stores.md)):
 
 | Store | Directory | Entities | Contents |
 |---|---|---|---|
-| search | `app_flutter/objectbox_search` | `ObjectboxSearchWord` | ~316k words, seeded on first launch from `assets/objectbox/data.mdb.gz` |
+| search | `app_flutter/objectbox_search` | `ObjectboxSearchWord` | ~316k words, seeded on first launch from `assets/objectbox/search_seed.mdb.gzip` |
 | history | `app_flutter/objectbox_history` | `ObjectboxHistoryWord`, `ObjectboxFavoriteWord` | search history and bookmarks |
 | translation | `app_flutter/objectbox_translation` | `ObjectboxTranslationWord` | cached translations and downloaded offline dictionaries |
 
