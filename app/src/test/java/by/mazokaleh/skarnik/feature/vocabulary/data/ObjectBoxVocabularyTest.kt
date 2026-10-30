@@ -40,10 +40,11 @@ class ObjectBoxVocabularyTest {
         val russian = load(Dictionary.RusBel).indexSections.map { it.letter }
 
         assertEquals("А", belarusian.first())
-        assertTrue("І" in belarusian && "Ў" in belarusian && "Щ" !in belarusian, belarusian.toString())
+        // No headword starts with «ў», so it has no index entry.
+        assertTrue("І" in belarusian && "Щ" !in belarusian && "И" !in belarusian, belarusian.toString())
         assertTrue("Щ" in russian && "Ў" !in russian, russian.toString())
         assertTrue(belarusian.indexOf("З") < belarusian.indexOf("І"), belarusian.toString())
-        assertTrue(belarusian.indexOf("У") < belarusian.indexOf("Ў"), belarusian.toString())
+        assertTrue(belarusian.indexOf("Е") + 1 == belarusian.indexOf("Ё"), belarusian.toString())
     }
 
     @Test
