@@ -63,11 +63,13 @@ class ObjectBoxSearchTest {
 
     @Test
     fun `a glued preposition is stripped when nothing else matches`() = runTest {
-        val result = search("всмысле")
+        // Long enough that fuzzy search finds nothing under «в» first. (Short ones like «всмысле» do get a
+        // fuzzy match there, so the retry never runs for them; Flutter behaves the same.)
+        val result = search("вздравству")
 
-        assertTrue(result.usedPrepositionFallback)
+        assertTrue(result.usedPrepositionFallback, result.words.toString())
         assertTrue(result.words.isNotEmpty())
-        assertTrue(result.words.all { it.lword.startsWith("смысл") }, result.words.toString())
+        assertTrue(result.words.all { it.lword.startsWith("здравству") }, result.words.toString())
     }
 
     @Test
