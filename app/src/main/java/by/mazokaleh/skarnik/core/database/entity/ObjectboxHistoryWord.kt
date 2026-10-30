@@ -18,5 +18,5 @@ data class ObjectboxHistoryWord(
     var wordId: Long = 0,
     var word: String = "",
     var lword: String = "",
-    var lwordMask: String? = null,
+    var lwordMask: String? = null
 )

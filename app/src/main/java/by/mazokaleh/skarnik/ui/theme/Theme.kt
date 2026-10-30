@@ -23,14 +23,14 @@ private val BrandLightColors = lightColorScheme(
     primary = BrandRedLight,
     onPrimary = Color.White,
     background = Color.White,
-    surface = Color.White,
+    surface = Color.White
 )
 
 private val BrandDarkColors = darkColorScheme(
     primary = BrandRedDark,
     onPrimary = Color.White,
     background = BrandDarkBackground,
-    surface = BrandDarkBackground,
+    surface = BrandDarkBackground
 )
 
 /**
@@ -41,7 +41,7 @@ private val BrandDarkColors = darkColorScheme(
 fun SkarnikTheme(
     themeMode: ThemeMode = ThemeMode.System,
     useDynamicColor: Boolean = true,
-    content: @Composable () -> Unit,
+    content: @Composable () -> Unit
 ) {
     val darkTheme = when (themeMode) {
         ThemeMode.System -> isSystemInDarkTheme()

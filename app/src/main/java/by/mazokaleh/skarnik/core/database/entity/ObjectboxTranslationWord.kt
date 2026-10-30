@@ -23,7 +23,7 @@ data class ObjectboxTranslationWord(
     @Unique(onConflict = ConflictStrategy.REPLACE) var key: String = "",
     var stress: String? = null,
     var translation: String = "",
-    var redirectTo: String? = null,
+    var redirectTo: String? = null
 ) {
     companion object {
         fun keyOf(langId: Long, wordId: Long): String = "$langId:$wordId"

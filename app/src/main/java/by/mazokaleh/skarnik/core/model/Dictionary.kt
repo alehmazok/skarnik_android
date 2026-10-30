@@ -7,8 +7,7 @@ package by.mazokaleh.skarnik.core.model
 enum class Dictionary(val langId: Long, val path: String) {
     BelRus(langId = 1, path = "belrus"),
     RusBel(langId = 0, path = "rusbel"),
-    Tsbm(langId = 2, path = "tsbm"),
-    ;
+    Tsbm(langId = 2, path = "tsbm");
 
     companion object {
         fun byLangId(langId: Long): Dictionary? = entries.firstOrNull { it.langId == langId }

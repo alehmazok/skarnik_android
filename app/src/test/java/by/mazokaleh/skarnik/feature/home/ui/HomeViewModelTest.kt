@@ -2,6 +2,7 @@ package by.mazokaleh.skarnik.feature.home.ui
 
 import app.cash.turbine.test
 import by.mazokaleh.skarnik.feature.home.data.DictionaryStatsRepository
+import kotlin.test.assertEquals
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -12,7 +13,6 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertEquals
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {

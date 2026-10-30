@@ -34,7 +34,7 @@ private fun HomeContent(uiState: HomeUiState) {
     Scaffold { padding ->
         Box(
             modifier = Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center,
+            contentAlignment = Alignment.Center
         ) {
             when (uiState) {
                 HomeUiState.Loading -> CircularProgressIndicator()
@@ -42,13 +42,13 @@ private fun HomeContent(uiState: HomeUiState) {
                     text = pluralStringResource(
                         R.plurals.words_in_dictionary,
                         uiState.wordCount.toInt(),
-                        uiState.wordCount,
+                        uiState.wordCount
                     ),
-                    style = MaterialTheme.typography.titleMedium,
+                    style = MaterialTheme.typography.titleMedium
                 )
                 HomeUiState.Error -> Text(
                     text = stringResource(R.string.database_error),
-                    color = MaterialTheme.colorScheme.error,
+                    color = MaterialTheme.colorScheme.error
                 )
             }
         }

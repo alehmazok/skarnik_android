@@ -6,9 +6,9 @@ import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import javax.inject.Inject
 
 interface DictionaryStatsRepository {
     /** Number of words in the bundled search index. Opens the stores on first call. */
@@ -17,7 +17,7 @@ interface DictionaryStatsRepository {
 
 class ObjectBoxDictionaryStatsRepository @Inject constructor(
     private val database: SkarnikDatabase,
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
 ) : DictionaryStatsRepository {
     override suspend fun searchWordCount(): Long = withContext(ioDispatcher) {
         database.stores().searchBox.count()

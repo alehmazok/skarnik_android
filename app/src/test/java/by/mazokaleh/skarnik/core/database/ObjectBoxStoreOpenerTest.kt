@@ -5,15 +5,15 @@ import by.mazokaleh.skarnik.core.database.entity.ObjectboxHistoryWord
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxSearchWord_
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxTranslationWord
 import io.objectbox.query.QueryBuilder.StringOrder
+import java.io.File
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.io.File
-import kotlin.test.assertEquals
-import kotlin.test.assertFalse
-import kotlin.test.assertTrue
 
 /**
  * Opens the real search index that skarnik-flutter ships (written by ObjectBox Dart) with the Kotlin model.
@@ -56,7 +56,7 @@ class ObjectBoxStoreOpenerTest {
         val opened = open()
 
         val words = opened.searchBox.query(
-            ObjectboxSearchWord_.lword.startsWith("прывітанн", StringOrder.CASE_SENSITIVE),
+            ObjectboxSearchWord_.lword.startsWith("прывітанн", StringOrder.CASE_SENSITIVE)
         ).build().use { it.find() }
 
         assertTrue(words.isNotEmpty())
@@ -98,7 +98,7 @@ class ObjectBoxStoreOpenerTest {
         langId = 1,
         wordId = 7,
         key = ObjectboxTranslationWord.keyOf(1, 7),
-        translation = text,
+        translation = text
     )
 
     private companion object {

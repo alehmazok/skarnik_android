@@ -23,5 +23,5 @@ data class ObjectboxSearchWord(
     @Unique var wordId: Long = 0,
     var word: String = "",
     @Index(type = IndexType.VALUE) var lword: String = "",
-    @Index(type = IndexType.VALUE) var lwordMask: String? = null,
+    @Index(type = IndexType.VALUE) var lwordMask: String? = null
 )

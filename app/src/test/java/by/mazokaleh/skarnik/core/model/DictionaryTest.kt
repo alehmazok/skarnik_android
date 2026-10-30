@@ -1,8 +1,8 @@
 package by.mazokaleh.skarnik.core.model
 
-import org.junit.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import org.junit.Test
 
 class DictionaryTest {
     @Test

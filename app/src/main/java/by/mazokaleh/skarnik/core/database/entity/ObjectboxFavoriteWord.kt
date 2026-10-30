@@ -16,5 +16,5 @@ data class ObjectboxFavoriteWord(
     var langId: Long = 0,
     var letter: String = "",
     var wordId: Long = 0,
-    var word: String = "",
+    var word: String = ""
 )

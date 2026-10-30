@@ -15,17 +15,14 @@ import java.util.zip.GZIPInputStream
  *
  * Blocking: call off the main thread.
  */
-class ObjectBoxStoreOpener(
-    private val documentsDir: File,
-    private val openSeed: () -> InputStream,
-) {
+class ObjectBoxStoreOpener(private val documentsDir: File, private val openSeed: () -> InputStream) {
     fun open(): ObjectBoxStores {
         val searchDir = File(documentsDir, SEARCH_DIR)
         installSeedIfMissing(File(searchDir, DATA_FILE))
         return ObjectBoxStores(
             search = openStore(searchDir),
             history = openStore(File(documentsDir, HISTORY_DIR)),
-            translation = openStore(File(documentsDir, TRANSLATION_DIR)),
+            translation = openStore(File(documentsDir, TRANSLATION_DIR))
         )
     }
 

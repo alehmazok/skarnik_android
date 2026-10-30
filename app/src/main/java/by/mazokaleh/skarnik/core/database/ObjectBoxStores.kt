@@ -13,11 +13,7 @@ import java.io.Closeable
  * The three ObjectBox stores the app has used since the Flutter version. All three share one model;
  * each entity is only ever written to its own store, as in Flutter's `ObjectboxStoreHolder`.
  */
-class ObjectBoxStores(
-    val search: BoxStore,
-    val history: BoxStore,
-    val translation: BoxStore,
-) : Closeable {
+class ObjectBoxStores(val search: BoxStore, val history: BoxStore, val translation: BoxStore) : Closeable {
     val searchBox: Box<ObjectboxSearchWord> get() = search.boxFor()
     val historyBox: Box<ObjectboxHistoryWord> get() = history.boxFor()
     val favoritesBox: Box<ObjectboxFavoriteWord> get() = history.boxFor()
