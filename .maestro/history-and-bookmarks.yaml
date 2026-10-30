@@ -60,10 +60,12 @@ tags:
       text: "дзяк.*"
 - takeScreenshot: bookmarks-alphabetical
 
-# Swipe to remove, then undo.
+# Swipe to remove, then undo. Swipe from the row's centre: the word sits at its left edge, too close to swipe far.
 - swipe:
     from:
-      text: "дзяк.*"
+      id: bookmarks_item
+      containsChild:
+        text: "дзяк.*"
     direction: LEFT
 - assertVisible: "Выдалена з закладак."
 - tapOn: "Вярнуць"
@@ -105,7 +107,9 @@ tags:
 # Removing without undo keeps it removed.
 - swipe:
     from:
-      text: "дзяк.*"
+      id: bookmarks_item
+      containsChild:
+        text: "дзяк.*"
     direction: LEFT
 - assertVisible: "Выдалена з закладак."
 - assertNotVisible:
