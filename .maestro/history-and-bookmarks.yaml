@@ -33,8 +33,9 @@ tags:
 
 # History lists both, newest first, without re-opening the search.
 - assertVisible:
-    id: history_item
     text: "прыв.*"
+    childOf:
+      id: history_item
 - assertVisible:
     text: "дзяк.*"
     below:
@@ -68,7 +69,8 @@ tags:
 - tapOn: "Вярнуць"
 - assertVisible:
     text: "дзяк.*"
-    id: bookmarks_item
+    childOf:
+      id: bookmarks_item
 
 # Opening a bookmark shows its translation; back returns to the Bookmarks tab.
 - tapOn:
@@ -108,4 +110,5 @@ tags:
 - assertVisible: "Выдалена з закладак."
 - assertNotVisible:
     text: "дзяк.*"
-    id: bookmarks_item
+    childOf:
+      id: bookmarks_item

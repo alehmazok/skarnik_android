@@ -4,10 +4,12 @@ appId: by.mazokaleh.skarnik.debug
 - tapOn:
     id: home_search
 - inputText: ${QUERY}
+# A row's text lives in its child views, so match the word inside a result row.
 - extendedWaitUntil:
     visible:
-      id: search_result
-      text: "${WORD}.*"
+      text: "${WORD}"
+      childOf:
+        id: search_result
     timeout: 10000
 - tapOn:
     id: search_result
