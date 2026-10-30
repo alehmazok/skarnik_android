@@ -14,6 +14,8 @@ complexity:
 
 style:
   MagicNumber:
+    # @Uid values are ObjectBox model IDs copied from the Flutter model.
+    ignoreAnnotation: true
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
     excludes: ['**/test/**', '**/ui/theme/**']
