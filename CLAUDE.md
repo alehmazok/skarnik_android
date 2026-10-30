@@ -1,0 +1,80 @@
+# CLAUDE.md — Skarnik Android
+
+Native Android rewrite of [skarnik-flutter](https://github.com/alehmazok/skarnik-flutter): the Skarnik
+Belarusian dictionary (Бел-Рус, Рус-Бел, Тлумачальны). It ships as an **update** of the existing Play app
+`by.mazokaleh.skarnik`, so users must keep their history, bookmarks and downloaded dictionaries.
+
+- Architecture (living reference): [docs/architecture.md](docs/architecture.md)
+- Decisions and why: [docs/adr/](docs/adr/README.md)
+- What is ported and what is left: [docs/parity.md](docs/parity.md)
+
+## Roles
+
+Aleh owns product: what to build, in which order, user-visible texts, release timing. Claude owns every
+technical decision (architecture, libraries, code, tests, performance, CI) and states decisions instead of
+asking. Product questions go to Aleh as a single multiple-choice question with a recommendation.
+
+## How work is done
+
+- One thread = one feature = one PR. Port behaviour from the Dart code, not from prose: the Flutter source
+  (and `skarnik_ios` for shared specs) is the spec. Write a short spec in `docs/` only for non-obvious
+  algorithms (search, translation fallback chain, dictionary download).
+- Every PR: tests for the new logic, `docs/parity.md` updated, CI green. Self-review the diff before opening.
+- A decision that had real alternatives gets an ADR in `docs/adr/` (`NNNN-title.md`). Plain rules go here.
+- Emulator checks run on Aleh's machine via Remote Control at the end of each feature.
+
+## Commands
+
+```bash
+./gradlew ktlintCheck detekt lintDebug   # static checks (what CI runs)
+./gradlew ktlintFormat                   # auto-fix formatting
+./gradlew testDebugUnitTest              # JVM unit tests, incl. ObjectBox against the real seed DB
+./gradlew assembleDebug                  # debug APK (id by.mazokaleh.skarnik.debug)
+```
+
+JDK 17. The cloud environment has no Android SDK or Maven access, so CI is the build of record there.
+
+## Technical rules
+
+**Stack.** Kotlin 2.x, Jetpack Compose + Material 3, single Activity, Navigation Compose with type-safe
+`@Serializable` routes. Hilt (KSP) for DI. Coroutines + Flow. kotlinx.serialization for JSON. Retrofit or
+Ktor on OkHttp with a disk cache (decided in the translation PR). DataStore instead of SharedPreferences.
+WorkManager for background work, Glance for the widget. Versions live only in `gradle/libs.versions.toml`.
+
+**Architecture.** UI (Compose) → ViewModel (one `StateFlow<UiState>` per screen) → use case (only when it
+holds logic) → repository (interface in the feature, implementation in `data`) → data source. Feature-first
+packages under `feature/<name>/{data,domain,ui}`; shared code under `core/`. No layer that only forwards calls.
+
+**Storage compatibility (do not break).**
+- ObjectBox entity class names, property names and types (`Long`, not `Int`) and index types must match
+  skarnik-flutter's `lib/objectbox-model.json`. `app/objectbox-models/default.json` is that file; CI fails
+  if the build changes it. Never delete or "clean up" retired UIDs in it.
+- Stores live in `app_flutter/objectbox_{search,history,translation}` (`Context.getDir("flutter")`).
+- `langId`: RusBel = 0, BelRus = 1, Tsbm = 2. Never renumber.
+- Flutter `shared_preferences` data (in `FlutterSharedPreferences.xml`, keys prefixed `flutter.`) is
+  migrated into DataStore once, by the feature that owns each key (see parity register).
+- `applicationId` stays `by.mazokaleh.skarnik` (debug: `.debug` suffix, same as Flutter). `versionCode`
+  must stay above Flutter's last (81).
+
+**Threading and performance.** No disk or network on the main thread: inject `@IoDispatcher` /
+`@DefaultDispatcher`, never call `Dispatchers.IO` directly in classes. Stores open lazily via
+`SkarnikDatabase.stores()`. Compose: immutable/stable UI state, `key` in lazy lists, `collectAsStateWithLifecycle`.
+R8 full mode with resource shrinking in release. Baseline Profile and startup macrobenchmark come with the
+first real screens.
+
+**Quality.** ktlint (android_studio style) + detekt + Android Lint must pass. Unit tests for logic and
+ViewModels (JUnit4, kotlin.test, coroutines-test, Turbine, fakes over mocks). Compose UI tests for key screens.
+`CancellationException` is always rethrown.
+
+**Theme (agreed with Aleh, 2026-10-30).** Material 3. Follows system light/dark by default, with a
+System/Light/Dark setting in DataStore. Material You dynamic colour by default on Android 12+, with a setting
+to switch to the brand palette (light: white + red `#E1251B`; dark: `#0F0F10` + `#FF4438`, same as skarnik.app).
+No AMOLED theme. System font, sizes in `sp` via `MaterialTheme.typography`. Adaptive icon with a monochrome
+layer. Colours in translation HTML are mapped to theme roles, never rendered as fixed hex. Never hard-code
+colours in screens: use `MaterialTheme.colorScheme`.
+
+**UI.** All user-visible strings in Belarusian in `res/values/strings.xml` (use `plurals` for counts). Dark
+theme, TalkBack labels, large fonts, edge-to-edge, predictive back. minSdk 24.
+
+**Analytics and secrets.** Same Firebase event names as Flutter (listed in parity register); nothing is sent
+before consent. Secrets only via `local.properties` / GitHub Secrets, never in code or git.

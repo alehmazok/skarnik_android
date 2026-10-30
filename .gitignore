@@ -1,0 +1,15 @@
+*.iml
+.gradle/
+/local.properties
+/.idea/
+.DS_Store
+build/
+/captures
+.externalNativeBuild/
+.cxx/
+.kotlin/
+# Release signing material never goes into git.
+*.jks
+*.keystore
+key.properties
+google-services.json

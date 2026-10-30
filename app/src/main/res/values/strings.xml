@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- app_name is defined per build type in app/build.gradle.kts. -->
+    <string name="database_error">Не атрымалася адкрыць базу слоў.</string>
+    <plurals name="words_in_dictionary">
+        <item quantity="one">%1$d слова ў слоўніку</item>
+        <item quantity="few">%1$d словы ў слоўніку</item>
+        <item quantity="many">%1$d слоў у слоўніку</item>
+        <item quantity="other">%1$d слова ў слоўніку</item>
+    </plurals>
+</resources>
