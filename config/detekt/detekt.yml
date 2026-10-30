@@ -18,6 +18,7 @@ style:
     ignoreAnnotation: true
     ignorePropertyDeclaration: true
     ignoreCompanionObjectPropertyDeclaration: true
-    excludes: ['**/test/**', '**/ui/theme/**']
+    # Compose UI is full of dp/sp literals; logic code stays checked.
+    excludes: ['**/test/**', '**/ui/**']
   UnusedPrivateMember:
     ignoreAnnotated: ['Preview']

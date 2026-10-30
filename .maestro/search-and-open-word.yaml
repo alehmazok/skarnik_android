@@ -1,0 +1,55 @@
+# Search: open search from home, find a Belarusian word typed with a Russian letter, open it.
+appId: by.mazokaleh.skarnik.debug
+name: Search a word and open it
+tags:
+  - search
+---
+- launchApp:
+    clearState: true
+# First launch unpacks the search index.
+- extendedWaitUntil:
+    visible:
+      id: home_word_count
+    timeout: 60000
+- tapOn:
+    id: home_search
+- assertVisible:
+    id: search_hint
+# "и" instead of "і": the search also tries the Belarusian letter.
+- inputText: прывитанне
+- extendedWaitUntil:
+    visible: прывітанне
+    timeout: 10000
+- takeScreenshot: search-results
+# Extra letters show only while the on-screen keyboard is up (CI emulators may use a hardware keyboard).
+- runFlow:
+    when:
+      visible:
+        id: search_letters
+    commands:
+      - tapOn:
+          id: search_clear
+      - tapOn:
+          id: search_letter_і
+      - assertVisible:
+          id: search_result
+      - eraseText: 1
+      - inputText: прывитанне
+      - extendedWaitUntil:
+          visible: прывітанне
+          timeout: 10000
+- tapOn:
+    id: search_result
+    index: 0
+- assertVisible:
+    id: translation_word
+    text: прывітанне
+- takeScreenshot: search-opened-word
+- back
+- assertVisible:
+    id: search_field
+- tapOn:
+    id: search_clear
+- assertVisible:
+    id: search_hint
+- assertVisible: Пошук з аўтаматычнай падменай.*
