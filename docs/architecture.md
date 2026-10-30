@@ -127,4 +127,6 @@ Crash and error reporting goes to Sentry (sponsored org `skarnik`) in release bu
 - JVM unit tests for logic, repositories and ViewModels (fakes, coroutines-test, Turbine).
 - ObjectBox runs in JVM tests via `objectbox-linux`; `ObjectBoxStoreOpenerTest` opens the real Flutter seed DB.
 - Compose UI tests for key screens; screenshots of Flutter screens in `docs/screens/` as the visual reference.
-- CI (GitHub Actions): ktlint, detekt, Android Lint, unit tests, debug APK artifact, ObjectBox model drift check.
+- Maestro end-to-end flows (`.maestro/`) for user journeys and the Flutter → native upgrade, run on an emulator in CI.
+- CI (GitHub Actions): ktlint, detekt, Android Lint, unit tests, debug APK artifact, ObjectBox model drift check;
+  then an `e2e` job runs the Maestro flows on an emulator and uploads screenshots.

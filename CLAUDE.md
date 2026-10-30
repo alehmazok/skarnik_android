@@ -30,6 +30,7 @@ asking. Product questions go to Aleh as a single multiple-choice question with a
 ./gradlew ktlintFormat                   # auto-fix formatting
 ./gradlew testDebugUnitTest              # JVM unit tests, incl. ObjectBox against the real seed DB
 ./gradlew assembleDebug                  # debug APK (id by.mazokaleh.skarnik.debug)
+maestro test .maestro/                   # end-to-end flows on a running emulator (after installDebug)
 ```
 
 JDK 17. The cloud environment has no Android SDK or Maven access, so CI is the build of record there.
@@ -70,6 +71,8 @@ first real screens.
 
 **Quality.** ktlint (android_studio style) + detekt + Android Lint must pass. Unit tests for logic and
 ViewModels (JUnit4, kotlin.test, coroutines-test, Turbine, fakes over mocks). Compose UI tests for key screens.
+Maestro flows in `.maestro/` for every user journey a feature adds ([ADR 0002](docs/adr/0002-maestro-end-to-end-tests.md));
+CI runs them on an emulator. Give interactive and asserted elements a `Modifier.testTag`.
 `CancellationException` is always rethrown.
 
 **Theme (agreed with Aleh, 2026-10-30).** Material 3. Follows system light/dark by default, with a
