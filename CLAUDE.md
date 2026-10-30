@@ -58,8 +58,10 @@ packages under `feature/<name>/{data,domain,ui}`; shared code under `core/`. No 
   if the build changes it. Never delete or "clean up" retired UIDs in it.
 - Stores live in `app_flutter/objectbox_{search,history,translation}` (`Context.getDir("flutter")`).
 - `langId`: RusBel = 0, BelRus = 1, Tsbm = 2. Never renumber.
-- Flutter `shared_preferences` data (in `FlutterSharedPreferences.xml`, keys prefixed `flutter.`) is
-  migrated into DataStore once, by the feature that owns each key (see parity register).
+- Flutter settings use `SharedPreferencesAsync`, which on Android is already a Preferences DataStore:
+  `files/datastore/FlutterSharedPreferences.preferences_pb` (no XML, no `flutter.` prefix). Never give a native
+  DataStore that name by accident. Each feature reads its own keys from it once and moves them to the native
+  DataStore (see parity register). Flutter's HTTP cache `DioCache.db` is not migrated.
 - `applicationId` stays `by.mazokaleh.skarnik` (debug: `.debug` suffix, same as Flutter). `versionCode`
   must stay above Flutter's last (81).
 

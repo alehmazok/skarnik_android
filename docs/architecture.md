@@ -87,7 +87,9 @@ UIDs ([ADR 0001](adr/0001-objectbox-on-flutter-stores.md)):
 
 `SkarnikDatabase.stores()` opens all three once, lazily, on the IO dispatcher. Small key-value settings
 (analytics consent, bookmark sort order, review counter, download cursors, widget history) move to DataStore,
-migrated from Flutter's `FlutterSharedPreferences` by the feature that owns each key.
+migrated by the feature that owns each key from Flutter's `files/datastore/FlutterSharedPreferences.preferences_pb`
+(Flutter's `SharedPreferencesAsync` is a Preferences DataStore on Android, so it is read with DataStore itself).
+Flutter's HTTP response cache `DioCache.db` is a cache, not user data, and is deleted once after the upgrade.
 
 ## Search *(planned)*
 
