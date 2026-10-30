@@ -1,20 +1,20 @@
 [versions]
-agp = "8.13.0"
-kotlin = "2.2.20"
-ksp = "2.2.20-2.0.3"
-hilt = "2.57.2"
-androidx-hilt = "1.2.0"
-objectbox = "5.0.1"
-coroutines = "1.10.2"
-serialization = "1.9.0"
-core-ktx = "1.16.0"
-activity = "1.10.1"
-lifecycle = "2.9.2"
-navigation = "2.9.3"
-compose-bom = "2025.09.00"
+agp = "9.4.0"
+kotlin = "2.4.21"
+ksp = "2.3.11"
+hilt = "2.60.1"
+androidx-hilt = "1.4.0"
+objectbox = "5.4.2"
+coroutines = "1.11.0"
+serialization = "1.12.0"
+core-ktx = "1.19.1"
+activity = "1.13.0"
+lifecycle = "2.11.0"
+navigation = "2.10.2"
+compose-bom = "2026.09.00"
 junit = "4.13.2"
 turbine = "1.2.1"
-ktlint-gradle = "13.1.0"
+ktlint-gradle = "14.2.0"
 detekt = "1.23.8"
 
 [libraries]
@@ -23,7 +23,7 @@ androidx-activity-compose = { module = "androidx.activity:activity-compose", ver
 androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-runtime-compose", version.ref = "lifecycle" }
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycle" }
 androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigation" }
-androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "androidx-hilt" }
+androidx-hilt-lifecycle-viewmodel-compose = { module = "androidx.hilt:hilt-lifecycle-viewmodel-compose", version.ref = "androidx-hilt" }
 
 compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 compose-ui = { module = "androidx.compose.ui:ui" }
@@ -48,8 +48,8 @@ turbine = { module = "app.cash.turbine:turbine", version.ref = "turbine" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
-kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
-kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlin" }
+# AGP 9 has Kotlin built in; kapt (needed by the ObjectBox processor) comes from AGP's legacy-kapt plugin.
+android-legacy-kapt = { id = "com.android.legacy-kapt", version.ref = "agp" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }

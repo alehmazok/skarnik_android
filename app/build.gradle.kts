@@ -1,29 +1,27 @@
 import io.gitlab.arturbosch.detekt.getSupportedKotlinVersion
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.android.legacy.kapt)
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ktlint)
     alias(libs.plugins.detekt)
-    // Must come after the Kotlin and kapt plugins: it hooks its annotation processor into kapt.
+    // Must come after the kapt plugin: it hooks its annotation processor into kapt.
     alias(libs.plugins.objectbox)
 }
 
 android {
     // Same id as the Flutter app, so the native build installs as an update and keeps user data.
     namespace = "by.mazokaleh.skarnik"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "by.mazokaleh.skarnik"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         // Flutter 3.6.0 shipped versionCode 81; the native app must stay above it.
         versionCode = 100
         versionName = "4.0.0"
@@ -53,6 +51,8 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // AGP 9 turns resValue off by default; app_name is set per build type.
+        resValues = true
     }
 
     testOptions {
@@ -65,12 +65,6 @@ android {
         checkDependencies = true
         // New AndroidX releases land weekly; version bumps are a deliberate chore, not a CI failure.
         disable += setOf("GradleDependency", "AndroidGradlePluginVersion", "NewerVersionAvailable")
-    }
-}
-
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
     }
 }
 
@@ -106,7 +100,7 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.navigation.compose)
-    implementation(libs.androidx.hilt.navigation.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)

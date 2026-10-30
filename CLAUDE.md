@@ -41,6 +41,12 @@ JDK 17. The cloud environment has no Android SDK or Maven access, so CI is the b
 Ktor on OkHttp with a disk cache (decided in the translation PR). DataStore instead of SharedPreferences.
 WorkManager for background work, Glance for the widget. Versions live only in `gradle/libs.versions.toml`.
 
+**Versions.** Use the latest stable SDK, AGP, Gradle, Kotlin and library versions. Check every version against
+its official release page or Maven metadata when adding or bumping it, never from memory. No alphas/betas unless
+an ADR says why. Dependabot opens grouped update PRs weekly (`.github/dependabot.yml`); merge them once CI is
+green, and read the release notes for major bumps. AGP 9 has Kotlin built in: there is no
+`org.jetbrains.kotlin.android` plugin, and kapt (only for ObjectBox) comes from `com.android.legacy-kapt`.
+
 **Architecture.** UI (Compose) → ViewModel (one `StateFlow<UiState>` per screen) → use case (only when it
 holds logic) → repository (interface in the feature, implementation in `data`) → data source. Feature-first
 packages under `feature/<name>/{data,domain,ui}`; shared code under `core/`. No layer that only forwards calls.
