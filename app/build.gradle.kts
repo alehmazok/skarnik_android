@@ -51,6 +51,8 @@ android {
     buildFeatures {
         compose = true
         buildConfig = true
+        // AGP 9 turns resValue off by default; app_name is set per build type.
+        resValues = true
     }
 
     testOptions {
