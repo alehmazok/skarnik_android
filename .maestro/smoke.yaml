@@ -11,5 +11,5 @@ tags:
     visible:
       id: home_word_count
     timeout: 60000
-- assertVisible: ".*у слоўніку.*"
+- assertVisible: ".*ў слоўніку.*"
 - takeScreenshot: smoke-home
