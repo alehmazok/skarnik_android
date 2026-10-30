@@ -9,7 +9,7 @@ tags:
     clearState: true
 - extendedWaitUntil:
     visible:
-      id: home_word_count
+      id: history_empty
     timeout: 60000
 - tapOn:
     id: home_search

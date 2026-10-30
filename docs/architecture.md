@@ -41,10 +41,10 @@ by.mazokaleh.skarnik
 │   ├── network/           OkHttp client with disk cache, suspend calls
 │   └── analytics/         (planned) consent-gated event logger
 └── feature/
-    ├── home/              (skeleton placeholder, becomes the History tab)
+    ├── home/              top-level screen with the navigation bar
     ├── search/            word search
     ├── translation/       translation screen, source chain, HTML renderer
-    ├── history/ favorites/   repositories used by translation (tabs planned)
+    ├── history/ favorites/   History and Bookmarks tabs, their repositories and the sort setting
     ├── vocabulary/ settings/ stress/ widget/   (planned)
 ```
 
@@ -70,7 +70,10 @@ tests can swap them.
 
 Navigation Compose with type-safe routes (`@Serializable` objects/classes). Target graph, mirroring Flutter:
 
-- Bottom bar: History (start), Bookmarks, Dictionary (vocabulary). Each tab keeps its own back stack.
+- `HomeRoute` holds the bottom bar: History (start), Bookmarks, Dictionary (vocabulary, planned). Tabs switch
+  inside the one destination; a `SaveableStateHolder` keeps each tab's scroll position and its ViewModel lives
+  on the `HomeRoute` entry, so hidden tabs keep their data. Back on another tab returns to History. Search and
+  Translation open full screen above it.
 - Full-screen: Search, Settings, Translation(`langId`, `wordId`, `word`), Stress(`word`) → Stress table.
 - Large screens: list–detail (search/history/bookmarks list with translation beside it).
 - Deep links `skarnik.by/<dict>/<id>` and `skarnik.app/r/<dict>/<id>` open Translation.
@@ -130,6 +133,23 @@ flowchart LR
   links are `LinkAnnotation`s. The text is selectable.
 - History and bookmark writes live in `feature/history/data` and `feature/favorites/data`; the tabs that list
   them come with their own PRs.
+
+## History and bookmarks
+
+`feature/history` and `feature/favorites` read the history store through `BoxStore.changes<T>()`
+(`core/database/ObjectBoxChanges.kt`): a Flow that emits once and after every transaction touching the entity,
+whatever wrote it, so both tabs update live (Flutter's bookmarks tab did not, skarnik-flutter#19). Each emission
+re-runs a limited query (`limit + 1` rows, the extra one tells whether more follow); the ViewModel grows the
+limit by 25 when the last row shows. Bookmarks sort by id (date added) or by `word`. Removing a bookmark deletes
+it at once; undo puts the same row back with its old id, so it keeps its place in the date order.
+
+## Settings (DataStore)
+
+One Preferences DataStore, `files/datastore/settings.preferences_pb`, provided by `core/datastore`. Flutter's
+`FlutterSharedPreferences.preferences_pb` is opened read-only as a second DataStore (`@FlutterPreferences`).
+Each feature contributes a `FlutterPreferencesMigration` into a Hilt set; it copies that feature's keys once and
+sets a `migrated_from_flutter_<name>` flag. An unreadable Flutter file counts as empty. Keys keep Flutter's
+names and values (`favorites_sort_order` = `dateAdded` | `alphabetical`).
 
 ## Background work and widget *(planned)*
 

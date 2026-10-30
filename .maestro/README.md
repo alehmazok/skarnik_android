@@ -14,3 +14,4 @@ Rules:
   Belarusian text; never by coordinates.
 - Flows start from `clearState: true` unless the flow is about kept state (upgrade, history).
 - `takeScreenshot` at the end state of each journey; CI uploads them as an artifact.
+- Steps shared by several flows live in `subflows/` (not run on their own) and take parameters through `env`.

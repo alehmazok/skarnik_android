@@ -1,4 +1,4 @@
-# Smoke test: a clean install starts, installs the search seed and opens the stores.
+# Smoke test: a clean install starts, installs the search seed, opens the stores and shows empty history.
 appId: by.mazokaleh.skarnik.debug
 name: App starts and opens the dictionary
 tags:
@@ -9,8 +9,9 @@ tags:
 # First launch unpacks the 60 MB search index, so allow time on a slow CI emulator.
 - extendedWaitUntil:
     visible:
-      id: home_word_count
+      id: history_empty
     timeout: 60000
-# The CI emulator runs in English: this checks that plurals use Belarusian rules (316235 → "many").
-- assertVisible: ".*слоў у слоўніку.*"
+- assertVisible: "Пачніце ўводзіць слова ў пошук…"
+- assertVisible:
+    id: home_tab_bookmarks
 - takeScreenshot: smoke-home

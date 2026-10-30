@@ -18,7 +18,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 |---|---|---|---|
 | 0.1 | Same app id `by.mazokaleh.skarnik`; installs as an update | `android/app/build.gradle` | ✅ skeleton PR |
 | 0.2 | Open existing ObjectBox stores (search, history, translation) at `app_flutter/objectbox_*`; seed the search index from the bundled asset on first launch | `app/data/repository/objectbox_database_repository.dart` | ✅ skeleton PR; emulator upgrade 3.6.0 → 4.0.0 passed 2026-10-30 (all stores byte-identical, no re-seed) |
-| 0.3 | Migrate Flutter settings into DataStore (each key with its feature, listed below). Source is `files/datastore/FlutterSharedPreferences.preferences_pb` (`SharedPreferencesAsync`), not the XML file | various `shared_preferences_*_repository.dart` | ⬜ |
+| 0.3 | Migrate Flutter settings into DataStore (each key with its feature, listed below). Source is `files/datastore/FlutterSharedPreferences.preferences_pb` (`SharedPreferencesAsync`), not the XML file. Each feature adds a one-time `FlutterPreferencesMigration` to the app's `settings` store; Flutter's file is left untouched | various `shared_preferences_*_repository.dart` | 🟨 mechanism + `favorites_sort_order` in history/bookmarks PR; other keys with their features |
 | 0.3a | Delete Flutter's HTTP cache `DioCache.db` once after the upgrade (cache only, not migrated; native uses OkHttp's cache in `cache/http`) | `translation/data/http/skarnik_dio.dart` | ⬜ with the settings migration |
 | 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
 | 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | 🟨 theme done, settings toggles with the settings PR |
@@ -53,17 +53,17 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 2.8 | Share: link `skarnik.app/r/<dict>/<id>` with the word as subject (Android share sheet) | `widgets/action_share.dart`, `translation_cubit.dart` | ✅ translation PR |
 | 2.9 | Error state «Прабачце, адбылася памылка перакладу слова.» M3: shown in the screen with a «Паўтарыць» button instead of a 15 s snackbar over an endless spinner | `translation_page.dart` | ✅ translation PR |
 | 2.10 | Analytics: `translation`, `add_to_favorites`, share event | `firebase_analytics_translation_repository.dart` | ⬜ with the analytics/consent PR |
-| 2.11 | Open by id (deep link / widget) and open from a word (search, history, bookmarks). The route takes `langId` + `wordId` (+ the word to show while loading, and `saveToHistory`, false from history/bookmarks as in Flutter) | `app/presentation/skarnik_router.dart` | 🟨 route done in translation PR; deep links with 9.1 |
+| 2.11 | Open by id (deep link / widget) and open from a word (search, history, bookmarks). The route takes `langId` + `wordId` (+ the word to show while loading, and `saveToHistory`, false from history/bookmarks as in Flutter) | `app/presentation/skarnik_router.dart` | 🟨 route done in translation PR, used by history/bookmarks; deep links with 9.1 |
 
 ## 3. History and bookmarks
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 3.1 | History tab (start screen): words opened, newest first, paged by 25 | `history/`, `home/domain/use_case/load_history.dart` | ⬜ |
-| 3.2 | Bookmarks tab: paged list, tap to open. Native: the list observes the history store (ObjectBox query as a Flow), so bookmarks added or removed elsewhere show at once. Flutter bug, not ported: the kept-alive tab never reloads after a bookmark changes on the translation screen | `favorites/` | ⬜ |
-| 3.3 | Bookmarks sort: by date added / alphabetical, remembered (`favorites_sort_order`) | `favorites/data/repository/shared_preferences_favorites_sort_repository.dart` | ⬜ |
-| 3.4 | Remove a bookmark with «Вярнуць» undo in the snackbar | `favorites/presentation/favorites_page.dart` | ⬜ |
-| 3.5 | Bottom navigation: History, Bookmarks, Dictionary; each tab keeps its own stack | `home/presentation/home_shell.dart` | ⬜ |
+| 3.1 | History tab (start screen): words opened, newest first, paged by 25. Native: the list observes the history store, so a word opened from search shows on return (Flutter reloaded on an app event). Tap opens the word without re-saving it | `history/`, `home/domain/use_case/load_history.dart` | ✅ history/bookmarks PR |
+| 3.2 | Bookmarks tab: paged list, tap to open. Native: the list observes the history store (ObjectBox query as a Flow), so bookmarks added or removed elsewhere show at once. Flutter bug, not ported: the kept-alive tab never reloads after a bookmark changes on the translation screen | `favorites/` | ✅ history/bookmarks PR |
+| 3.3 | Bookmarks sort: by date added / alphabetical, remembered (`favorites_sort_order`, migrated from Flutter with the same values). M3: sort icon opens a dropdown menu with a check on the current order | `favorites/data/repository/shared_preferences_favorites_sort_repository.dart` | ✅ history/bookmarks PR |
+| 3.4 | Remove a bookmark with «Вярнуць» undo in the snackbar. Native: swipe from the end (as in Flutter) or the TalkBack action «Выдаліць з закладак»; the bookmark is removed at once and undo puts it back with its old id, so it keeps its place (Flutter delayed the delete by 4 s and lost it if the app closed) | `favorites/presentation/favorites_page.dart` | ✅ history/bookmarks PR |
+| 3.5 | Bottom navigation: History («Пошук»), Bookmarks, Dictionary; each tab keeps its own state. Native: tabs keep scroll position and data while hidden; back on Bookmarks returns to History first (M3). The Dictionary tab is added with 4.1; the navigation rail on wide screens comes with 0.5 | `home/presentation/home_shell.dart` | 🟨 History + Bookmarks in history/bookmarks PR; Dictionary with 4.1 |
 
 ## 4. Dictionary (vocabulary)
 

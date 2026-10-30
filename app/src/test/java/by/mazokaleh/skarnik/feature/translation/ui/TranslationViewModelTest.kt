@@ -2,9 +2,13 @@ package by.mazokaleh.skarnik.feature.translation.ui
 
 import app.cash.turbine.test
 import by.mazokaleh.skarnik.core.model.Dictionary
+import by.mazokaleh.skarnik.core.model.SavedWord
+import by.mazokaleh.skarnik.core.model.SavedWordsPage
 import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
+import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
+import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.RemoteTranslationSource
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
@@ -14,6 +18,8 @@ import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -50,7 +56,13 @@ class TranslationViewModelTest {
             api = { dictionary, id -> api.fetch(dictionary, id) },
             cloud = { _, _ -> throw IOException("offline") }
         ),
-        history = { history += it },
+        history = object : HistoryRepository {
+            override suspend fun save(word: Word) {
+                history += word
+            }
+
+            override fun observe(limit: Int): Flow<SavedWordsPage> = emptyFlow()
+        },
         bookmarks = bookmarks
     )
 
@@ -152,5 +164,11 @@ class TranslationViewModelTest {
         override suspend fun remove(word: Word) {
             words -= word
         }
+
+        override fun observe(sortOrder: BookmarksSortOrder, limit: Int): Flow<SavedWordsPage> = emptyFlow()
+
+        override suspend fun remove(bookmark: SavedWord) = Unit
+
+        override suspend fun restore(bookmark: SavedWord) = Unit
     }
 }
