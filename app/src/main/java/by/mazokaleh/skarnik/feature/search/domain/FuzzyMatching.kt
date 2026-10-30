@@ -42,18 +42,14 @@ private fun isTransposition(a: String, b: String, i: Int, j: Int): Boolean {
  * Keeps the [candidates] within [maxDistance] edits of [query], closest first and then alphabetically by
  * `lword`, at most [limit] of them. Ported from `fuzzy_candidate_ranking.dart`.
  */
-fun rankFuzzyCandidates(
-    candidates: List<SearchWord>,
-    query: String,
-    maxDistance: Int,
-    limit: Int
-): List<SearchWord> = candidates
-    .asSequence()
-    // The distance is at least the length difference, so skip the matrix for words that cannot match.
-    .filter { abs(it.lword.length - query.length) <= maxDistance }
-    .map { it to damerauLevenshteinDistance(query, it.lword) }
-    .filter { (_, distance) -> distance <= maxDistance }
-    .sortedWith(compareBy<Pair<SearchWord, Int>> { it.second }.thenBy { it.first.lword })
-    .take(limit)
-    .map { it.first }
-    .toList()
+fun rankFuzzyCandidates(candidates: List<SearchWord>, query: String, maxDistance: Int, limit: Int): List<SearchWord> =
+    candidates
+        .asSequence()
+        // The distance is at least the length difference, so skip the matrix for words that cannot match.
+        .filter { abs(it.lword.length - query.length) <= maxDistance }
+        .map { it to damerauLevenshteinDistance(query, it.lword) }
+        .filter { (_, distance) -> distance <= maxDistance }
+        .sortedWith(compareBy<Pair<SearchWord, Int>> { it.second }.thenBy { it.first.lword })
+        .take(limit)
+        .map { it.first }
+        .toList()

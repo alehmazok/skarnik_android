@@ -87,11 +87,7 @@ private val RUSSIAN_LETTERS = listOf("и", "щ", "ъ")
 private val BELARUSIAN_LETTERS = listOf("і", "ў", "'")
 
 @Composable
-fun SearchScreen(
-    onBack: () -> Unit,
-    onWordClick: (SearchWord) -> Unit,
-    viewModel: SearchViewModel = hiltViewModel()
-) {
+fun SearchScreen(onBack: () -> Unit, onWordClick: (SearchWord) -> Unit, viewModel: SearchViewModel = hiltViewModel()) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val queryState = rememberTextFieldState()
     LaunchedEffect(queryState) {
