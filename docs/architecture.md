@@ -16,7 +16,7 @@ flowchart TD
     UC --> Repo["Repository<br/>interface"]
     Repo --> OB[("ObjectBox<br/>search · history · translation")]
     Repo --> DS[("DataStore<br/>preferences")]
-    Repo --> Net["Network<br/>admin API · Supabase · skarnik.by · starnik.by"]
+    Repo --> Net["Network<br/>admin API · Supabase · starnik.by"]
     WM["WorkManager"] --> Repo
     Widget["Glance widget"] --> Repo
 ```
@@ -98,13 +98,12 @@ when nothing matched and the query has ≥3 letters; retry without a glued one-l
 
 ## Translation *(planned)*
 
-Fallback chain, ported from `GetTranslationUseCase`:
+Fallback chain, ported from `GetTranslationUseCase` without its last step (the skarnik.by page scrape, dropped):
 
 ```mermaid
 flowchart LR
     L["Local store<br/>(cache + offline dictionaries)"] -->|miss| A["Admin API<br/>/api/words/&lt;dict&gt;/&lt;id&gt;/"]
     A -->|error| S["Supabase main_word"]
-    S -->|error| W["skarnik.by page scrape"]
 ```
 
 Any source may answer with `redirectTo`, which navigates to the target word. Translation HTML is rendered
@@ -119,8 +118,9 @@ uses a native Glance widget, which is reused).
 
 ## Analytics and crash reporting *(planned)*
 
-Firebase Analytics, Crashlytics and Remote Config behind small interfaces with a no-op/logging debug
-implementation. Collection is disabled until the user answers the consent dialog; event names match Flutter.
+Firebase Analytics and Remote Config behind small interfaces with a no-op/logging debug implementation.
+Analytics collection is disabled until the user answers the consent dialog; event names match Flutter.
+Crash and error reporting goes to Sentry (sponsored org `skarnik`) in release builds, instead of Crashlytics.
 
 ## Testing
 

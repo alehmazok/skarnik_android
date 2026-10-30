@@ -76,5 +76,6 @@ colours in screens: use `MaterialTheme.colorScheme`.
 **UI.** All user-visible strings in Belarusian in `res/values/strings.xml` (use `plurals` for counts). Dark
 theme, TalkBack labels, large fonts, edge-to-edge, predictive back. minSdk 24.
 
-**Analytics and secrets.** Same Firebase event names as Flutter (listed in parity register); nothing is sent
-before consent. Secrets only via `local.properties` / GitHub Secrets, never in code or git.
+**Analytics, crashes and secrets.** Same Firebase Analytics event names as Flutter (listed in parity
+register); nothing is sent before consent. Crash reporting is Sentry (org `skarnik`), not Crashlytics. Secrets
+(incl. the Sentry DSN) only via `local.properties` / GitHub Secrets, never in code or git.
