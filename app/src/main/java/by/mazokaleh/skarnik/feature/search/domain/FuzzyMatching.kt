@@ -9,8 +9,7 @@ import kotlin.math.abs
  * Ported from skarnik-flutter's `damerau_levenshtein.dart`.
  */
 fun damerauLevenshteinDistance(a: String, b: String): Int {
-    if (a.isEmpty()) return b.length
-    if (b.isEmpty()) return a.length
+    if (a.isEmpty() || b.isEmpty()) return maxOf(a.length, b.length)
 
     val distances = Array(a.length + 1) { IntArray(b.length + 1) }
     for (i in 0..a.length) distances[i][0] = i
@@ -24,13 +23,19 @@ fun damerauLevenshteinDistance(a: String, b: String): Int {
                 distances[i][j - 1] + 1,
                 distances[i - 1][j - 1] + cost
             )
-            if (i > 1 && j > 1 && a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]) {
+            if (isTransposition(a, b, i, j)) {
                 value = minOf(value, distances[i - 2][j - 2] + cost)
             }
             distances[i][j] = value
         }
     }
     return distances[a.length][b.length]
+}
+
+/** The last two letters of `a[0, i)` are the last two of `b[0, j)` swapped. */
+private fun isTransposition(a: String, b: String, i: Int, j: Int): Boolean {
+    if (i < 2 || j < 2) return false
+    return a[i - 1] == b[j - 2] && a[i - 2] == b[j - 1]
 }
 
 /**

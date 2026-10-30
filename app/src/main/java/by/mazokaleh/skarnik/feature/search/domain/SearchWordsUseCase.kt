@@ -25,11 +25,12 @@ class SearchWordsUseCase @Inject constructor(
     suspend operator fun invoke(query: String): SearchResult {
         val lowercased = query.lowercase()
         val primary = searchOnce(lowercased)
-        if (primary.isNotEmpty()) return SearchResult(primary, usedPrepositionFallback = false)
-
-        val stripped = stripGluedPrefixLetter(lowercased)
-            ?: return SearchResult(primary, usedPrepositionFallback = false)
-        return SearchResult(searchOnce(stripped), usedPrepositionFallback = true)
+        val stripped = if (primary.isEmpty()) stripGluedPrefixLetter(lowercased) else null
+        return if (stripped == null) {
+            SearchResult(primary, usedPrepositionFallback = false)
+        } else {
+            SearchResult(searchOnce(stripped), usedPrepositionFallback = true)
+        }
     }
 
     private suspend fun searchOnce(query: String): List<SearchWord> {

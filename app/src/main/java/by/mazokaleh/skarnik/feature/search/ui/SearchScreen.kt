@@ -125,34 +125,11 @@ private fun SearchContent(
 
     SearchBar(
         inputField = {
-            SearchBarDefaults.InputField(
-                state = queryState,
+            SearchInputField(
+                queryState = queryState,
+                focusRequester = focusRequester,
                 onSearch = { keyboardController?.hide() },
-                expanded = true,
-                onExpandedChange = { expanded -> if (!expanded) onBack() },
-                modifier = Modifier.focusRequester(focusRequester).testTag(SearchTestTags.FIELD),
-                placeholder = { Text(stringResource(R.string.search_placeholder)) },
-                leadingIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = stringResource(R.string.action_back)
-                        )
-                    }
-                },
-                trailingIcon = {
-                    if (queryState.text.isNotEmpty()) {
-                        IconButton(
-                            onClick = { queryState.clearText() },
-                            modifier = Modifier.testTag(SearchTestTags.CLEAR)
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_close),
-                                contentDescription = stringResource(R.string.action_clear)
-                            )
-                        }
-                    }
-                }
+                onBack = onBack
             )
         },
         expanded = true,
@@ -173,6 +150,45 @@ private fun SearchContent(
             }
         }
     }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchInputField(
+    queryState: TextFieldState,
+    focusRequester: FocusRequester,
+    onSearch: () -> Unit,
+    onBack: () -> Unit
+) {
+    SearchBarDefaults.InputField(
+        state = queryState,
+        onSearch = { onSearch() },
+        expanded = true,
+        onExpandedChange = { expanded -> if (!expanded) onBack() },
+        modifier = Modifier.focusRequester(focusRequester).testTag(SearchTestTags.FIELD),
+        placeholder = { Text(stringResource(R.string.search_placeholder)) },
+        leadingIcon = {
+            IconButton(onClick = onBack) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_arrow_back),
+                    contentDescription = stringResource(R.string.action_back)
+                )
+            }
+        },
+        trailingIcon = {
+            if (queryState.text.isNotEmpty()) {
+                IconButton(
+                    onClick = { queryState.clearText() },
+                    modifier = Modifier.testTag(SearchTestTags.CLEAR)
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_close),
+                        contentDescription = stringResource(R.string.action_clear)
+                    )
+                }
+            }
+        }
+    )
 }
 
 @Composable
