@@ -52,8 +52,8 @@ tags:
 - takeScreenshot: bookmarks-by-date
 - tapOn:
     id: bookmarks_sort
-- tapOn:
-    id: bookmarks_sort_letter
+# The menu is a popup window, outside the tree where test tags become ids: select by text.
+- tapOn: "Па алфавіце"
 - assertVisible:
     text: "прыв.*"
     below:
