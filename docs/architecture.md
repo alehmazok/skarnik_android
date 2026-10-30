@@ -42,8 +42,8 @@ by.mazokaleh.skarnik
 │   └── analytics/         (planned) consent-gated event logger
 └── feature/
     ├── home/              (skeleton placeholder, becomes the History tab)
-    ├── search/            (planned)
-    ├── translation/       (planned)
+    ├── search/            word search
+    ├── translation/       (route and placeholder screen; translation PR fills it)
     ├── history/ favorites/ vocabulary/ settings/ stress/ widget/   (planned)
 ```
 
@@ -70,7 +70,7 @@ tests can swap them.
 Navigation Compose with type-safe routes (`@Serializable` objects/classes). Target graph, mirroring Flutter:
 
 - Bottom bar: History (start), Bookmarks, Dictionary (vocabulary). Each tab keeps its own back stack.
-- Full-screen: Search, Settings, Translation(`langId`, `wordId`), Stress(`word`) → Stress table.
+- Full-screen: Search, Settings, Translation(`langId`, `wordId`, `word`), Stress(`word`) → Stress table.
 - Large screens: list–detail (search/history/bookmarks list with translation beside it).
 - Deep links `skarnik.by/<dict>/<id>` and `skarnik.app/r/<dict>/<id>` open Translation.
 
@@ -91,12 +91,20 @@ migrated by the feature that owns each key from Flutter's `files/datastore/Flutt
 (Flutter's `SharedPreferencesAsync` is a Preferences DataStore on Android, so it is read with DataStore itself).
 Flutter's HTTP response cache `DioCache.db` is a cache, not user data, and is deleted once after the upgrade.
 
-## Search *(planned)*
+## Search
 
-Ported from `ObjectboxSearchRepository`: lowercase → prefix query on `lword`, then on `lwordMask`, each with
-and without letter substitutions (и→і, е→ё, щ→ў, ъ/'→‘); fuzzy Damerau–Levenshtein over the first-letter bucket
-when nothing matched and the query has ≥3 letters; retry without a glued one-letter preposition. Runs on
-`@DefaultDispatcher`. Golden tests pin results captured from the Flutter app.
+`feature/search`: `SearchWordsUseCase` (domain) holds the algorithm ported from `ObjectboxSearchRepository`;
+`SearchIndex` is the query interface, implemented on the search store by `ObjectBoxSearchIndex` (IO dispatcher).
+
+1. Lowercase; prefix query on `lword`, then on `lwordMask` minus the ids already found, each for the query as
+   typed and with letter substitutions (и→і, е→ё, щ→ў, ъ/'→‘), case-sensitive (the index is lowercase), 15 per stage.
+2. Nothing found and ≥3 letters: load the first-letter bucket (up to 65k rows) and rank by Damerau–Levenshtein
+   (distance 1 up to 5 letters, else 2) on `@DefaultDispatcher`.
+3. Still nothing and the query starts with a one-letter preposition/conjunction: run 1–2 once without it.
+
+`SearchViewModel` trims and debounces the query (50 ms, like Flutter) and cancels a running search when the
+query changes (`mapLatest`). The screen is a full-screen expanded M3 `SearchBar` opened from a collapsed bar on
+the start screen. `ObjectBoxSearchTest` runs the algorithm against the real bundled index.
 
 ## Translation *(planned)*
 

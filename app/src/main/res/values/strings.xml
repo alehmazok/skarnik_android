@@ -8,4 +8,19 @@
         <item quantity="many">%1$d слоў у слоўніку</item>
         <item quantity="other">%1$d слова ў слоўніку</item>
     </plurals>
+    <string name="action_back">Назад</string>
+    <string name="action_clear">Ачысціць</string>
+
+    <string name="dictionary_bel_rus">Беларуска-рускі</string>
+    <string name="dictionary_rus_bel">Руска-беларускі</string>
+    <string name="dictionary_tsbm">Тлумачэнне слова</string>
+
+    <string name="search_placeholder">Пошук слоў</string>
+    <string name="search_hint">Пошук з аўтаматычнай падменай і|и, ў|щ, \'|ь|ъ, е|ё</string>
+    <string name="search_nothing_found">Па запыце нічога не знойдзена</string>
+    <string name="search_error">Не атрымалася выканаць пошук.</string>
+    <string name="search_insert_letter">Уставіць «%1$s»</string>
+
+    <!-- Placeholder until the translation feature lands. -->
+    <string name="translation_coming_soon">Пераклад з’явіцца ў наступнай версіі.</string>
 </resources>

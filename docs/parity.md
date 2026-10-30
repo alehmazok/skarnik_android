@@ -29,15 +29,15 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 1.1 | Search screen opened from the History tab's search field; results across all three dictionaries, max 15 | `search/presentation/search_page.dart`, `app_config.dart` | ⬜ |
-| 1.2 | Prefix search on `lword`, then on `lwordMask` (alternative forms), de-duplicated | `search/data/repository/query_repository_impl.dart` | ⬜ |
-| 1.3 | Letter substitutions: и→і, е→ё, щ→ў, ъ and ' → ‘ (query runs with and without) | `search/data/repository/objectbox_search_repository.dart` | ⬜ |
-| 1.4 | Fuzzy search (Damerau–Levenshtein, distance 1 for ≤5 letters, else 2) when nothing matched and query ≥3 letters | `search/data/util/` | ⬜ |
-| 1.5 | Retry without a glued one-letter preposition/conjunction (e.g. «всмысле» → «смысле») | `objectbox_search_repository.dart` | ⬜ |
-| 1.6 | Extra letter buttons (і, ў, ‘, ё …) above the keyboard | `search/presentation/widgets/letter_button.dart`, `search_extra_buttons.dart` | ⬜ |
-| 1.7 | Hint «Пошук з аўтаматычнай падменай…» on empty query; «Па запыце нічога не знойдзена» on no results | `search/presentation/widgets/search_list_view.dart` | ⬜ |
-| 1.8 | Result row: word + dictionary name; tap opens translation and saves to history | `search_list_view.dart` | ⬜ |
-| 1.9 | Analytics: `search_performed`, `search_no_results`, `search_result_tapped` | `search/data/repository/firebase_analytics_search_repository.dart` | ⬜ |
+| 1.1 | Search screen opened from the History tab's search field; results across all three dictionaries. Each stage (word, mask, fuzzy) returns up to 15, so up to 30 rows can show, as in Flutter. M3: collapsed search bar on the start screen opens a full-screen expanded `SearchBar`; back closes it. Whitespace-only query shows the hint (Flutter searched for `""` and listed 15 random words) | `search/presentation/search_page.dart`, `app_config.dart` | ✅ search PR |
+| 1.2 | Prefix search on `lword`, then on `lwordMask` (alternative forms), de-duplicated | `search/data/repository/query_repository_impl.dart` | ✅ search PR |
+| 1.3 | Letter substitutions: и→і, е→ё, щ→ў, ъ and ' → ‘ (query runs with and without) | `search/data/repository/objectbox_search_repository.dart` | ✅ search PR |
+| 1.4 | Fuzzy search (Damerau–Levenshtein, distance 1 for ≤5 letters, else 2) when nothing matched and query ≥3 letters. Native skips words whose length differs by more than the distance (same results, less work) | `search/data/util/` | ✅ search PR |
+| 1.5 | Retry without a glued one-letter preposition/conjunction (e.g. «всмысле» → «смысле») | `objectbox_search_repository.dart` | ✅ search PR |
+| 1.6 | Extra letter buttons (и щ ъ · і ў ') while the keyboard is up; insert at the cursor. M3: a row of tonal buttons docked above the keyboard instead of floating action buttons | `search/presentation/widgets/letter_button.dart`, `search_extra_buttons.dart` | ✅ search PR |
+| 1.7 | Hint «Пошук з аўтаматычнай падменай…» on empty query; «Па запыце нічога не знойдзена» on no results. New: «Не атрымалася выканаць пошук.» on a store error (Flutter showed nothing) | `search/presentation/widgets/search_list_view.dart` | ✅ search PR |
+| 1.8 | Result row: word + dictionary name; tap opens translation and saves to history. Native: names in sentence case («Беларуска-рускі»); tap opens the translation route with a placeholder body. Saving to history comes with the translation screen, which owns it in Flutter (`save_to_history`) | `search_list_view.dart` | 🟨 row and navigation done; history with the translation PR |
+| 1.9 | Analytics: `search_performed`, `search_no_results`, `search_result_tapped` | `search/data/repository/firebase_analytics_search_repository.dart` | ⬜ with the analytics/consent PR |
 
 ## 2. Translation
 
