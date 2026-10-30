@@ -39,8 +39,10 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 
 objectbox-kotlin = { module = "io.objectbox:objectbox-kotlin", version.ref = "objectbox" }
-# Native library for running ObjectBox in local JVM unit tests (CI runs on Linux).
+# Native libraries for running ObjectBox in local JVM unit tests: Linux for CI, macOS and Windows for dev machines.
 objectbox-linux = { module = "io.objectbox:objectbox-linux", version.ref = "objectbox" }
+objectbox-macos = { module = "io.objectbox:objectbox-macos", version.ref = "objectbox" }
+objectbox-windows = { module = "io.objectbox:objectbox-windows", version.ref = "objectbox" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
