@@ -126,4 +126,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.objectbox.linux)
+    testImplementation(libs.objectbox.macos)
+    testImplementation(libs.objectbox.windows)
 }
