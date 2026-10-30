@@ -1,21 +1,21 @@
 package by.mazokaleh.skarnik.feature.history.data
 
+import app.cash.turbine.test
 import by.mazokaleh.skarnik.core.database.ObjectBoxStores
 import by.mazokaleh.skarnik.core.database.SkarnikDatabase
 import by.mazokaleh.skarnik.core.database.entity.MyObjectBox
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxHistoryWord_
-import app.cash.turbine.test
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.SavedWordsPage
 import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.feature.favorites.data.ObjectBoxBookmarksRepository
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
 import io.objectbox.query.QueryBuilder
-import kotlinx.coroutines.flow.first
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
