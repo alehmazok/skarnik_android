@@ -1,115 +1,87 @@
 package by.mazokaleh.skarnik.feature.home.ui
 
+import androidx.activity.compose.BackHandler
+import androidx.annotation.DrawableRes
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
-import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
+import by.mazokaleh.skarnik.core.model.SavedWord
+import by.mazokaleh.skarnik.feature.favorites.ui.BookmarksScreen
+import by.mazokaleh.skarnik.feature.history.ui.HistoryScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
 data object HomeRoute
 
-object HomeTestTags {
-    const val SEARCH = "home_search"
-    const val WORD_COUNT = "home_word_count"
-    const val ERROR = "home_error"
+/** Bottom navigation destinations. The Dictionary tab joins with the vocabulary feature. */
+enum class HomeTab(
+    @StringRes val label: Int,
+    @DrawableRes val icon: Int,
+    @DrawableRes val selectedIcon: Int,
+    val testTag: String
+) {
+    History(R.string.tab_search, R.drawable.ic_search, R.drawable.ic_search, "home_tab_history"),
+    Bookmarks(R.string.tab_bookmarks, R.drawable.ic_bookmark_border, R.drawable.ic_bookmark, "home_tab_bookmarks")
 }
 
+/**
+ * The top-level screen with the navigation bar. Each tab keeps its scroll position and ViewModel while another
+ * tab shows; back on another tab returns to History first, as M3 navigation asks.
+ */
 @Composable
-fun HomeScreen(onSearchClick: () -> Unit, viewModel: HomeViewModel = hiltViewModel()) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(uiState, onSearchClick)
-}
+fun HomeScreen(onSearchClick: () -> Unit, onWordClick: (SavedWord) -> Unit) {
+    var tab by rememberSaveable { mutableStateOf(HomeTab.History) }
+    val tabStates = rememberSaveableStateHolder()
+    BackHandler(enabled = tab != HomeTab.History) { tab = HomeTab.History }
 
-@Composable
-private fun HomeContent(uiState: HomeUiState, onSearchClick: () -> Unit) {
-    Scaffold(topBar = { SearchEntry(onSearchClick) }) { padding ->
-        Box(
-            modifier = Modifier.fillMaxSize().padding(padding),
-            contentAlignment = Alignment.Center
-        ) {
-            when (uiState) {
-                HomeUiState.Loading -> CircularProgressIndicator()
-                is HomeUiState.Ready -> Text(
-                    text = pluralStringResource(
-                        R.plurals.words_in_dictionary,
-                        uiState.wordCount.toInt(),
-                        uiState.wordCount
-                    ),
-                    modifier = Modifier.testTag(HomeTestTags.WORD_COUNT),
-                    style = MaterialTheme.typography.titleMedium
-                )
-                HomeUiState.Error -> Text(
-                    text = stringResource(R.string.database_error),
-                    modifier = Modifier.testTag(HomeTestTags.ERROR),
-                    color = MaterialTheme.colorScheme.error
-                )
+    Scaffold(
+        bottomBar = { HomeNavigationBar(tab, onSelect = { tab = it }) },
+        // Each tab's own Scaffold handles the status bar; the navigation bar takes the bottom inset.
+        contentWindowInsets = WindowInsets(0)
+    ) { padding ->
+        Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
+            tabStates.SaveableStateProvider(tab) {
+                when (tab) {
+                    HomeTab.History -> HistoryScreen(onSearchClick = onSearchClick, onWordClick = onWordClick)
+                    HomeTab.Bookmarks -> BookmarksScreen(onWordClick = onWordClick)
+                }
             }
         }
     }
 }
 
-/**
- * A collapsed M3 search bar. It only opens the search screen, so it is a button styled as the bar rather
- * than a focusable text field (which would keep focus and reopen search on return).
- */
 @Composable
-private fun SearchEntry(onClick: () -> Unit) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .padding(horizontal = 16.dp, vertical = 8.dp)
-            .height(56.dp)
-            .testTag(HomeTestTags.SEARCH),
-        shape = CircleShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh
-    ) {
-        Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(
-                painter = painterResource(R.drawable.ic_search),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface
-            )
-            Text(
-                text = stringResource(R.string.search_placeholder),
-                modifier = Modifier.padding(start = 16.dp),
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+private fun HomeNavigationBar(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
+    NavigationBar {
+        HomeTab.entries.forEach { tab ->
+            val isSelected = tab == selected
+            NavigationBarItem(
+                selected = isSelected,
+                onClick = { onSelect(tab) },
+                icon = {
+                    Icon(painterResource(if (isSelected) tab.selectedIcon else tab.icon), contentDescription = null)
+                },
+                label = { Text(stringResource(tab.label)) },
+                modifier = Modifier.testTag(tab.testTag)
             )
         }
     }
-}
-
-@Preview
-@Composable
-private fun HomeContentPreview() {
-    SkarnikTheme { HomeContent(HomeUiState.Ready(wordCount = 316_237), onSearchClick = {}) }
 }

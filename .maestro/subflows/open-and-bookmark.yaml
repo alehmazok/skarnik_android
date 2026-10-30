@@ -1,0 +1,27 @@
+# From the History tab: search ${QUERY}, open the first result, bookmark it and return to History.
+appId: by.mazokaleh.skarnik.debug
+---
+- tapOn:
+    id: home_search
+- inputText: ${QUERY}
+# A row's text lives in its child views, so match the word inside a result row.
+- extendedWaitUntil:
+    visible:
+      text: "${WORD}"
+      childOf:
+        id: search_result
+    timeout: 10000
+- tapOn:
+    id: search_result
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- tapOn:
+    id: translation_bookmark
+- assertVisible: "Дададзена ў закладкі."
+- back
+- back
+- assertVisible:
+    id: home_search

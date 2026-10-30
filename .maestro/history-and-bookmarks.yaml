@@ -1,0 +1,118 @@
+# History and bookmarks: opened words appear in history; bookmarks list live, sort (remembered across
+# launches) and can be removed with undo. Needs network: translations come from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: History and bookmarks
+tags:
+  - history
+  - bookmarks
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- tapOn:
+    id: home_tab_bookmarks
+- assertVisible:
+    id: bookmarks_empty
+- tapOn:
+    id: home_tab_history
+
+# Bookmark «дзякуй» first and «прывітанне» second, so date and alphabetical orders differ.
+- runFlow:
+    file: subflows/open-and-bookmark.yaml
+    env:
+      QUERY: дзякуй
+      WORD: дзякуй
+- runFlow:
+    file: subflows/open-and-bookmark.yaml
+    env:
+      QUERY: прывитанне
+      WORD: прывітанне
+
+# History lists both, newest first, without re-opening the search.
+- assertVisible:
+    text: "прыв.*"
+    childOf:
+      id: history_item
+- assertVisible:
+    text: "дзяк.*"
+    below:
+      text: "прыв.*"
+- takeScreenshot: history
+
+# Bookmarks were added on the translation screen; the tab shows them without a reload.
+- tapOn:
+    id: home_tab_bookmarks
+- assertVisible:
+    text: "дзяк.*"
+    below:
+      text: "прыв.*"
+- takeScreenshot: bookmarks-by-date
+- tapOn:
+    id: bookmarks_sort
+# The menu is a popup window, outside the tree where test tags become ids: select by text.
+- tapOn: "Па алфавіце"
+- assertVisible:
+    text: "прыв.*"
+    below:
+      text: "дзяк.*"
+- takeScreenshot: bookmarks-alphabetical
+
+# Swipe to remove, then undo. Swipe from the row's centre: the word sits at its left edge, too close to swipe far.
+- swipe:
+    from:
+      id: bookmarks_item
+      containsChild:
+        text: "дзяк.*"
+    direction: LEFT
+- assertVisible: "Выдалена з закладак."
+- tapOn: "Вярнуць"
+- assertVisible:
+    text: "дзяк.*"
+    childOf:
+      id: bookmarks_item
+
+# Opening a bookmark shows its translation; back returns to the Bookmarks tab.
+- tapOn:
+    text: "прыв.*"
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- back
+- assertVisible:
+    id: bookmarks_list
+
+# Back on the Bookmarks tab returns to History before leaving the app.
+- back
+- assertVisible:
+    id: home_search
+
+# The sort order survives a restart.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: history_list
+    timeout: 30000
+- tapOn:
+    id: home_tab_bookmarks
+- assertVisible:
+    text: "прыв.*"
+    below:
+      text: "дзяк.*"
+
+# Removing without undo keeps it removed.
+- swipe:
+    from:
+      id: bookmarks_item
+      containsChild:
+        text: "дзяк.*"
+    direction: LEFT
+- assertVisible: "Выдалена з закладак."
+- assertNotVisible:
+    text: "дзяк.*"
+    childOf:
+      id: bookmarks_item

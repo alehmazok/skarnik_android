@@ -15,6 +15,19 @@
     <string name="dictionary_rus_bel">Руска-беларускі</string>
     <string name="dictionary_tsbm">Тлумачэнне слова</string>
 
+    <string name="tab_search">Пошук</string>
+    <string name="tab_bookmarks">Закладкі</string>
+
+    <string name="history_empty">Пачніце ўводзіць слова ў пошук…</string>
+
+    <string name="bookmarks_title">Закладкі</string>
+    <string name="bookmarks_empty">Пакуль ў закладках няма ніводнага слова</string>
+    <string name="bookmarks_sort">Сартаваць</string>
+    <string name="bookmarks_sort_by_date">Па даце</string>
+    <string name="bookmarks_sort_by_letter">Па алфавіце</string>
+    <string name="bookmarks_removed">Выдалена з закладак.</string>
+    <string name="action_undo">Вярнуць</string>
+
     <string name="search_placeholder">Пошук слоў</string>
     <string name="search_hint">Пошук з аўтаматычнай падменай і|и, ў|щ, \'|ь|ъ, е|ё</string>
     <string name="search_nothing_found">Па запыце нічога не знойдзена</string>

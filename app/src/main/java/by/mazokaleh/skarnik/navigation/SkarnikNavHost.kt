@@ -18,8 +18,18 @@ import by.mazokaleh.skarnik.feature.translation.ui.TranslationScreen
 fun SkarnikNavHost() {
     val navController = rememberNavController()
     NavHost(navController = navController, startDestination = HomeRoute) {
-        composable<HomeRoute> {
-            HomeScreen(onSearchClick = dropUnlessResumed { navController.navigate(SearchRoute) })
+        composable<HomeRoute> { entry ->
+            HomeScreen(
+                onSearchClick = dropUnlessResumed { navController.navigate(SearchRoute) },
+                onWordClick = { word ->
+                    if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                        // Opened from history or bookmarks: not saved to history again, as in Flutter.
+                        navController.navigate(
+                            TranslationRoute(word.dictionary.langId, word.wordId, word.word, saveToHistory = false)
+                        )
+                    }
+                }
+            )
         }
         composable<SearchRoute> { entry ->
             SearchScreen(

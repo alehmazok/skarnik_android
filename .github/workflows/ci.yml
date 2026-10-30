@@ -95,7 +95,7 @@ jobs:
           script: |
             adb install -r apk/*.apk
             mkdir -p maestro-out
-            cd maestro-out && maestro test ../.maestro/ --format junit --output report.xml || (adb logcat -d > logcat.txt; grep -E "AndroidRuntime|FATAL|HomeViewModel|SearchViewModel|TranslationViewModel|GetTranslation|ObjectBox" logcat.txt | tail -60; adb shell uiautomator dump /sdcard/ui.xml >/dev/null; adb shell cat /sdcard/ui.xml; exit 1)
+            cd maestro-out && maestro test ../.maestro/ --format junit --output report.xml || (adb logcat -d > logcat.txt; grep -E "AndroidRuntime|FATAL|HistoryViewModel|BookmarksViewModel|FlutterPreferences|SearchViewModel|TranslationViewModel|GetTranslation|ObjectBox" logcat.txt | tail -60; adb shell uiautomator dump /sdcard/ui.xml >/dev/null; adb shell cat /sdcard/ui.xml; exit 1)
 
       - uses: actions/upload-artifact@v7
         if: always()
