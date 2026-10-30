@@ -8,15 +8,14 @@ package by.mazokaleh.skarnik.core.model
 data class WordLink(val dictionary: Dictionary, val wordId: Long) {
     companion object {
         private val PATTERN = Regex(
-            """^(https?://(www\.)?(skarnik\.by|skarnik\.app))?/(r/)?(belrus|rusbel|tsbm)/([0-9]+)/?([?#].*)?$"""
+            """^(https?://(www\.)?(skarnik\.by|skarnik\.app))?/(r/)?(?<dict>belrus|rusbel|tsbm)/(?<id>[0-9]+)/?([?#].*)?$"""
         )
 
         fun parse(link: String): WordLink? {
-            val match = PATTERN.matchEntire(link.trim()) ?: return null
-            val (_, _, _, _, path, id) = match.destructured
-            val dictionary = Dictionary.byPath(path) ?: return null
-            val wordId = id.toLongOrNull() ?: return null
-            return WordLink(dictionary, wordId)
+            val groups = PATTERN.matchEntire(link.trim())?.groups ?: return null
+            val dictionary = groups["dict"]?.value?.let(Dictionary::byPath)
+            val wordId = groups["id"]?.value?.toLongOrNull()
+            return if (dictionary != null && wordId != null) WordLink(dictionary, wordId) else null
         }
     }
 }
