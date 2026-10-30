@@ -19,7 +19,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 0.1 | Same app id `by.mazokaleh.skarnik`; installs as an update | `android/app/build.gradle` | ✅ skeleton PR |
 | 0.2 | Open existing ObjectBox stores (search, history, translation) at `app_flutter/objectbox_*`; seed the search index from the bundled asset on first launch | `app/data/repository/objectbox_database_repository.dart` | ✅ skeleton PR; emulator upgrade 3.6.0 → 4.0.0 passed 2026-10-30 (all stores byte-identical, no re-seed) |
 | 0.3 | Migrate Flutter settings into DataStore (each key with its feature, listed below). Source is `files/datastore/FlutterSharedPreferences.preferences_pb` (`SharedPreferencesAsync`), not the XML file | various `shared_preferences_*_repository.dart` | ⬜ |
-| 0.3a | Delete Flutter's HTTP cache `DioCache.db` once after the upgrade (cache only, not migrated) | `translation/data/http/skarnik_dio.dart` | ⬜ |
+| 0.3a | Delete Flutter's HTTP cache `DioCache.db` once after the upgrade (cache only, not migrated; native uses OkHttp's cache in `cache/http`) | `translation/data/http/skarnik_dio.dart` | ⬜ with the settings migration |
 | 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
 | 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | 🟨 theme done, settings toggles with the settings PR |
 | 0.5 | Adaptive layout: list + translation side by side on wide screens | `widgets/master_detail_view.dart`, `widgets/breakpoints.dart` | ⬜ |
@@ -36,24 +36,24 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 1.5 | Retry without a glued one-letter preposition/conjunction (e.g. «всмысле» → «смысле») | `objectbox_search_repository.dart` | ✅ search PR |
 | 1.6 | Extra letter buttons (и щ ъ · і ў ') while the keyboard is up; insert at the cursor. M3: a row of tonal buttons docked above the keyboard instead of floating action buttons | `search/presentation/widgets/letter_button.dart`, `search_extra_buttons.dart` | ✅ search PR |
 | 1.7 | Hint «Пошук з аўтаматычнай падменай…» on empty query; «Па запыце нічога не знойдзена» on no results. New: «Не атрымалася выканаць пошук.» on a store error (Flutter showed nothing) | `search/presentation/widgets/search_list_view.dart` | ✅ search PR |
-| 1.8 | Result row: word + dictionary name; tap opens translation and saves to history. Native: names in sentence case («Беларуска-рускі»); tap opens the translation route with a placeholder body. Saving to history comes with the translation screen, which owns it in Flutter (`save_to_history`) | `search_list_view.dart` | 🟨 row and navigation done; history with the translation PR |
+| 1.8 | Result row: word + dictionary name; tap opens translation and saves to history. Native: names in sentence case («Беларуска-рускі»). Saving to history is done by the translation screen once the translation loads, as in Flutter (`save_to_history`) | `search_list_view.dart` | ✅ search PR, translation PR |
 | 1.9 | Analytics: `search_performed`, `search_no_results`, `search_result_tapped` | `search/data/repository/firebase_analytics_search_repository.dart` | ⬜ with the analytics/consent PR |
 
 ## 2. Translation
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 2.1 | Source chain: local store → admin API → Supabase `main_word` | `translation/domain/use_case/get_translation.dart` | ⬜ |
+| 2.1 | Source chain: local store (offline dictionaries) → admin API → Supabase `main_word`. A malformed API entry also falls through to Supabase. The word is looked up in the search index first, as in Flutter | `translation/domain/use_case/get_translation.dart` | ✅ translation PR |
 | ~~2.2~~ | ~~skarnik.by page scrape as the last fallback~~ (dropped by Aleh, 2026-10-30) | `translation/data/repository/skarnik_translation_repository.dart` | ➖ |
-| 2.3 | Redirect words (`redirect_to`): open the target word with «Перанакіравана з «…»» | `translation_page.dart`, `core/exceptions.dart` | ⬜ |
-| 2.4 | HTTP cache for fetched translations with lifetime from Remote Config (the translation store holds only offline downloads) | `objectbox_translation_repository.dart`, `data/http/skarnik_dio.dart` | ⬜ |
-| 2.5 | Render translation HTML (colours, bold/italic, links to other words) | `translation/presentation/widgets/translation_html.dart` | ⬜ |
-| 2.6 | Tap a linked word inside a translation to open it | `translation_html.dart` | ⬜ |
-| 2.7 | Bookmark toggle with snackbar «Дададзена ў закладкі» / «Выдалена з закладак» | `widgets/action_favorites.dart` | ⬜ |
-| 2.8 | Share: link `skarnik.app/r/<dict>/<id>` with the word as subject | `widgets/action_share.dart`, `translation_cubit.dart` | ⬜ |
-| 2.9 | Error state «Прабачце, адбылася памылка перакладу слова.» | `translation_page.dart` | ⬜ |
-| 2.10 | Analytics: `translation`, `add_to_favorites`, share event | `firebase_analytics_translation_repository.dart` | ⬜ |
-| 2.11 | Open by id (deep link / widget) and open from a word (search, history, bookmarks) | `app/presentation/skarnik_router.dart` | ⬜ |
+| 2.3 | Redirect words (`redirect_to`): open the target word with «Перанакіравана з «…»». M3: the target replaces the alias screen (back skips the empty alias) and the notice is a snackbar on the target; a word redirecting to itself shows the error instead of looping | `translation_page.dart`, `core/exceptions.dart` | ✅ translation PR |
+| 2.4 | HTTP cache for fetched translations, 24 h (Flutter's Remote Config default; Remote Config itself comes with 8.8). Native caches the Supabase fallback too. The translation store holds only offline downloads | `objectbox_translation_repository.dart`, `data/http/skarnik_dio.dart` | ✅ translation PR (lifetime from Remote Config with 8.8) |
+| 2.5 | Render translation HTML (colours, bold/italic, sizes, links to other words), selectable. Colours map to M3 roles instead of Flutter's fixed iOS colours; unknown colours render as plain text ([ADR 0003](adr/0003-translation-network-and-html.md)) | `translation/presentation/widgets/translation_html.dart` | ✅ translation PR |
+| 2.6 | Tap a linked word inside a translation to open it. New: links to other sites open in the browser (Flutter ignored them) | `translation_html.dart` | ✅ translation PR |
+| 2.7 | Bookmark toggle with snackbar «Дададзена ў закладкі.» / «Выдалена з закладак.» | `widgets/action_favorites.dart` | ✅ translation PR |
+| 2.8 | Share: link `skarnik.app/r/<dict>/<id>` with the word as subject (Android share sheet) | `widgets/action_share.dart`, `translation_cubit.dart` | ✅ translation PR |
+| 2.9 | Error state «Прабачце, адбылася памылка перакладу слова.» M3: shown in the screen with a «Паўтарыць» button instead of a 15 s snackbar over an endless spinner | `translation_page.dart` | ✅ translation PR |
+| 2.10 | Analytics: `translation`, `add_to_favorites`, share event | `firebase_analytics_translation_repository.dart` | ⬜ with the analytics/consent PR |
+| 2.11 | Open by id (deep link / widget) and open from a word (search, history, bookmarks). The route takes `langId` + `wordId` (+ the word to show while loading, and `saveToHistory`, false from history/bookmarks as in Flutter) | `app/presentation/skarnik_router.dart` | 🟨 route done in translation PR; deep links with 9.1 |
 
 ## 3. History and bookmarks
 

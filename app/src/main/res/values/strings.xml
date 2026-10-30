@@ -21,6 +21,14 @@
     <string name="search_error">Не атрымалася выканаць пошук.</string>
     <string name="search_insert_letter">Уставіць «%1$s»</string>
 
-    <!-- Placeholder until the translation feature lands. -->
-    <string name="translation_coming_soon">Пераклад з’явіцца ў наступнай версіі.</string>
+    <string name="translation_into_russian">Пераклад на рускую мову</string>
+    <string name="translation_into_belarusian">Пераклад на беларускую мову</string>
+    <string name="translation_error">Прабачце, адбылася памылка перакладу слова.</string>
+    <string name="translation_redirected_from">Перанакіравана з «%1$s»</string>
+    <string name="translation_bookmark_added">Дададзена ў закладкі.</string>
+    <string name="translation_bookmark_removed">Выдалена з закладак.</string>
+    <string name="action_retry">Паўтарыць</string>
+    <string name="action_share">Падзяліцца</string>
+    <string name="action_bookmark_add">Дадаць у закладкі</string>
+    <string name="action_bookmark_remove">Выдаліць з закладак</string>
 </resources>

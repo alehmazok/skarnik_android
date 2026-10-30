@@ -1,0 +1,47 @@
+# Translation: open a word from search, read it, bookmark and unbookmark it, open the share sheet.
+# Needs network: the translation comes from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: Read a translation and bookmark it
+tags:
+  - translation
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: home_word_count
+    timeout: 60000
+- tapOn:
+    id: home_search
+- inputText: прывитанне
+- extendedWaitUntil:
+    visible: прывітанне
+    timeout: 10000
+- tapOn:
+    id: search_result
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- assertVisible:
+    id: translation_dictionary
+- assertNotVisible:
+    id: translation_error
+- takeScreenshot: translation-loaded
+- tapOn:
+    id: translation_bookmark
+- assertVisible: "Дададзена ў закладкі."
+- takeScreenshot: translation-bookmarked
+- tapOn:
+    id: translation_bookmark
+- assertVisible: "Выдалена з закладак."
+- tapOn:
+    id: translation_share
+- takeScreenshot: translation-share-sheet
+- back
+- assertVisible:
+    id: translation_text
+- back
+- assertVisible:
+    id: search_field

@@ -27,6 +27,11 @@ android {
         versionName = "4.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Public endpoints, the same ones the Flutter and iOS apps ship (see gradle.properties).
+        buildConfigField("String", "API_BASE_URL", "\"${property("skarnik.apiBaseUrl")}\"")
+        buildConfigField("String", "SUPABASE_URL", "\"${property("skarnik.supabaseUrl")}\"")
+        buildConfigField("String", "SUPABASE_KEY", "\"${property("skarnik.supabaseKey")}\"")
     }
 
     buildTypes {
@@ -120,11 +125,14 @@ dependencies {
     implementation(libs.kotlinx.serialization.json)
 
     implementation(libs.objectbox.kotlin)
+    implementation(libs.okhttp)
+    implementation(libs.jsoup)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
+    testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.objectbox.linux)
     testImplementation(libs.objectbox.macos)
     testImplementation(libs.objectbox.windows)

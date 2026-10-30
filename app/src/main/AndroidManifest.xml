@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Translations are fetched from the admin API and Supabase. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:name=".SkarnikApplication"
         android:allowBackup="true"

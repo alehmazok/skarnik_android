@@ -41,9 +41,10 @@ tags:
 - tapOn:
     id: search_result
     index: 0
+# The title gains a stress mark once the translation loads, so match loosely.
 - assertVisible:
     id: translation_word
-    text: прывітанне
+    text: "прыв.*"
 - takeScreenshot: search-opened-word
 - back
 - assertVisible:
