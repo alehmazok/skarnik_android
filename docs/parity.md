@@ -19,7 +19,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
 | 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | 🟨 theme done, settings toggles with the settings PR |
 | 0.5 | Adaptive layout: list + translation side by side on wide screens | `widgets/master_detail_view.dart`, `widgets/breakpoints.dart` | ⬜ |
-| 0.6 | Crash reporting (Crashlytics), release-only | `main.dart` | ⬜ |
+| 0.6 | Crash reporting, release-only. **Sentry** (org `skarnik`) instead of Crashlytics (Aleh, 2026-10-30) | `main.dart` | ⬜ |
 
 ## 1. Search
 
@@ -39,8 +39,8 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 2.1 | Source chain: local store → admin API → Supabase `main_word` → skarnik.by page scrape | `translation/domain/use_case/get_translation.dart` | ⬜ |
-| 2.2 | ❓ Keep scraping skarnik.by as the last fallback? | `translation/data/repository/skarnik_translation_repository.dart` | ⬜ |
+| 2.1 | Source chain: local store → admin API → Supabase `main_word` | `translation/domain/use_case/get_translation.dart` | ⬜ |
+| ~~2.2~~ | ~~skarnik.by page scrape as the last fallback~~ (dropped by Aleh, 2026-10-30) | `translation/data/repository/skarnik_translation_repository.dart` | ➖ |
 | 2.3 | Redirect words (`redirect_to`): open the target word with «Перанакіравана з «…»» | `translation_page.dart`, `core/exceptions.dart` | ⬜ |
 | 2.4 | Cache fetched translations in the translation store; HTTP cache with lifetime from Remote Config | `objectbox_translation_repository.dart`, `data/http/skarnik_dio.dart` | ⬜ |
 | 2.5 | Render translation HTML (colours, bold/italic, links to other words) | `translation/presentation/widgets/translation_html.dart` | ⬜ |
