@@ -8,7 +8,8 @@ package by.mazokaleh.skarnik.core.model
 data class WordLink(val dictionary: Dictionary, val wordId: Long) {
     companion object {
         private val PATTERN = Regex(
-            """^(https?://(www\.)?(skarnik\.by|skarnik\.app))?/(r/)?(?<dict>belrus|rusbel|tsbm)/(?<id>[0-9]+)/?([?#].*)?$"""
+            """^(https?://(www\.)?(skarnik\.by|skarnik\.app))?/(r/)?""" +
+                """(?<dict>belrus|rusbel|tsbm)/(?<id>[0-9]+)/?([?#].*)?$"""
         )
 
         fun parse(link: String): WordLink? {
