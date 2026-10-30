@@ -51,6 +51,14 @@ Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cas
 if needed) and `ui/` (screens, ViewModels, UiState). A single Gradle module for now; features move into
 modules only if build times call for it.
 
+## Theme
+
+`ui/theme/SkarnikTheme` takes `ThemeMode` (System/Light/Dark) and `useDynamicColor`. Dynamic colour
+(Android 12+) is the default; the brand palette (white/`#E1251B`, `#0F0F10`/`#FF4438`, as on skarnik.app) is
+used when the user turns dynamic colour off or the device is older. Both settings are stored in DataStore by
+the settings feature and read once at the root. Translation HTML colours are mapped to colour-scheme roles so
+they stay readable in every scheme.
+
 ## Dependency injection
 
 Hilt with KSP. `SingletonComponent` holds the database, HTTP client and repositories; ViewModels use

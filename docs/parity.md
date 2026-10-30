@@ -16,7 +16,8 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 0.1 | Same app id `by.mazokaleh.skarnik`; installs as an update | `android/app/build.gradle` | ✅ skeleton PR |
 | 0.2 | Open existing ObjectBox stores (search, history, translation) at `app_flutter/objectbox_*`; seed the search index from the bundled asset on first launch | `app/data/repository/objectbox_database_repository.dart` | ✅ skeleton PR (emulator upgrade test pending) |
 | 0.3 | Migrate Flutter `shared_preferences` keys into DataStore (each key with its feature, listed below) | various `shared_preferences_*_repository.dart` | ⬜ |
-| 0.4 | Light/dark theme following the system; grey palette with red primary | `app/presentation/skarnik_app.dart` | 🟨 colours set, screens pending |
+| 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
+| 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | 🟨 theme done, settings toggles with the settings PR |
 | 0.5 | Adaptive layout: list + translation side by side on wide screens | `widgets/master_detail_view.dart`, `widgets/breakpoints.dart` | ⬜ |
 | 0.6 | Crash reporting (Crashlytics), release-only | `main.dart` | ⬜ |
 

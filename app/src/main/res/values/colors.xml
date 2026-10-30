@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Window background before Compose draws; matches the brand dark background. -->
+    <color name="brand_dark_background">#FF0F0F10</color>
+</resources>

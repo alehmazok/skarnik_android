@@ -66,6 +66,13 @@ first real screens.
 ViewModels (JUnit4, kotlin.test, coroutines-test, Turbine, fakes over mocks). Compose UI tests for key screens.
 `CancellationException` is always rethrown.
 
+**Theme (agreed with Aleh, 2026-10-30).** Material 3. Follows system light/dark by default, with a
+System/Light/Dark setting in DataStore. Material You dynamic colour by default on Android 12+, with a setting
+to switch to the brand palette (light: white + red `#E1251B`; dark: `#0F0F10` + `#FF4438`, same as skarnik.app).
+No AMOLED theme. System font, sizes in `sp` via `MaterialTheme.typography`. Adaptive icon with a monochrome
+layer. Colours in translation HTML are mapped to theme roles, never rendered as fixed hex. Never hard-code
+colours in screens: use `MaterialTheme.colorScheme`.
+
 **UI.** All user-visible strings in Belarusian in `res/values/strings.xml` (use `plurals` for counts). Dark
 theme, TalkBack labels, large fonts, edge-to-edge, predictive back. minSdk 24.
 
