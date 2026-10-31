@@ -11,6 +11,7 @@ import androidx.compose.foundation.systemGestureExclusion
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -20,10 +21,14 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import by.mazokaleh.skarnik.R
 
@@ -67,17 +72,28 @@ fun LetterIndexBar(
                 )
             }
     ) {
-        letters.forEachIndexed { index, letter ->
-            IndexLetter(
-                letter = letter,
-                onJump = {
-                    currentOnLetter(index)
-                    currentOnRelease()
-                },
-                modifier = Modifier.weight(1f)
-            )
+        // A letter is far smaller than the 48dp touch target, and accessibility clips each letter's node by
+        // its neighbours' expanded touch bounds, which reports every letter about one row too high. The bar
+        // takes touches itself, so the letters need no touch target of their own.
+        val viewConfiguration = LocalViewConfiguration.current
+        val noTouchTarget = remember(viewConfiguration) { NoTouchTargetViewConfiguration(viewConfiguration) }
+        CompositionLocalProvider(LocalViewConfiguration provides noTouchTarget) {
+            letters.forEachIndexed { index, letter ->
+                IndexLetter(
+                    letter = letter,
+                    onJump = {
+                        currentOnLetter(index)
+                        currentOnRelease()
+                    },
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
     }
+}
+
+private class NoTouchTargetViewConfiguration(base: ViewConfiguration) : ViewConfiguration by base {
+    override val minimumTouchTargetSize: DpSize = DpSize.Zero
 }
 
 @Composable
@@ -88,6 +104,8 @@ private fun IndexLetter(letter: String, onJump: () -> Unit, modifier: Modifier =
             .fillMaxWidth()
             .testTag(VocabularyTestTags.INDEX_LETTER)
             .semantics(mergeDescendants = true) {
+                // A merged node does not expose its text, so the letter is its description (TalkBack, Maestro).
+                contentDescription = letter
                 onClick(label = jumpLabel) {
                     onJump()
                     true
