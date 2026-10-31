@@ -9,8 +9,8 @@ import by.mazokaleh.skarnik.feature.translation.ui.TranslationRoute
 import kotlinx.coroutines.flow.Flow
 
 /**
- * Opens each word from [wordLinks] (widget taps) over the start screen: back from the word returns to History,
- * whatever was open before. The word is saved to history, as a Flutter deep link was.
+ * Opens each word from [wordLinks] (widget taps, app links) over the start screen: back from the word returns to
+ * History, whatever was open before. The word is saved to history, as a Flutter deep link was.
  */
 @Composable
 fun WordLinkEffect(navController: NavHostController, wordLinks: Flow<WordLink>) {

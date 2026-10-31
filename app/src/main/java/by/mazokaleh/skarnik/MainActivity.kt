@@ -45,7 +45,7 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var analytics: Analytics
 
-    /** Words to open, from the widget. Buffered until the navigation graph collects them. */
+    /** Words to open, from the widget and app links. Buffered until the navigation graph collects them. */
     private val wordLinks = Channel<WordLink>(Channel.BUFFERED)
     private val wordLinkFlow = wordLinks.receiveAsFlow()
 

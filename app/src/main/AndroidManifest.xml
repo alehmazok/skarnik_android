@@ -24,6 +24,33 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <!-- Word links (parity 9.1, 9.2). WordLinkIntents parses the URL; a link that does not parse just opens
+                 the app. Verified App Links need /.well-known/assetlinks.json on each host with the app signing
+                 key's SHA-256; an unverified host still works when the user allows it in the app's settings. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="skarnik.by" />
+                <data android:host="www.skarnik.by" />
+                <data android:pathPrefix="/belrus/" />
+                <data android:pathPrefix="/rusbel/" />
+                <data android:pathPrefix="/tsbm/" />
+            </intent-filter>
+            <!-- Share links from the app (skarnik.app/r/<dict>/<id>). Only /r/, so the landing page stays in the
+                 browser. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:scheme="https" />
+                <data android:host="skarnik.app" />
+                <data android:host="www.skarnik.app" />
+                <data android:pathPrefix="/r/" />
+            </intent-filter>
         </activity>
 
         <!-- «Слова дня». Same class name as the Flutter app's provider, so placed widgets survive the upgrade. -->
