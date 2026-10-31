@@ -11,6 +11,8 @@ import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
+import by.mazokaleh.skarnik.feature.review.domain.FakeReviewSettings
+import by.mazokaleh.skarnik.feature.review.domain.ShouldAskForReviewUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.RemoteTranslationSource
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
@@ -37,6 +39,7 @@ class TranslationViewModelTest {
     private val history = mutableListOf<Word>()
     private val bookmarks = FakeBookmarks()
     private val analytics = FakeAnalytics()
+    private val review = FakeReviewSettings()
     private var api: RemoteTranslationSource = RemoteTranslationSource { _, _ ->
         TranslationEntry(stress = null, html = "янтарь", redirectTo = null)
     }
@@ -69,7 +72,8 @@ class TranslationViewModelTest {
             override fun observe(limit: Int): Flow<SavedWordsPage> = emptyFlow()
         },
         bookmarks = bookmarks,
-        analytics = analytics
+        analytics = analytics,
+        shouldAskForReview = ShouldAskForReviewUseCase(review)
     )
 
     @Test
@@ -180,6 +184,28 @@ class TranslationViewModelTest {
 
         val translation: Translation = (viewModel().uiState.value as TranslationUiState.Loaded).translation
         assertEquals("буршты́н", translation.title)
+    }
+
+    @Test
+    fun `the tenth loaded translation asks for a review`() = runTest {
+        review.viewCount = 8
+        viewModel()
+
+        val tenth = viewModel()
+
+        tenth.events.test { assertEquals(TranslationEvent.AskForReview, awaitItem()) }
+        assertEquals(10, review.viewCount)
+        assertEquals(true, review.requested)
+    }
+
+    @Test
+    fun `errors and redirects are not counted as views`() = runTest {
+        api = RemoteTranslationSource { _, _ -> TranslationEntry(null, null, "https://skarnik.by/tsbm/3528") }
+        viewModel()
+        api = RemoteTranslationSource { _, _ -> throw IOException("offline") }
+        viewModel()
+
+        assertEquals(0, review.viewCount)
     }
 
     private class FakeBookmarks : BookmarksRepository {

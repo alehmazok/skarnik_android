@@ -11,6 +11,8 @@ complexity:
     # Composables commonly take many optional parameters.
     ignoreAnnotated: ['Composable']
     functionThreshold: 8
+    # Hilt ViewModels take the assisted route plus their repositories; 8 fits a screen like Translation.
+    constructorThreshold: 8
 
 style:
   MagicNumber:

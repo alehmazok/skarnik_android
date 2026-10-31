@@ -5,6 +5,14 @@
     <!-- Translations are fetched from the admin API and Supabase. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- Lets the review prompt see whether AppGallery is installed (parity 8.7). -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:scheme="appmarket" />
+        </intent>
+    </queries>
+
     <application
         android:name=".SkarnikApplication"
         android:allowBackup="true"

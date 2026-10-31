@@ -95,6 +95,10 @@
     <string name="settings_history_clear_error">Не атрымалася ачысціць гісторыю.</string>
     <string name="settings_write_to_developers">Напісаць распрацоўшчыкам</string>
     <string name="settings_rate_app">Ацаніць праграму</string>
+    <string name="review_title">Ацаніць праграму</string>
+    <string name="review_app_gallery_message">Падабаецца «Скарнік»? Калі ласка, пакіньце водгук у AppGallery!</string>
+    <string name="review_app_gallery_open">Адкрыць AppGallery</string>
+    <string name="review_later">Пазней</string>
     <string name="settings_about">Пра Скарнік</string>
     <string name="settings_no_app">Няма праграмы, каб гэта адкрыць.</string>
     <string name="about_title">Пра Скарнік</string>
