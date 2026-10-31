@@ -23,7 +23,8 @@ Options considered:
 Use the Gradle plugin (option 3), driven by `.github/workflows/distribute.yml`:
 
 - Every push to `main` builds a signed, minified release APK and uploads it to the `internal` group. Manual
-  runs are possible from the Actions tab. PRs that touch the release build config build it without uploading.
+  runs are possible from the Actions tab. The APK is uploaded only after a `smoke` job cold-starts it on an
+  emulator without a crash (added after the first upload crashed on launch from R8). PRs that touch the release build config build it without uploading.
 - Same Firebase app as Flutter (same application id), so testers who have a Flutter build from App
   Distribution get the native build as an update, which also exercises the data migration.
 - Signed with the existing Play upload key from `key.properties` (Flutter's format); CI writes it from the
