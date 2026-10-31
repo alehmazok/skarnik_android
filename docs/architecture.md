@@ -39,8 +39,9 @@ by.mazokaleh.skarnik
 │   ├── model/             Dictionary and other shared domain types
 │   ├── database/          ObjectBox entities, store opener, SkarnikDatabase
 │   ├── network/           OkHttp client with disk cache, suspend calls
-│   └── analytics/         (planned) consent-gated event logger
+│   └── analytics/         Analytics (Firebase), typed events, AnalyticsConsent
 └── feature/
+    ├── consent/           first-launch analytics consent dialog
     ├── home/              top-level screen with the navigation bar
     ├── search/            word search
     ├── translation/       translation screen, source chain, HTML renderer
@@ -213,11 +214,21 @@ once, so a new widget gets a word right away. After a refresh it calls `updateAl
 `MainActivity` with `WordLinkIntents.EXTRA_WORD_LINK`; the activity passes the parsed `WordLink` to the NavHost
 (`WordLinkEffect`), which opens the translation over the start screen. App links (9.1) will feed the same path.
 
-## Analytics and crash reporting *(planned)*
+## Analytics and crash reporting
 
-Firebase Analytics and Remote Config behind small interfaces with a no-op/logging debug implementation.
-Analytics collection is disabled until the user answers the consent dialog; event names match Flutter.
-Crash and error reporting goes to Sentry (sponsored org `skarnik`) in release builds, instead of Crashlytics.
+Analytics ([ADR 0007](adr/0007-analytics-and-consent.md)): ViewModels call `Analytics.log(AnalyticsEvent)`
+and forget it. `AnalyticsEvent` is a sealed class with Flutter's event names and parameters, so the Firebase
+reports continue across the update; `FirebaseAnalyticsTracker` turns it into a `Bundle`. Firebase is configured
+from `gradle.properties` through generated string resources, without the google-services plugin.
+
+Collection is off in the manifest. `AnalyticsConsent` keeps the answer under Flutter's keys
+(`analytics_consent_answered`, `analytics_consent_granted`, migrated from Flutter's preferences), switches
+collection on or off when it changes, and re-applies it at every app start. `AnalyticsConsentHost` at the app
+root shows the non-dismissible dialog until there is an answer; the Settings switch writes the same answer.
+Debug builds have collection deactivated for good and print events to Logcat (tag `Analytics`).
+
+Remote Config (8.8) and Sentry crash reporting (0.6, sponsored org `skarnik`, instead of Crashlytics) are still
+to come.
 
 ## Testing
 

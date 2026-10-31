@@ -83,6 +83,8 @@
     <string name="settings_theme_system">Як у сістэме</string>
     <string name="settings_theme_light">Светлая</string>
     <string name="settings_theme_dark">Цёмная</string>
+    <string name="settings_analytics">Аналітыка выкарыстання</string>
+    <string name="settings_analytics_description">Дазволіць збор ананімнай статыстыкі выкарыстання праграмы</string>
     <string name="settings_dynamic_color">Колеры шпалер</string>
     <string name="settings_dynamic_color_description">Колеры праграмы падбіраюцца пад шпалеры. Выключыце, каб вярнуць чырвоныя колеры Скарніка.</string>
     <string name="settings_other_section">Іншае</string>
@@ -119,4 +121,10 @@
     <string name="stress_part_prepositions">Прыназоўнік</string>
     <string name="stress_part_pronouns">Займеннік</string>
     <string name="stress_part_verbs">Дзеяслоў</string>
+
+    <!-- Analytics consent (first launch) -->
+    <string name="analytics_consent_title">Аналітыка выкарыстання</string>
+    <string name="analytics_consent_message">Дазвольце збіраць ананімную статыстыку выкарыстання праграмы, каб дапамагчы нам паляпшаць «Скарнік». Гэта не ўплывае на вашы асабістыя даныя і можа быць зменена ў любы момант у наладах.</string>
+    <string name="analytics_consent_accept">Дазволіць</string>
+    <string name="analytics_consent_decline">Не дазваляць</string>
 </resources>

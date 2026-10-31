@@ -20,10 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import by.mazokaleh.skarnik.core.analytics.Analytics
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.withAppLocale
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
+import by.mazokaleh.skarnik.feature.consent.ui.AnalyticsConsentHost
 import by.mazokaleh.skarnik.navigation.SkarnikNavHost
 import by.mazokaleh.skarnik.navigation.WordLinkIntents
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
@@ -39,6 +42,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var appearanceSettings: AppearanceSettings
 
+    @Inject
+    lateinit var analytics: Analytics
+
     /** Words to open, from the widget. Buffered until the navigation graph collects them. */
     private val wordLinks = Channel<WordLink>(Channel.BUFFERED)
     private val wordLinkFlow = wordLinks.receiveAsFlow()
@@ -51,7 +57,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         // A recreated activity (rotation, process death) already handled its intent.
-        if (savedInstanceState == null) openWordFrom(intent)
+        if (savedInstanceState == null) {
+            openWordFrom(intent)
+            analytics.log(AnalyticsEvent.AppOpen)
+        }
         setContent {
             val appearanceFlow = remember {
                 appearanceSettings.appearance.catch {
@@ -82,6 +91,7 @@ class MainActivity : ComponentActivity() {
             // Exposes Modifier.testTag values as resource ids, so Maestro flows can select by tag.
             Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                 SkarnikNavHost(wordLinks = wordLinkFlow)
+                AnalyticsConsentHost()
             }
         }
     }

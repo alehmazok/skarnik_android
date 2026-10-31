@@ -33,6 +33,7 @@ object GeneralSettingsTestTags {
     /** Followed by the mode's key: `settings_theme_option_dark`. */
     const val THEME_OPTION_PREFIX = "settings_theme_option_"
     const val DYNAMIC_COLOR = "settings_dynamic_color"
+    const val ANALYTICS = "settings_analytics"
     const val CLEAR_HISTORY = "settings_clear_history"
     const val WRITE_TO_DEVELOPERS = "settings_write_to_developers"
     const val RATE_APP = "settings_rate_app"
@@ -84,20 +85,48 @@ fun ThemeRow(themeMode: ThemeMode, onClick: () -> Unit) {
     }
 }
 
-/** Material You on/off; the row toggles, the switch only shows the state (one TalkBack stop). */
+/** Material You on/off. */
 @Composable
 fun DynamicColorRow(enabled: Boolean, onChange: (Boolean) -> Unit) {
+    SwitchRow(
+        title = R.string.settings_dynamic_color,
+        description = R.string.settings_dynamic_color_description,
+        icon = R.drawable.ic_palette,
+        tag = GeneralSettingsTestTags.DYNAMIC_COLOR,
+        checked = enabled,
+        onChange = onChange
+    )
+}
+
+/** Analytics consent, the same answer as the first-launch dialog's (parity 8.2). */
+@Composable
+fun AnalyticsRow(enabled: Boolean, onChange: (Boolean) -> Unit) {
+    SwitchRow(
+        title = R.string.settings_analytics,
+        description = R.string.settings_analytics_description,
+        icon = R.drawable.ic_bar_chart,
+        tag = GeneralSettingsTestTags.ANALYTICS,
+        checked = enabled,
+        onChange = onChange
+    )
+}
+
+/** The row toggles; the switch only shows the state (one TalkBack stop). The tag goes on the headline. */
+@Composable
+private fun SwitchRow(
+    @StringRes title: Int,
+    @StringRes description: Int,
+    @DrawableRes icon: Int,
+    tag: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit
+) {
     ListItem(
-        headlineContent = {
-            Text(
-                text = stringResource(R.string.settings_dynamic_color),
-                modifier = Modifier.testTag(GeneralSettingsTestTags.DYNAMIC_COLOR)
-            )
-        },
-        supportingContent = { Text(stringResource(R.string.settings_dynamic_color_description)) },
-        leadingContent = { Icon(painterResource(R.drawable.ic_palette), contentDescription = null) },
-        trailingContent = { Switch(checked = enabled, onCheckedChange = null) },
-        modifier = Modifier.toggleable(value = enabled, role = Role.Switch, onValueChange = onChange)
+        headlineContent = { Text(stringResource(title), Modifier.testTag(tag)) },
+        supportingContent = { Text(stringResource(description)) },
+        leadingContent = { Icon(painterResource(icon), contentDescription = null) },
+        trailingContent = { Switch(checked = checked, onCheckedChange = null) },
+        modifier = Modifier.toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
     )
 }
 

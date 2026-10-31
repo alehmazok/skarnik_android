@@ -39,6 +39,22 @@
                 android:resource="@xml/word_of_the_day_widget_info" />
         </receiver>
 
+        <!-- Analytics (docs/adr/0007): off until the user allows it in the consent dialog; AnalyticsConsent turns it
+             on. Debug builds are deactivated for good. No screen views (as Flutter) and no advertising id: the
+             consent text promises anonymous statistics. -->
+        <meta-data
+            android:name="firebase_analytics_collection_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="firebase_analytics_collection_deactivated"
+            android:value="${analyticsDeactivated}" />
+        <meta-data
+            android:name="google_analytics_automatic_screen_reporting_enabled"
+            android:value="false" />
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
+
         <!-- WorkManager is initialised by SkarnikApplication with Hilt's worker factory, not by App Startup. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

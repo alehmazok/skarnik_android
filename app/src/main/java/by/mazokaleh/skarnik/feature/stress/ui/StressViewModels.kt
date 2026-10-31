@@ -2,6 +2,8 @@ package by.mazokaleh.skarnik.feature.stress.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.mazokaleh.skarnik.core.analytics.Analytics
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.feature.stress.domain.StressResolver
 import by.mazokaleh.skarnik.feature.stress.domain.StressResult
 import by.mazokaleh.skarnik.feature.stress.domain.StressRow
@@ -49,7 +51,8 @@ sealed interface StressUiState {
 @HiltViewModel(assistedFactory = StressViewModel.Factory::class)
 class StressViewModel @AssistedInject constructor(
     @Assisted private val route: StressRoute,
-    private val resolver: StressResolver
+    private val resolver: StressResolver,
+    analytics: Analytics
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<StressUiState>(StressUiState.Loading)
     val uiState: StateFlow<StressUiState> = _uiState.asStateFlow()
@@ -62,7 +65,7 @@ class StressViewModel @AssistedInject constructor(
     private var loading: Job? = null
 
     init {
-        // TODO(parity 6.4): log `stress_clicked` with the word, with the analytics/consent PR.
+        analytics.log(AnalyticsEvent.StressClicked(route.word))
         load()
     }
 

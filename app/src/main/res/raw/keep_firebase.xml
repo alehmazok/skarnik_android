@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Firebase looks these generated strings up by name (FirebaseOptions.fromResource); keep them from resource
+     shrinking in release builds. -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@string/google_app_id,@string/google_api_key,@string/gcm_defaultSenderId,@string/project_id,@string/google_storage_bucket" />

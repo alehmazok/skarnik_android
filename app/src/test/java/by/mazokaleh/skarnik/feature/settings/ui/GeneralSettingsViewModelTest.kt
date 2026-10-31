@@ -1,6 +1,8 @@
 package by.mazokaleh.skarnik.feature.settings.ui
 
 import app.cash.turbine.test
+import by.mazokaleh.skarnik.core.analytics.ConsentState
+import by.mazokaleh.skarnik.core.analytics.FakeAnalyticsConsent
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.core.model.SavedWordsPage
@@ -52,7 +54,9 @@ class GeneralSettingsViewModelTest {
             historyWords.map { SavedWordsPage(it.take(limit), hasMore = it.size > limit) }
     }
 
-    private fun viewModel() = GeneralSettingsViewModel(appearance, history)
+    private val consent = FakeAnalyticsConsent()
+
+    private fun viewModel() = GeneralSettingsViewModel(appearance, history, consent)
 
     @Before
     fun setUp() {
@@ -75,6 +79,17 @@ class GeneralSettingsViewModelTest {
             assertFalse(awaitItem().appearance.dynamicColor)
         }
         assertEquals(Appearance(ThemeMode.Light, dynamicColor = false), appearance.stored.value)
+    }
+
+    @Test
+    fun `the analytics switch answers the consent question`() = runTest {
+        val viewModel = viewModel()
+        viewModel.state.test {
+            assertFalse(awaitItem().analyticsEnabled)
+            viewModel.setAnalyticsEnabled(true)
+            assertTrue(awaitItem().analyticsEnabled)
+        }
+        assertEquals(ConsentState(answered = true, granted = true), consent.stored.value)
     }
 
     @Test

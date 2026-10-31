@@ -67,6 +67,7 @@ data class SettingsActions(
     val onDelete: (Dictionary) -> Unit,
     val onThemeMode: (ThemeMode) -> Unit,
     val onDynamicColor: (Boolean) -> Unit,
+    val onAnalytics: (Boolean) -> Unit,
     val onClearHistory: () -> Unit,
     val onWriteToDevelopers: () -> Unit,
     val onRateApp: () -> Unit
@@ -98,6 +99,7 @@ fun SettingsScreen(
         onDelete = viewModel::delete,
         onThemeMode = generalViewModel::setThemeMode,
         onDynamicColor = generalViewModel::setDynamicColor,
+        onAnalytics = generalViewModel::setAnalyticsEnabled,
         onClearHistory = generalViewModel::clearHistory,
         onWriteToDevelopers = {
             if (!ExternalActions.mailToDevelopers(context)) showMessage(R.string.settings_no_app)
@@ -156,7 +158,7 @@ private fun SettingsContent(
                     DynamicColorRow(general.appearance.dynamicColor, actions.onDynamicColor)
                 }
             }
-            otherSection(general.hasHistory, actions, onDialog = { dialog = it })
+            otherSection(general, actions, onDialog = { dialog = it })
         }
     }
     when (dialog) {
@@ -206,18 +208,19 @@ private fun LazyListScope.offlineSection(offline: OfflineSectionState, actions: 
 }
 
 private fun LazyListScope.otherSection(
-    hasHistory: Boolean,
+    general: GeneralSettingsState,
     actions: SettingsActions,
     onDialog: (SettingsDialog) -> Unit
 ) {
     item(key = "other_header") { SectionHeader(R.string.settings_other_section, SettingsTestTags.OTHER_HEADER) }
+    item(key = "analytics") { AnalyticsRow(general.analyticsEnabled, actions.onAnalytics) }
     item(key = "clear_history") {
         SettingsRow(
             title = R.string.settings_clear_history,
             icon = R.drawable.ic_history,
             tag = GeneralSettingsTestTags.CLEAR_HISTORY,
             onClick = { onDialog(SettingsDialog.ClearHistory) },
-            enabled = hasHistory
+            enabled = general.hasHistory
         )
     }
     item(key = "write") {
@@ -270,7 +273,7 @@ private fun SettingsContentPreview() {
         ),
         OfflineDictionaryItem(Dictionary.Tsbm, OfflineDictionaryStatus.NotDownloaded)
     )
-    val actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {})
+    val actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {})
     SkarnikTheme {
         SettingsContent(
             OfflineSectionState.Ready(items),

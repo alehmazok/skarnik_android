@@ -25,6 +25,9 @@ val keystoreProperties =
         if (file.exists()) file.inputStream().use { load(it) }
     }
 
+// The Firebase Android app Flutter registered for this application id (gradle.properties).
+val firebaseAppId = property("skarnik.firebaseAppId").toString()
+
 android {
     // Same id as the Flutter app, so the native build installs as an update and keeps user data.
     namespace = "by.mazokaleh.skarnik"
@@ -48,6 +51,14 @@ android {
         buildConfigField("String", "STARNIK_BASE_URL", "\"${property("skarnik.starnikBaseUrl")}\"")
         buildConfigField("String", "DEV_EMAIL", "\"${property("skarnik.devEmail")}\"")
         buildConfigField("String", "DEV_EMAIL_BCC", "\"${property("skarnik.devEmailBcc")}\"")
+
+        // Firebase without the google-services plugin (docs/adr/0007): FirebaseInitProvider reads these resources.
+        // They are the public client config of the Firebase Android app Flutter registered for this id.
+        resValue("string", "google_app_id", firebaseAppId)
+        resValue("string", "google_api_key", property("skarnik.firebaseApiKey").toString())
+        resValue("string", "gcm_defaultSenderId", property("skarnik.firebaseSenderId").toString())
+        resValue("string", "project_id", property("skarnik.firebaseProjectId").toString())
+        resValue("string", "google_storage_bucket", property("skarnik.firebaseStorageBucket").toString())
     }
 
     signingConfigs {
@@ -66,17 +77,20 @@ android {
             // Matches the Flutter debug build, so a native debug build upgrades a Flutter debug install.
             applicationIdSuffix = ".debug"
             resValue("string", "app_name", "Debug Skarnik")
+            // Debug builds never send analytics: events only go to Logcat (tag "Analytics").
+            manifestPlaceholders["analyticsDeactivated"] = "true"
         }
         release {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             resValue("string", "app_name", "Skarnik")
+            manifestPlaceholders["analyticsDeactivated"] = "false"
             signingConfig = signingConfigs.findByName("release")
             // Firebase App Distribution (docs/adr/0005). The Firebase Android app is the one Flutter
             // registered for this application id; credentials and release notes come from CI.
             firebaseAppDistribution {
-                appId = "1:690309283484:android:3c2521a8af9d651ad03759"
+                appId = firebaseAppId
                 artifactType = "APK"
                 groups = "internal"
             }
@@ -175,6 +189,9 @@ dependencies {
     implementation(libs.objectbox.kotlin)
     implementation(libs.okhttp)
     implementation(libs.jsoup)
+
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)

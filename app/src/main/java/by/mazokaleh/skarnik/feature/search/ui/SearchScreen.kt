@@ -21,7 +21,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.input.TextFieldState
 import androidx.compose.foundation.text.input.clearText
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -93,7 +93,15 @@ fun SearchScreen(onBack: () -> Unit, onWordClick: (SearchWord) -> Unit, viewMode
     LaunchedEffect(queryState) {
         snapshotFlow { queryState.text.toString() }.collect(viewModel::onQueryChange)
     }
-    SearchContent(uiState = uiState, queryState = queryState, onBack = onBack, onWordClick = onWordClick)
+    SearchContent(
+        uiState = uiState,
+        queryState = queryState,
+        onBack = onBack,
+        onWordClick = { word, position ->
+            viewModel.onResultClick(word, position)
+            onWordClick(word)
+        }
+    )
 }
 
 /**
@@ -106,7 +114,7 @@ private fun SearchContent(
     uiState: SearchUiState,
     queryState: TextFieldState,
     onBack: () -> Unit,
-    onWordClick: (SearchWord) -> Unit
+    onWordClick: (SearchWord, Int) -> Unit
 ) {
     val focusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -188,7 +196,7 @@ private fun SearchInputField(
 }
 
 @Composable
-private fun SearchResults(uiState: SearchUiState, onWordClick: (SearchWord) -> Unit) {
+private fun SearchResults(uiState: SearchUiState, onWordClick: (SearchWord, Int) -> Unit) {
     when (uiState) {
         SearchUiState.Hint -> Message(stringResource(R.string.search_hint), SearchTestTags.HINT)
         is SearchUiState.NothingFound -> Message(
@@ -197,14 +205,14 @@ private fun SearchResults(uiState: SearchUiState, onWordClick: (SearchWord) -> U
         )
         SearchUiState.Error -> Message(stringResource(R.string.search_error), SearchTestTags.ERROR)
         is SearchUiState.Results -> LazyColumn(Modifier.fillMaxSize()) {
-            items(uiState.words, key = { it.id }) { word ->
+            itemsIndexed(uiState.words, key = { _, word -> word.id }) { position, word ->
                 ListItem(
                     headlineContent = { Text(word.word) },
                     supportingContent = { Text(stringResource(word.dictionary.nameRes)) },
                     // The expanded search bar already draws the container.
                     colors = ListItemDefaults.colors(containerColor = Color.Transparent),
                     modifier = Modifier
-                        .clickable { onWordClick(word) }
+                        .clickable { onWordClick(word, position) }
                         .testTag(SearchTestTags.RESULT)
                 )
             }
@@ -278,7 +286,7 @@ private fun SearchContentPreview() {
             ),
             queryState = rememberTextFieldState("прыв"),
             onBack = {},
-            onWordClick = {}
+            onWordClick = { _, _ -> }
         )
     }
 }
