@@ -1,0 +1,84 @@
+# Offline dictionaries: Settings from the start screen, download the explanatory dictionary from Supabase,
+# keep downloading while away from the screen, open a downloaded word, then delete the offline copy.
+# Needs network, like the other flows; the full download is the slow part.
+appId: by.mazokaleh.skarnik.debug
+name: Offline dictionaries
+tags:
+  - offline
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- tapOn:
+    id: settings_button
+- assertVisible:
+    id: settings_offline_header
+- assertVisible:
+    id: offline_status_tsbm
+    text: "Спампаваць для афлайн доступу"
+- takeScreenshot: offline-settings
+
+# Start the download; progress shows once the word count arrives.
+- tapOn:
+    id: offline_dictionary_tsbm
+- extendedWaitUntil:
+    visible:
+      id: offline_progress_text
+    timeout: 60000
+- assertVisible:
+    id: offline_status_tsbm
+    text: "Спампоўваецца…"
+- takeScreenshot: offline-downloading
+
+# Leaving Settings does not stop the download.
+- tapOn:
+    id: settings_back
+- assertVisible:
+    id: history_empty
+- tapOn:
+    id: settings_button
+- extendedWaitUntil:
+    visible:
+      id: offline_status_tsbm
+      text: "Спампавана: .*"
+    timeout: 480000
+- takeScreenshot: offline-downloaded
+
+# A downloaded word opens from the Dictionary tab (read from the offline copy first).
+- tapOn:
+    id: settings_back
+- tapOn:
+    id: home_tab_dictionary
+- extendedWaitUntil:
+    visible:
+      id: vocabulary_item
+    timeout: 30000
+- tapOn:
+    id: vocabulary_item
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- back
+
+# Delete the offline copy after confirming.
+- tapOn:
+    id: home_tab_history
+- tapOn:
+    id: settings_button
+- tapOn:
+    id: offline_delete
+- assertVisible: "Вы сапраўды жадаеце выдаліць афлайн-копію слоўніка «Тлумачальны»?"
+- takeScreenshot: offline-delete-dialog
+- tapOn:
+    id: offline_delete_confirm
+- extendedWaitUntil:
+    visible:
+      id: offline_status_tsbm
+      text: "Спампаваць для афлайн доступу"
+    timeout: 30000
+- assertVisible: "Афлайн-копія слоўніка выдалена."

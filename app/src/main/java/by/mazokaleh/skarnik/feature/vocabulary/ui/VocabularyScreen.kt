@@ -1,6 +1,5 @@
 package by.mazokaleh.skarnik.feature.vocabulary.ui
 
-import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,6 +45,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
+import by.mazokaleh.skarnik.core.ui.shortNameRes
 import by.mazokaleh.skarnik.feature.vocabulary.domain.Vocabulary
 import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularySection
 import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularyWord
@@ -114,7 +114,7 @@ private fun DictionaryTabs(selected: Dictionary, onSelect: (Dictionary) -> Unit)
             Tab(
                 selected = dictionary == selected,
                 onClick = { onSelect(dictionary) },
-                text = { Text(stringResource(dictionary.tabLabel)) },
+                text = { Text(stringResource(dictionary.shortNameRes)) },
                 modifier = Modifier.testTag(VocabularyTestTags.TAB_PREFIX + dictionary.path)
             )
         }
@@ -204,14 +204,6 @@ private fun VocabularyError(onRetry: () -> Unit, modifier: Modifier) {
         }
     }
 }
-
-@get:StringRes
-private val Dictionary.tabLabel: Int
-    get() = when (this) {
-        Dictionary.Tsbm -> R.string.vocabulary_tab_tsbm
-        Dictionary.BelRus -> R.string.vocabulary_tab_bel_rus
-        Dictionary.RusBel -> R.string.vocabulary_tab_rus_bel
-    }
 
 private const val HEADER_KEY_PREFIX = "header_"
 private const val WORD_CONTENT_TYPE = "word"

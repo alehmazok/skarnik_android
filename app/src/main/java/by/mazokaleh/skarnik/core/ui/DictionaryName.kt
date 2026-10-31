@@ -12,3 +12,12 @@ val Dictionary.nameRes: Int
         Dictionary.RusBel -> R.string.dictionary_rus_bel
         Dictionary.Tsbm -> R.string.dictionary_tsbm
     }
+
+/** The dictionary's short name, as on the Dictionary tab and in Settings. */
+@get:StringRes
+val Dictionary.shortNameRes: Int
+    get() = when (this) {
+        Dictionary.Tsbm -> R.string.vocabulary_tab_tsbm
+        Dictionary.BelRus -> R.string.vocabulary_tab_bel_rus
+        Dictionary.RusBel -> R.string.vocabulary_tab_rus_bel
+    }

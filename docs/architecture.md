@@ -46,7 +46,9 @@ by.mazokaleh.skarnik
     ├── translation/       translation screen, source chain, HTML renderer
     ├── history/ favorites/   History and Bookmarks tabs, their repositories and the sort setting
     ├── vocabulary/        Dictionary tab: whole dictionaries in alphabetical order, letter index
-    ├── settings/ stress/ widget/   (planned)
+    ├── offline/           offline dictionary downloads: Supabase pages, WorkManager job, rate limit
+    ├── settings/          Settings screen (offline section so far) and the settings button with its badge
+    ├── stress/ widget/    (planned)
 ```
 
 Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cases, feature models, only
@@ -163,11 +165,29 @@ Each feature contributes a `FlutterPreferencesMigration` into a Hilt set; it cop
 sets a `migrated_from_flutter_<name>` flag. An unreadable Flutter file counts as empty. Keys keep Flutter's
 names and values (`favorites_sort_order` = `dateAdded` | `alphabetical`).
 
+## Offline dictionaries
+
+`feature/offline` ([ADR 0004](adr/0004-offline-downloads-in-workmanager.md)). Tapping a dictionary in Settings
+checks the rate limit (4 starts per 5 minutes) and enqueues unique work `offline_dictionary_<path>` (policy
+`KEEP`, so a second tap never runs a parallel download). `DownloadDictionaryWorker` (Hilt worker; WorkManager is
+initialised by `SkarnikApplication` with `HiltWorkerFactory`) runs `DownloadDictionaryUseCase`:
+
+1. Count the dictionary in Supabase (`Prefer: count=exact`, `Content-Range`). Drop a cursor that has no stored
+   words behind it.
+2. Fetch `main_word` keyset pages (`id > cursor`, `order=id.asc`, 5000 asked, Supabase may return fewer) until a
+   page is empty; write each page into the translation store in one transaction (unique `key` replaces), then
+   save the page's last `id` as `download_cursor_<path>`. Each request is retried 5 times on `IOException`.
+3. Clear the cursor. Progress goes out through `setProgress`.
+
+Download requests use the app's OkHttp client without the HTTP cache and with a longer call timeout. The
+Settings row combines three flows: the job's `WorkInfo`, the stored word count (`BoxStore.changes`) and the
+cursor; `OfflineDictionaryStatus.of` turns them into not downloaded / downloading / downloaded / failed. The
+translation screen reads downloaded words first (`ObjectBoxLocalTranslationSource`).
+
 ## Background work and widget *(planned)*
 
-WorkManager refreshes the word-of-the-day widget hourly plus once on first add, as Flutter does; offline
-dictionary downloads run as resumable work with a persisted cursor. The widget is Glance (Flutter already
-uses a native Glance widget, which is reused).
+WorkManager refreshes the word-of-the-day widget hourly plus once on first add, as Flutter does. The widget is
+Glance (Flutter already uses a native Glance widget, which is reused).
 
 ## Analytics and crash reporting *(planned)*
 

@@ -11,6 +11,8 @@ import by.mazokaleh.skarnik.feature.home.ui.HomeRoute
 import by.mazokaleh.skarnik.feature.home.ui.HomeScreen
 import by.mazokaleh.skarnik.feature.search.ui.SearchRoute
 import by.mazokaleh.skarnik.feature.search.ui.SearchScreen
+import by.mazokaleh.skarnik.feature.settings.ui.SettingsRoute
+import by.mazokaleh.skarnik.feature.settings.ui.SettingsScreen
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationRoute
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationScreen
 
@@ -21,6 +23,7 @@ fun SkarnikNavHost() {
         composable<HomeRoute> { entry ->
             HomeScreen(
                 onSearchClick = dropUnlessResumed { navController.navigate(SearchRoute) },
+                onSettingsClick = dropUnlessResumed { navController.navigate(SettingsRoute) },
                 onWordClick = { word ->
                     if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
                         // Opened from history or bookmarks: not saved to history again, as in Flutter.
@@ -49,6 +52,9 @@ fun SkarnikNavHost() {
                     }
                 }
             )
+        }
+        composable<SettingsRoute> {
+            SettingsScreen(onBack = dropUnlessResumed { navController.popBackStack() })
         }
         composable<TranslationRoute> { entry ->
             TranslationScreen(

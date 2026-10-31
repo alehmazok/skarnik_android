@@ -97,7 +97,7 @@ jobs:
             mkdir -p maestro-out
             # Stream logcat to a file from the start, so a device that drops off adb still leaves its last log.
             (adb logcat -b main,system,crash -v time > maestro-out/logcat-live.txt 2>&1 &)
-            cd maestro-out && maestro test ../.maestro/ --format junit --output report.xml || (adb devices; grep -E "AndroidRuntime|FATAL|lowmemorykiller|lmkd|Watchdog|adbd|VocabularyViewModel" logcat-live.txt | tail -80; tail -40 logcat-live.txt; adb logcat -d > logcat.txt; grep -E "AndroidRuntime|FATAL|HistoryViewModel|BookmarksViewModel|VocabularyViewModel|FlutterPreferences|SearchViewModel|TranslationViewModel|GetTranslation|ObjectBox" logcat.txt | tail -60; adb shell uiautomator dump /sdcard/ui.xml >/dev/null; adb shell cat /sdcard/ui.xml; exit 1)
+            cd maestro-out && maestro test ../.maestro/ --format junit --output report.xml || (adb devices; grep -E "AndroidRuntime|FATAL|lowmemorykiller|lmkd|Watchdog|adbd|VocabularyViewModel" logcat-live.txt | tail -80; tail -40 logcat-live.txt; adb logcat -d > logcat.txt; grep -E "AndroidRuntime|FATAL|DownloadDictionary|WM-|SettingsViewModel|HistoryViewModel|BookmarksViewModel|VocabularyViewModel|FlutterPreferences|SearchViewModel|TranslationViewModel|GetTranslation|ObjectBox" logcat.txt | tail -60; adb shell uiautomator dump /sdcard/ui.xml >/dev/null; adb shell cat /sdcard/ui.xml; exit 1)
 
       - uses: actions/upload-artifact@v7
         if: always()
