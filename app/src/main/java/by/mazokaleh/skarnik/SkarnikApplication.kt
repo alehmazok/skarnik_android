@@ -6,6 +6,7 @@ import androidx.hilt.work.HiltWorkerFactory
 import androidx.work.Configuration
 import by.mazokaleh.skarnik.core.analytics.AnalyticsConsent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.config.RemoteConfig
 import by.mazokaleh.skarnik.core.network.FlutterHttpCacheCleaner
 import by.mazokaleh.skarnik.feature.widget.data.WordOfTheDayWork
 import dagger.hilt.android.HiltAndroidApp
@@ -26,6 +27,9 @@ class SkarnikApplication :
     @Inject
     lateinit var analyticsConsent: AnalyticsConsent
 
+    @Inject
+    lateinit var remoteConfig: RemoteConfig
+
     /** WorkManager starts on first use with this configuration, so workers get their dependencies from Hilt. */
     override val workManagerConfiguration: Configuration
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
@@ -40,6 +44,12 @@ class SkarnikApplication :
         MainScope().launch {
             suspendRunCatching { analyticsConsent.applyStored() }
                 .onFailure { Log.e("SkarnikApplication", "Cannot apply the analytics consent", it) }
+        }
+        // Nothing waits for it (Flutter didn't either): until it succeeds, the last activated values or the defaults
+        // apply. A failure (offline, throttled) is retried at the next start.
+        MainScope().launch {
+            suspendRunCatching { remoteConfig.fetchAndActivate() }
+                .onFailure { Log.w("SkarnikApplication", "Remote Config fetch failed", it) }
         }
     }
 }

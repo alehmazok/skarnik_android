@@ -22,15 +22,12 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.core.net.toUri
 import by.mazokaleh.skarnik.R
+import by.mazokaleh.skarnik.core.common.await
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
 import by.mazokaleh.skarnik.feature.settings.ui.ExternalActions
-import com.google.android.gms.tasks.Task
 import com.google.android.play.core.review.ReviewManagerFactory
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 
 object ReviewPromptTestTags {
     const val APP_GALLERY_DIALOG = "review_app_gallery_dialog"
@@ -89,17 +86,6 @@ class ReviewPromptState internal constructor(
             Intent.ACTION_VIEW,
             "appmarket://details?id=${ExternalActions.STORE_PACKAGE}".toUri()
         )
-    }
-}
-
-/** Play's tasks complete on the main thread; a failed or cancelled task (e.g. no Play Store) throws. */
-private suspend fun <T> Task<T>.await(): T = suspendCancellableCoroutine { continuation ->
-    addOnCompleteListener { task ->
-        if (task.isSuccessful) {
-            continuation.resume(task.result)
-        } else {
-            continuation.resumeWithException(task.exception ?: IllegalStateException("Play task was cancelled"))
-        }
     }
 }
 

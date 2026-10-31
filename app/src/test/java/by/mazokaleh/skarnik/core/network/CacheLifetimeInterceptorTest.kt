@@ -1,6 +1,7 @@
 package by.mazokaleh.skarnik.core.network
 
 import kotlin.test.assertEquals
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
@@ -19,6 +20,7 @@ class CacheLifetimeInterceptorTest {
     val tmp = TemporaryFolder()
 
     private val server = MockWebServer()
+    private var lifetime = 24.hours
     private lateinit var client: OkHttpClient
 
     @Before
@@ -26,7 +28,7 @@ class CacheLifetimeInterceptorTest {
         server.start()
         client = OkHttpClient.Builder()
             .cache(Cache(tmp.newFolder("http"), 1024L * 1024))
-            .addNetworkInterceptor(CacheLifetimeInterceptor(24.hours))
+            .addNetworkInterceptor(CacheLifetimeInterceptor { lifetime })
             .build()
     }
 
@@ -55,5 +57,31 @@ class CacheLifetimeInterceptorTest {
 
         runCatching { client.fetchString(request) }
         assertEquals("ok", client.fetchString(request))
+    }
+
+    @Test
+    fun `a lifetime of zero turns caching off`() = runTest {
+        lifetime = Duration.ZERO
+        server.enqueue(MockResponse.Builder().body("first").build())
+        server.enqueue(MockResponse.Builder().body("second").build())
+        val request = Request.Builder().url(server.url("/api/words/belrus/1/")).build()
+
+        assertEquals("first", client.fetchString(request))
+        assertEquals("second", client.fetchString(request))
+    }
+
+    @Test
+    fun `a new lifetime applies to the next response`() = runTest {
+        lifetime = Duration.ZERO
+        server.enqueue(MockResponse.Builder().body("first").build())
+        server.enqueue(MockResponse.Builder().body("second").build())
+        server.enqueue(MockResponse.Builder().body("third").build())
+        val request = Request.Builder().url(server.url("/api/words/belrus/1/")).build()
+
+        assertEquals("first", client.fetchString(request))
+        lifetime = 1.hours
+        assertEquals("second", client.fetchString(request))
+        assertEquals("second", client.fetchString(request))
+        assertEquals(2, server.requestCount)
     }
 }

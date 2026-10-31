@@ -1,6 +1,7 @@
 package by.mazokaleh.skarnik.core.network
 
 import android.content.Context
+import by.mazokaleh.skarnik.core.config.RemoteConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,11 +24,12 @@ object NetworkModule {
     /** One client for the whole app. The disk cache is created lazily by OkHttp, off the main thread. */
     @Provides
     @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient = OkHttpClient.Builder()
-        .cache(Cache(File(context.cacheDir, CACHE_DIR), CACHE_SIZE_BYTES))
-        .addNetworkInterceptor(CacheLifetimeInterceptor(HttpCacheLifetime.DEFAULT))
-        .callTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .build()
+    fun provideOkHttpClient(@ApplicationContext context: Context, remoteConfig: RemoteConfig): OkHttpClient =
+        OkHttpClient.Builder()
+            .cache(Cache(File(context.cacheDir, CACHE_DIR), CACHE_SIZE_BYTES))
+            .addNetworkInterceptor(CacheLifetimeInterceptor { remoteConfig.httpCacheLifetime })
+            .callTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build()
 
     @Provides
     @Singleton
