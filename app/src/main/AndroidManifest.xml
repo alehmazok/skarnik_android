@@ -26,6 +26,19 @@
             </intent-filter>
         </activity>
 
+        <!-- «Слова дня». Same class name as the Flutter app's provider, so placed widgets survive the upgrade. -->
+        <receiver
+            android:name=".widget.WordOfDayWidgetReceiver"
+            android:exported="true"
+            android:label="@string/word_of_the_day_widget_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/word_of_the_day_widget_info" />
+        </receiver>
+
         <!-- WorkManager is initialised by SkarnikApplication with Hilt's worker factory, not by App Startup. -->
         <provider
             android:name="androidx.startup.InitializationProvider"

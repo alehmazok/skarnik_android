@@ -63,6 +63,8 @@ packages under `feature/<name>/{data,domain,ui}`; shared code under `core/`. No 
   `files/datastore/FlutterSharedPreferences.preferences_pb` (no XML, no `flutter.` prefix). Never give a native
   DataStore that name by accident. Each feature reads its own keys from it once and moves them to the native
   DataStore (see parity register). Flutter's HTTP cache `DioCache.db` is not migrated.
+- The widget provider stays `by.mazokaleh.skarnik.widget.WordOfDayWidgetReceiver` (Flutter's name): launchers
+  bind placed widgets by it. Same for `MainActivity` (launcher shortcuts).
 - `applicationId` stays `by.mazokaleh.skarnik` (debug: `.debug` suffix, same as Flutter). `versionCode`
   must stay above Flutter's last (81).
 

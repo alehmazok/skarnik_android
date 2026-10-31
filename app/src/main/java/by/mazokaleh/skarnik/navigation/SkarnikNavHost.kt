@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.home.ui.HomeRoute
 import by.mazokaleh.skarnik.feature.home.ui.HomeScreen
 import by.mazokaleh.skarnik.feature.search.ui.SearchRoute
@@ -15,10 +16,13 @@ import by.mazokaleh.skarnik.feature.settings.ui.SettingsRoute
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsScreen
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationRoute
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationScreen
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 
 @Composable
-fun SkarnikNavHost() {
+fun SkarnikNavHost(wordLinks: Flow<WordLink> = emptyFlow()) {
     val navController = rememberNavController()
+    WordLinkEffect(navController, wordLinks)
     NavHost(navController = navController, startDestination = HomeRoute) {
         composable<HomeRoute> { entry ->
             HomeScreen(

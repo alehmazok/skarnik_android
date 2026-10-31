@@ -153,6 +153,8 @@ dependencies {
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.work.runtime.ktx)
     implementation(libs.androidx.hilt.work)
+    implementation(libs.androidx.glance.appwidget)
+    implementation(libs.androidx.glance.material3)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -176,6 +178,7 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.turbine)
     testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.androidx.glance.appwidget.testing)
     testImplementation(libs.objectbox.linux)
     testImplementation(libs.objectbox.macos)
     testImplementation(libs.objectbox.windows)
