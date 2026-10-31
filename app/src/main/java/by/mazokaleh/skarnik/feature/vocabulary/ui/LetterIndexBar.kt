@@ -20,6 +20,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputScope
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
@@ -85,6 +86,7 @@ private fun IndexLetter(letter: String, onJump: () -> Unit, modifier: Modifier =
     Box(
         modifier
             .fillMaxWidth()
+            .testTag(VocabularyTestTags.INDEX_LETTER)
             .semantics(mergeDescendants = true) {
                 onClick(label = jumpLabel) {
                     onJump()

@@ -58,6 +58,9 @@ object VocabularyTestTags {
     const val ITEM = "vocabulary_item"
     const val HEADER = "vocabulary_header"
     const val INDEX = "vocabulary_index"
+
+    /** Each letter of the index; it carries both this tag and the letter, so match them together. */
+    const val INDEX_LETTER = "vocabulary_index_letter"
     const val LOADING = "vocabulary_loading"
     const val ERROR = "vocabulary_error"
     const val RETRY = "vocabulary_retry"

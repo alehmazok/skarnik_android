@@ -26,9 +26,8 @@ tags:
 
 # Jump to «К» with the index; its header sticks to the top.
 - tapOn:
+    id: vocabulary_index_letter
     text: "К"
-    childOf:
-      id: vocabulary_index
 - assertVisible:
     id: vocabulary_header
     text: "К"
@@ -60,9 +59,8 @@ tags:
       text: "А"
     timeout: 30000
 - tapOn:
+    id: vocabulary_index_letter
     text: "Щ"
-    childOf:
-      id: vocabulary_index
 - assertVisible:
     id: vocabulary_header
     text: "Щ"
