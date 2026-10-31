@@ -38,7 +38,7 @@ class SupabaseOfflineDictionarySourceTest {
 
     @Test
     fun `counts a dictionary's words from Content-Range`() = runTest {
-        server.enqueue(MockResponse.Builder().header("Content-Range", "0-0/103412").body("""[{"id":1}]""").build())
+        server.enqueue(MockResponse.Builder().addHeader("Content-Range", "0-0/103412").body("""[{"id":1}]""").build())
 
         assertEquals(103_412, source.countWords(Dictionary.BelRus))
 
@@ -52,7 +52,7 @@ class SupabaseOfflineDictionarySourceTest {
 
     @Test
     fun `an empty dictionary counts zero`() = runTest {
-        server.enqueue(MockResponse.Builder().header("Content-Range", "*/0").body("[]").build())
+        server.enqueue(MockResponse.Builder().addHeader("Content-Range", "*/0").body("[]").build())
 
         assertEquals(0, source.countWords(Dictionary.Tsbm))
     }
