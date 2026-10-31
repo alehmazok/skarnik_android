@@ -57,10 +57,8 @@ object WordSimilarity {
         return result
     }
 
+    /** Edit distance; empty strings need no special case, the table starts from them. */
     fun levenshtein(a: String, b: String): Int {
-        if (a == b) return 0
-        if (a.isEmpty()) return b.length
-        if (b.isEmpty()) return a.length
         var previous = IntArray(b.length + 1) { it }
         var current = IntArray(b.length + 1)
         for (i in 1..a.length) {
@@ -85,8 +83,7 @@ object WordSimilarity {
         if (senses.isEmpty()) return false
         val normalizedWord = normalize(word)
         val minDistance = senses.minOf { levenshtein(normalizedWord, normalize(it)) }
-        if (minDistance == 0) return true
-        return normalizedWord.length.toDouble() / minDistance > SIMILARITY_THRESHOLD
+        return minDistance == 0 || normalizedWord.length.toDouble() / minDistance > SIMILARITY_THRESHOLD
     }
 
     private fun firstSensePerLine(plainText: String): List<String> = plainText.lines()
