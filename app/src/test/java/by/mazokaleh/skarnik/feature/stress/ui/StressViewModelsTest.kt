@@ -59,7 +59,9 @@ class StressViewModelsTest {
     fun `several matches are listed`() = runTest {
         words = pair
 
-        assertEquals(StressUiState.Choose(pair), StressViewModel(StressRoute("пара"), resolver, analytics).uiState.value)
+        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
+
+        assertEquals(StressUiState.Choose(pair), viewModel.uiState.value)
     }
 
     @Test

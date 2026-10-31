@@ -105,7 +105,10 @@ class SettingsViewModelTest {
             assertEquals(OfflineDictionaryStatus.Downloading(null), awaitItem().statuses()[Dictionary.BelRus])
             assertEquals(listOf(Dictionary.BelRus), downloads.started)
         }
-        assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.OfflineDictionaryDownloadClicked(Dictionary.BelRus)), analytics.events)
+        assertEquals(
+            listOf<AnalyticsEvent>(AnalyticsEvent.OfflineDictionaryDownloadClicked(Dictionary.BelRus)),
+            analytics.events
+        )
     }
 
     @Test
