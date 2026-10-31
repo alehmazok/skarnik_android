@@ -14,9 +14,7 @@ import by.mazokaleh.skarnik.feature.search.ui.SearchScreen
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsRoute
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsScreen
 import by.mazokaleh.skarnik.feature.stress.ui.StressRoute
-import by.mazokaleh.skarnik.feature.stress.ui.StressScreen
-import by.mazokaleh.skarnik.feature.stress.ui.StressTableRoute
-import by.mazokaleh.skarnik.feature.stress.ui.StressTableScreen
+import by.mazokaleh.skarnik.feature.stress.ui.stressDestinations
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationRoute
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationScreen
 
@@ -84,27 +82,6 @@ fun SkarnikNavHost() {
                 }
             )
         }
-        composable<StressRoute> { entry ->
-            StressScreen(
-                route = entry.toRoute(),
-                onBack = dropUnlessResumed { navController.popBackStack() },
-                onOpenTable = { stressEntry, replace ->
-                    if (replace) {
-                        // The only match: its table replaces the lookup, so back returns to the translation.
-                        navController.navigate(StressTableRoute(stressEntry)) {
-                            popUpTo<StressRoute> { inclusive = true }
-                        }
-                    } else if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                        navController.navigate(StressTableRoute(stressEntry))
-                    }
-                }
-            )
-        }
-        composable<StressTableRoute> { entry ->
-            StressTableScreen(
-                route = entry.toRoute(),
-                onBack = dropUnlessResumed { navController.popBackStack() }
-            )
-        }
+        stressDestinations(navController)
     }
 }

@@ -147,22 +147,10 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
             "sub" -> SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = SMALL_SIZE.em)
             else -> null
         }
-        classStyleOf(element)?.let { style = (style ?: SpanStyle()).merge(it) }
+        classStyleOf(element, colors)?.let { style = (style ?: SpanStyle()).merge(it) }
         colorOf(element)?.let { style = (style ?: SpanStyle()).copy(color = it) }
         fontScaleOf(element.attr("size"))?.let { style = (style ?: SpanStyle()).copy(fontSize = it.em) }
         return style
-    }
-
-    /**
-     * Classes of the stress tables (starnik.by and skarnik_admin), styled as in Flutter's `StressHtmlCell`:
-     * `pytanne` (the case question) muted and smaller, `skarot` (abbreviations such as «мн.», «я») as a label.
-     */
-    private fun classStyleOf(element: Element): SpanStyle? = when {
-        element.hasClass("pytanne") ->
-            SpanStyle(fontStyle = FontStyle.Italic, color = colors.muted, fontSize = QUESTION_SIZE.em)
-        element.hasClass("skarot") ->
-            SpanStyle(fontStyle = FontStyle.Italic, fontWeight = FontWeight.Normal, color = colors.label)
-        else -> null
     }
 
     private fun colorOf(element: Element): Color? {
@@ -208,7 +196,20 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         private val CSS_COLOR = Regex("""(?i)(?:^|;)\s*color\s*:\s*(#?[0-9a-f]{3,6})""")
         private const val NORMAL_FONT_SIZE = 3
         private const val SMALL_SIZE = 0.75f
-        private const val QUESTION_SIZE = 0.875f
         private val FONT_SCALES = floatArrayOf(0.85f, 0.92f, 1f, 1.12f, 1.25f)
     }
 }
+
+/**
+ * Classes of the stress tables (starnik.by and skarnik_admin), styled as in Flutter's `StressHtmlCell`:
+ * `pytanne` (the case question) muted and smaller, `skarot` (abbreviations such as «мн.», «я») as a label.
+ */
+private fun classStyleOf(element: Element, colors: TranslationColors): SpanStyle? = when {
+    element.hasClass("pytanne") ->
+        SpanStyle(fontStyle = FontStyle.Italic, color = colors.muted, fontSize = QUESTION_SIZE.em)
+    element.hasClass("skarot") ->
+        SpanStyle(fontStyle = FontStyle.Italic, fontWeight = FontWeight.Normal, color = colors.label)
+    else -> null
+}
+
+private const val QUESTION_SIZE = 0.875f
