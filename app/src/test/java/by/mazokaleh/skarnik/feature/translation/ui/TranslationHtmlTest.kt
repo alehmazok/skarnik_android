@@ -86,4 +86,20 @@ class TranslationHtmlTest {
 
         assertEquals("тэкст", text.text)
     }
+
+    @Test
+    fun `styles the stress table classes`() {
+        val text = render(
+            """Назоўны<br><span class="pytanne">хто? што?</span>""" +
+                """<br><span class="skarot">мн.</span>&nbsp;<b> ру́кі </b>"""
+        )
+
+        assertEquals("Назоўны\nхто? што?\nмн.\u00a0 ру́кі", text.text)
+        assertEquals(Color.Gray, text.colorOf("хто? што?"))
+        assertEquals(Color.Blue, text.colorOf("мн."))
+        fun styled(part: String) =
+            text.spanStyles.filter { text.text.substring(it.start, it.end) == part }.map { it.item }
+        assertTrue(styled("хто? што?").any { it.fontStyle == FontStyle.Italic })
+        assertTrue(styled("мн.").any { it.fontStyle == FontStyle.Italic && it.fontWeight == FontWeight.Normal })
+    }
 }

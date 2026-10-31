@@ -3,6 +3,8 @@ package by.mazokaleh.skarnik.navigation
 import androidx.compose.runtime.Composable
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.dropUnlessResumed
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -13,6 +15,8 @@ import by.mazokaleh.skarnik.feature.search.ui.SearchRoute
 import by.mazokaleh.skarnik.feature.search.ui.SearchScreen
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsRoute
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsScreen
+import by.mazokaleh.skarnik.feature.stress.ui.StressRoute
+import by.mazokaleh.skarnik.feature.stress.ui.stressDestinations
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationRoute
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationScreen
 
@@ -56,24 +60,34 @@ fun SkarnikNavHost() {
         composable<SettingsRoute> {
             SettingsScreen(onBack = dropUnlessResumed { navController.popBackStack() })
         }
-        composable<TranslationRoute> { entry ->
-            TranslationScreen(
-                route = entry.toRoute(),
-                onBack = dropUnlessResumed { navController.popBackStack() },
-                onOpenWord = { link ->
-                    if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
-                        navController.navigate(TranslationRoute(link.dictionary.langId, link.wordId))
-                    }
-                },
-                onRedirect = { target, fromWord ->
-                    // The alias has nothing to show: the target replaces it, so back skips it.
-                    navController.navigate(
-                        TranslationRoute(target.dictionary.langId, target.wordId, redirectedFrom = fromWord)
-                    ) {
-                        popUpTo<TranslationRoute> { inclusive = true }
-                    }
+        translationDestination(navController)
+        stressDestinations(navController)
+    }
+}
+
+private fun NavGraphBuilder.translationDestination(navController: NavHostController) {
+    composable<TranslationRoute> { entry ->
+        TranslationScreen(
+            route = entry.toRoute(),
+            onBack = dropUnlessResumed { navController.popBackStack() },
+            onOpenWord = { link ->
+                if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    navController.navigate(TranslationRoute(link.dictionary.langId, link.wordId))
                 }
-            )
-        }
+            },
+            onRedirect = { target, fromWord ->
+                // The alias has nothing to show: the target replaces it, so back skips it.
+                navController.navigate(
+                    TranslationRoute(target.dictionary.langId, target.wordId, redirectedFrom = fromWord)
+                ) {
+                    popUpTo<TranslationRoute> { inclusive = true }
+                }
+            },
+            onStress = { word ->
+                if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                    navController.navigate(StressRoute(word))
+                }
+            }
+        )
     }
 }

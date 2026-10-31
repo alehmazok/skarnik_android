@@ -53,6 +53,7 @@ import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.core.model.WordLink
+import by.mazokaleh.skarnik.feature.stress.ui.StressButton
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 import kotlinx.coroutines.launch
@@ -88,6 +89,7 @@ fun TranslationScreen(
     onBack: () -> Unit,
     onOpenWord: (WordLink) -> Unit,
     onRedirect: (target: WordLink, fromWord: String) -> Unit,
+    onStress: (word: String) -> Unit,
     viewModel: TranslationViewModel = hiltViewModel<TranslationViewModel, TranslationViewModel.Factory>(
         creationCallback = { it.create(route) }
     )
@@ -105,6 +107,7 @@ fun TranslationScreen(
         onToggleBookmark = viewModel::toggleBookmark,
         onShare = { context.shareTranslation(it) },
         onRetry = viewModel::retry,
+        onStress = onStress,
         onLink = { href ->
             val link = WordLink.parse(href)
             when {
@@ -173,6 +176,7 @@ private fun TranslationContent(
     onToggleBookmark: () -> Unit,
     onShare: (Translation) -> Unit,
     onRetry: () -> Unit,
+    onStress: (String) -> Unit,
     onLink: (String) -> Unit
 ) {
     Scaffold(
@@ -208,7 +212,7 @@ private fun TranslationContent(
             when (uiState) {
                 is TranslationUiState.Loading -> LoadingContent(uiState.word)
                 is TranslationUiState.Error -> ErrorContent(uiState.word, onRetry)
-                is TranslationUiState.Loaded -> LoadedContent(uiState.translation, onLink)
+                is TranslationUiState.Loaded -> LoadedContent(uiState, onStress, onLink)
             }
         }
     }
@@ -276,7 +280,8 @@ private fun ErrorContent(word: String?, onRetry: () -> Unit) {
 }
 
 @Composable
-private fun LoadedContent(translation: Translation, onLink: (String) -> Unit) {
+private fun LoadedContent(uiState: TranslationUiState.Loaded, onStress: (String) -> Unit, onLink: (String) -> Unit) {
+    val translation = uiState.translation
     Text(
         text = stringResource(translation.word.dictionary.translationNameRes),
         modifier = Modifier.testTag(TranslationTestTags.DICTIONARY),
@@ -285,6 +290,7 @@ private fun LoadedContent(translation: Translation, onLink: (String) -> Unit) {
     )
     Spacer(Modifier.height(4.dp))
     Title(translation.title)
+    StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
     Spacer(Modifier.height(16.dp))
     val colors = rememberTranslationColors()
     val currentOnLink by rememberUpdatedState(onLink)
@@ -341,13 +347,15 @@ private fun TranslationContentPreview() {
                         "<i>-ру <font color=\"#008000\">муж.</font></i> <a href=\"/belrus/2\">гл.</a>",
                     source = Translation.Source.Api
                 ),
-                bookmarked = true
+                bookmarked = true,
+                stressCandidates = listOf("янтар")
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onBack = {},
             onToggleBookmark = {},
             onShare = {},
             onRetry = {},
+            onStress = {},
             onLink = {}
         )
     }

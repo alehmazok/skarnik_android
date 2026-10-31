@@ -77,4 +77,20 @@
     <string name="offline_delete_error">Не атрымалася выдаліць афлайн-копію.</string>
     <string name="action_cancel">Скасаваць</string>
     <string name="action_delete">Выдаліць</string>
+    <!-- Stress (націск). The title keeps Flutter's combining acute accent (U+0301). -->
+    <string name="stress_title">На́ціск</string>
+    <string name="stress_choose_word">Абярыце слова:</string>
+    <string name="stress_not_found">Інфармацыя аб націску для гэтага слова не знойдзена.</string>
+    <string name="stress_error">Адбылася памылка падчас загрузцы інфармацыі аб націску.</string>
+    <string name="stress_part_adjectives">Прыметнік</string>
+    <string name="stress_part_adverbs">Прыслоўе</string>
+    <string name="stress_part_conjunctions">Злучнік</string>
+    <string name="stress_part_interjections">Выклічнік</string>
+    <string name="stress_part_nouns">Назоўнік</string>
+    <string name="stress_part_numerals">Лічэбнік</string>
+    <string name="stress_part_particles">Частка</string>
+    <string name="stress_part_participles">Дзеепрыметнік</string>
+    <string name="stress_part_prepositions">Прыназоўнік</string>
+    <string name="stress_part_pronouns">Займеннік</string>
+    <string name="stress_part_verbs">Дзеяслоў</string>
 </resources>

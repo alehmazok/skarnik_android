@@ -1,0 +1,72 @@
+# Stress: open a ТСБМ word from the Dictionary tab, tap «На́ціск», read its stress table, go back to the translation.
+# Needs network: the table comes from starnik.by (or skarnik_admin when starnik.by has nothing).
+appId: by.mazokaleh.skarnik.debug
+name: Stress table
+tags:
+  - stress
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+# Open the first ТСБМ word from the Dictionary tab (ТСБМ opens first, at «А»): a ТСБМ headword is its own stress
+# candidate, so the chip opens the lookup straight away. (Search mixes dictionaries, and on the small CI
+# emulator the ТСБМ row is hard to reach.)
+- tapOn:
+    id: home_tab_dictionary
+- extendedWaitUntil:
+    visible:
+      id: vocabulary_item
+    timeout: 30000
+- tapOn:
+    id: vocabulary_item
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- takeScreenshot: stress-translation-chip
+- tapOn:
+    id: translation_stress
+- extendedWaitUntil:
+    visible:
+      id: stress_back
+    timeout: 10000
+- extendedWaitUntil:
+    notVisible:
+      id: stress_loading
+    timeout: 30000
+# Homographs show a list first; one match opens its table directly.
+- runFlow:
+    when:
+      visible:
+        id: stress_choice
+    commands:
+      - takeScreenshot: stress-choose
+      - tapOn:
+          id: stress_choice
+          index: 0
+      - extendedWaitUntil:
+          notVisible:
+            id: stress_loading
+          timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: stress_cell
+    timeout: 30000
+- assertVisible:
+    id: stress_word
+- assertNotVisible:
+    id: stress_error
+- takeScreenshot: stress-table
+- back
+- runFlow:
+    when:
+      visible:
+        id: stress_choice
+    commands:
+      - back
+- assertVisible:
+    id: translation_text

@@ -80,6 +80,7 @@ fun rememberTranslationColors(): TranslationColors {
 /**
  * Converts a translation's HTML into styled text: colours, bold, italic, underline, sizes, line breaks and
  * links (reported to [onLink] with their `href`). Unknown tags keep their text and drop their styling.
+ * Stress table cells use it too.
  */
 fun translationHtmlToAnnotatedString(
     html: String,
@@ -146,6 +147,7 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
             "sub" -> SpanStyle(baselineShift = BaselineShift.Subscript, fontSize = SMALL_SIZE.em)
             else -> null
         }
+        classStyleOf(element, colors)?.let { style = (style ?: SpanStyle()).merge(it) }
         colorOf(element)?.let { style = (style ?: SpanStyle()).copy(color = it) }
         fontScaleOf(element.attr("size"))?.let { style = (style ?: SpanStyle()).copy(fontSize = it.em) }
         return style
@@ -197,3 +199,17 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         private val FONT_SCALES = floatArrayOf(0.85f, 0.92f, 1f, 1.12f, 1.25f)
     }
 }
+
+/**
+ * Classes of the stress tables (starnik.by and skarnik_admin), styled as in Flutter's `StressHtmlCell`:
+ * `pytanne` (the case question) muted and smaller, `skarot` (abbreviations such as «мн.», «я») as a label.
+ */
+private fun classStyleOf(element: Element, colors: TranslationColors): SpanStyle? = when {
+    element.hasClass("pytanne") ->
+        SpanStyle(fontStyle = FontStyle.Italic, color = colors.muted, fontSize = QUESTION_SIZE.em)
+    element.hasClass("skarot") ->
+        SpanStyle(fontStyle = FontStyle.Italic, fontWeight = FontWeight.Normal, color = colors.label)
+    else -> null
+}
+
+private const val QUESTION_SIZE = 0.875f

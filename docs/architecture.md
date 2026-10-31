@@ -48,7 +48,8 @@ by.mazokaleh.skarnik
     ├── vocabulary/        Dictionary tab: whole dictionaries in alphabetical order, letter index
     ├── offline/           offline dictionary downloads: Supabase pages, WorkManager job, rate limit
     ├── settings/          Settings screen (offline section so far) and the settings button with its badge
-    ├── stress/ widget/    (planned)
+    ├── stress/            «На́ціск»: stress candidates, starnik.by → skarnik_admin lookup, stress table
+    ├── widget/            (planned)
 ```
 
 Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cases, feature models, only
@@ -77,7 +78,7 @@ Navigation Compose with type-safe routes (`@Serializable` objects/classes). Targ
   inside the one destination; a `SaveableStateHolder` keeps each tab's scroll position and its ViewModel lives
   on the `HomeRoute` entry, so hidden tabs keep their data. Back on another tab returns to History. Search and
   Translation open full screen above it.
-- Full-screen: Search, Settings, Translation(`langId`, `wordId`, `word`), Stress(`word`) → Stress table.
+- Full-screen: Search, Settings, Translation(`langId`, `wordId`, `word`), Stress(`word`) → StressTable(`id`, `source`, `word`, `tableName`).
 - Large screens: list–detail (search/history/bookmarks list with translation beside it).
 - Deep links `skarnik.by/<dict>/<id>` and `skarnik.app/r/<dict>/<id>` open Translation.
 
@@ -183,6 +184,17 @@ Download requests use the app's OkHttp client without the HTTP cache and with a 
 Settings row combines three flows: the job's `WorkInfo`, the stored word count (`BoxStore.changes`) and the
 cursor; `OfflineDictionaryStatus.of` turns them into not downloaded / downloading / downloaded / failed. The
 translation screen reads downloaded words first (`ObjectBoxLocalTranslationSource`).
+
+## Stress (націск)
+
+`feature/stress`, ported from Flutter's stress feature (spec: skarnik-flutter `shared/stress_spec.md`).
+`stressCandidates(word, html)` gives the translation screen the words for the «На́ціск» chip. `StressResolver`
+runs the cascade over two `StressBackend`s: `StarnikStressBackend` (JSON word list, the table scraped from the
+`/pravapis/<id>` page with jsoup) and `AdminStressBackend` (skarnik_admin JSON, whose `word`/`lemma` fields are
+swapped on reading). Entries carry their `StressSource`, because ids of the two backends are unrelated; a table
+is fetched only from the entry's source. `StressRoute(word)` resolves: one match replaces it with
+`StressTableRoute(id, source, word, tableName)`, several are listed. Table cells are rendered with the
+translation HTML converter, which also styles the tables' `pytanne` and `skarot` classes.
 
 ## Background work and widget *(planned)*
 
