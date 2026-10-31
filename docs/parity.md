@@ -127,4 +127,5 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
 | 10.1 | Signed release build with the existing upload key; Play, plus Huawei AppGallery | `android/fastlane/` | ⬜ |
+| 10.1a | New: every merge to `main` goes to Firebase App Distribution (group `internal`), signed with the upload key ([ADR 0004](adr/0004-firebase-app-distribution.md)) | `android/fastlane/Fastfile` (`firebase` lane) | 🟨 workflow PR; needs repository secrets |
 | 10.2 | Upgrade test: Flutter 3.6.0 with history, bookmarks and an offline dictionary → native build keeps all of it | — | ⬜ |

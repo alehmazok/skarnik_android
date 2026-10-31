@@ -1,4 +1,6 @@
+import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import io.gitlab.arturbosch.detekt.getSupportedKotlinVersion
+import java.util.Properties
 
 plugins {
     alias(libs.plugins.android.application)
@@ -11,7 +13,17 @@ plugins {
     alias(libs.plugins.detekt)
     // Must come after the kapt plugin: it hooks its annotation processor into kapt.
     alias(libs.plugins.objectbox)
+    alias(libs.plugins.firebase.appdistribution)
 }
+
+// Release signing with the Play upload key, the same one skarnik-flutter signs with. key.properties
+// (gitignored) has the same format as Flutter's: storeFile is relative to app/. CI writes it from secrets.
+// Without it the release build is unsigned.
+val keystoreProperties =
+    Properties().apply {
+        val file = rootProject.file("key.properties")
+        if (file.exists()) file.inputStream().use { load(it) }
+    }
 
 android {
     // Same id as the Flutter app, so the native build installs as an update and keeps user data.
@@ -23,7 +35,8 @@ android {
         minSdk = 24
         targetSdk = 37
         // Flutter 3.6.0 shipped versionCode 81; the native app must stay above it.
-        versionCode = 100
+        // CI passes -Pskarnik.versionCode so every distributed build installs over the previous one.
+        versionCode = providers.gradleProperty("skarnik.versionCode").orNull?.toInt() ?: 100
         versionName = "4.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -32,6 +45,17 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"${property("skarnik.apiBaseUrl")}\"")
         buildConfigField("String", "SUPABASE_URL", "\"${property("skarnik.supabaseUrl")}\"")
         buildConfigField("String", "SUPABASE_KEY", "\"${property("skarnik.supabaseKey")}\"")
+    }
+
+    signingConfigs {
+        if (!keystoreProperties.isEmpty) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile"))
+                storePassword = keystoreProperties.getProperty("storePassword")
+                keyAlias = keystoreProperties.getProperty("keyAlias")
+                keyPassword = keystoreProperties.getProperty("keyPassword")
+            }
+        }
     }
 
     buildTypes {
@@ -45,6 +69,14 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             resValue("string", "app_name", "Skarnik")
+            signingConfig = signingConfigs.findByName("release")
+            // Firebase App Distribution (docs/adr/0004). The Firebase Android app is the one Flutter
+            // registered for this application id; credentials and release notes come from CI.
+            firebaseAppDistribution {
+                appId = "1:690309283484:android:3c2521a8af9d651ad03759"
+                artifactType = "APK"
+                groups = "internal"
+            }
         }
     }
 

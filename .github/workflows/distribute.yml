@@ -1,0 +1,92 @@
+name: Firebase App Distribution
+
+# Every merge to main goes to the "internal" tester group as a signed, minified release APK (docs/adr/0004).
+# Pull requests that touch the release build only build it, to catch signing and R8 problems before merge.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - .github/workflows/distribute.yml
+      - app/build.gradle.kts
+      - app/proguard-rules.pro
+      - gradle/libs.versions.toml
+
+concurrency:
+  group: distribute-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  distribute:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      HAS_SIGNING_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+      HAS_FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # Builds before this workflow were 100; each run gets a higher code so testers can install over it.
+      - name: Version code
+        run: echo "VERSION_CODE=$((100 + GITHUB_RUN_NUMBER))" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Restore upload key
+        if: env.HAS_SIGNING_KEY == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.keystore"
+          cat > key.properties <<EOF
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          storeFile=$RUNNER_TEMP/upload.keystore
+          EOF
+
+      - name: Release APK
+        run: ./gradlew assembleRelease -Pskarnik.versionCode="$VERSION_CODE"
+
+      - name: Release notes
+        run: |
+          # A merge commit's body is the PR title; a direct push has its own subject.
+          {
+            git log -1 --format='%b' | sed '/^$/d' | head -5
+            git log -1 --format='%s'
+            echo
+            echo "Commit ${GITHUB_SHA::7}, build $VERSION_CODE"
+          } > "$RUNNER_TEMP/release-notes.txt"
+          cat "$RUNNER_TEMP/release-notes.txt" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload to Firebase App Distribution
+        if: github.event_name != 'pull_request' && env.HAS_SIGNING_KEY == 'true' && env.HAS_FIREBASE_CREDENTIALS == 'true'
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+          ./gradlew appDistributionUploadRelease -Pskarnik.versionCode="$VERSION_CODE" \
+            --serviceCredentialsFile="$RUNNER_TEMP/firebase-sa.json" \
+            --releaseNotesFile="$RUNNER_TEMP/release-notes.txt"
+
+      - name: Missing secrets
+        if: github.event_name != 'pull_request' && (env.HAS_SIGNING_KEY != 'true' || env.HAS_FIREBASE_CREDENTIALS != 'true')
+        run: |
+          echo "::warning::Not uploaded: add ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS and FIREBASE_SERVICE_ACCOUNT_JSON repository secrets (README, Release build)."
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: skarnik-release
+          path: |
+            app/build/outputs/apk/release/*.apk
+            app/build/outputs/mapping/release/mapping.txt
+          retention-days: 30
