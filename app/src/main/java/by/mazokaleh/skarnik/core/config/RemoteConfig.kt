@@ -30,9 +30,8 @@ interface RemoteConfig {
 }
 
 @Singleton
-class FirebaseAppRemoteConfig @Inject constructor(
-    @IoDispatcher private val ioDispatcher: CoroutineDispatcher
-) : RemoteConfig {
+class FirebaseAppRemoteConfig @Inject constructor(@IoDispatcher private val ioDispatcher: CoroutineDispatcher) :
+    RemoteConfig {
     // getInstance reads Firebase's metadata from disk, so it is created on first use, never at injection.
     private val config by lazy { FirebaseRemoteConfig.getInstance() }
 
