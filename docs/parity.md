@@ -88,10 +88,10 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 6.1 | «На́ціск» button on a translation; picker when the entry has several words | `translation/presentation/widgets/action_stress.dart` | ⬜ |
-| 6.2 | Resolve word list and stress table (admin API / Supabase; starnik.by) | `stress/` | ⬜ |
-| 6.3 | Stress table screen with HTML cells and part-of-speech names | `stress/presentation/stress_table_page.dart`, `strings.dart` | ⬜ |
-| 6.4 | Analytics: `stress_clicked` | `stress/data/repository/firebase_analytics_stress_repository.dart` | ⬜ |
+| 6.1 | «На́ціск» button on a translation; picker when the entry has several words. Candidates: the ТСБМ headword unless it is a phrase, else the single words of the entry's `#831b03` runs, sorted. M3: an assist chip under the headword (a dropdown menu for several candidates) instead of a text button in the top app bar | `translation/presentation/widgets/action_stress.dart`, `translation/domain/entity/translation.dart` | ✅ stress PR |
+| 6.2 | Resolve word list and stress table: starnik.by (`/api/wordList`, `/pravapis/<id>` page) first, skarnik_admin `/api/stress_words/` when starnik.by fails or has no exact match; never merged, a table only from the entry's own source (`shared/stress_spec.md`). Responses go through the shared 24 h HTTP cache. (The parity row said Supabase; Flutter moved the fallback to skarnik_admin) | `stress/` | ✅ stress PR |
+| 6.3 | Stress table screen with HTML cells and part-of-speech names; one match opens its table directly (the lookup screen is replaced, so back returns to the translation), homographs are listed first. M3: two columns with dividers instead of a bordered table; `.pytanne` muted and `.skarot` in the label colour role instead of fixed red; the stressed word and part of speech head the table. Not found and errors stay on the screen (errors with «Паўтарыць»); Flutter closed the screen with a snackbar when nothing was found and had no retry | `stress/presentation/stress_page.dart`, `stress_table_page.dart`, `strings.dart` | ✅ stress PR |
+| 6.4 | Analytics: `stress_clicked` | `stress/data/repository/firebase_analytics_stress_repository.dart` | ⬜ with the analytics/consent PR |
 
 ## 7. Word-of-the-day widget
 

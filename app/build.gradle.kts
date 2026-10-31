@@ -32,6 +32,7 @@ android {
         buildConfigField("String", "API_BASE_URL", "\"${property("skarnik.apiBaseUrl")}\"")
         buildConfigField("String", "SUPABASE_URL", "\"${property("skarnik.supabaseUrl")}\"")
         buildConfigField("String", "SUPABASE_KEY", "\"${property("skarnik.supabaseKey")}\"")
+        buildConfigField("String", "STARNIK_BASE_URL", "\"${property("skarnik.starnikBaseUrl")}\"")
     }
 
     buildTypes {

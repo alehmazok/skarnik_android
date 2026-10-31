@@ -77,6 +77,17 @@ class TranslationViewModelTest {
     }
 
     @Test
+    fun `offers the stress candidates of the translation`() = runTest {
+        api = RemoteTranslationSource { _, _ ->
+            TranslationEntry(stress = null, html = "<font color=\"#831b03\">янтар, бурштын</font>", redirectTo = null)
+        }
+
+        val loaded = assertIs<TranslationUiState.Loaded>(viewModel().uiState.value)
+
+        assertEquals(listOf("бурштын", "янтар"), loaded.stressCandidates)
+    }
+
+    @Test
     fun `does not save to history when opened from history`() = runTest {
         viewModel(route.copy(saveToHistory = false))
 

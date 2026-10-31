@@ -8,6 +8,7 @@ import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
+import by.mazokaleh.skarnik.feature.stress.domain.stressCandidates
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.feature.translation.domain.TranslationResult
@@ -30,7 +31,12 @@ sealed interface TranslationUiState {
     /** [word] is known when the screen was opened from a list; links and redirects open by id only. */
     data class Loading(val word: String?) : TranslationUiState
 
-    data class Loaded(val translation: Translation, val bookmarked: Boolean) : TranslationUiState
+    /** [stressCandidates]: the words the «На́ціск» button offers; empty hides it. */
+    data class Loaded(
+        val translation: Translation,
+        val bookmarked: Boolean,
+        val stressCandidates: List<String> = emptyList()
+    ) : TranslationUiState
 
     data class Error(val word: String?) : TranslationUiState
 }
@@ -110,7 +116,8 @@ class TranslationViewModel @AssistedInject constructor(
                     suspendRunCatching { history.save(word) }.onFailure { Log.e(TAG, "Cannot save to history", it) }
                 }
                 val bookmarked = suspendRunCatching { bookmarks.isBookmarked(word) }.getOrDefault(false)
-                TranslationUiState.Loaded(result.translation, bookmarked)
+                val candidates = stressCandidates(word, result.translation.html)
+                TranslationUiState.Loaded(result.translation, bookmarked, candidates)
             }
         }
     }
