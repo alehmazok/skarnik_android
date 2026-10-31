@@ -12,3 +12,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | [0002](0002-maestro-end-to-end-tests.md) | Maestro for end-to-end tests | Accepted |
 | [0003](0003-translation-network-and-html.md) | Translation: plain OkHttp, PostgREST without an SDK, jsoup HTML rendering | Accepted |
 | [0004](0004-offline-downloads-in-workmanager.md) | Offline dictionary downloads run as a WorkManager job | Accepted |
+| [0005](0005-firebase-app-distribution.md) | Firebase App Distribution via its Gradle plugin, on every merge to main | Accepted |

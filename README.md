@@ -110,5 +110,24 @@ saved to `~/.maestro/tests/`. How to write flows: [.maestro/README.md](.maestro/
 
 ### Release build
 
-`./gradlew assembleRelease` builds a minified APK, but release signing is not set up in this repo yet,
-so the output is unsigned and cannot be installed as is.
+`./gradlew assembleRelease` builds a minified APK. It is signed with the Play upload key when `key.properties`
+exists in the repository root (gitignored, same format as skarnik-flutter's: `storePassword`, `keyPassword`,
+`keyAlias`, `storeFile` relative to `app/`); otherwise it is unsigned.
+
+### Tester builds (Firebase App Distribution)
+
+Every merge to `main` builds a signed release APK and uploads it to the Firebase App Distribution group
+`internal` of the `skarnik-app` project ([.github/workflows/distribute.yml](.github/workflows/distribute.yml),
+[ADR 0005](docs/adr/0005-firebase-app-distribution.md)). Run it by hand from Actions → Firebase App
+Distribution → Run workflow. It needs these repository secrets (Settings → Secrets and variables → Actions):
+
+| Secret | Value |
+|---|---|
+| `ANDROID_KEYSTORE_BASE64` | The upload keystore, `base64 -i upload.keystore` (same as in skarnik-flutter) |
+| `ANDROID_STORE_PASSWORD` | Keystore password |
+| `ANDROID_KEY_ALIAS` | Key alias |
+| `ANDROID_KEY_PASSWORD` | Key password |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | JSON key of a `skarnik-app` service account with the *Firebase App Distribution Admin* role |
+
+Without them the workflow still builds, and warns that nothing was uploaded. To upload from a local machine:
+`./gradlew assembleRelease appDistributionUploadRelease --serviceCredentialsFile=/path/to/key.json`.
