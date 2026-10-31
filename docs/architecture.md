@@ -49,7 +49,7 @@ by.mazokaleh.skarnik
     ├── offline/           offline dictionary downloads: Supabase pages, WorkManager job, rate limit
     ├── settings/          Settings screen (offline section so far) and the settings button with its badge
     ├── stress/            «На́ціск»: stress candidates, starnik.by → skarnik_admin lookup, stress table
-    ├── widget/            (planned)
+    ├── widget/            «Слова дня» Glance widget, hourly refresh worker, word picker
 ```
 
 Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cases, feature models, only
@@ -196,10 +196,20 @@ is fetched only from the entry's source. `StressRoute(word)` resolves: one match
 `StressTableRoute(id, source, word, tableName)`, several are listed. Table cells are rendered with the
 translation HTML converter, which also styles the tables' `pytanne` and `skarot` classes.
 
-## Background work and widget *(planned)*
+## Word-of-the-day widget
 
-WorkManager refreshes the word-of-the-day widget hourly plus once on first add, as Flutter does. The widget is
-Glance (Flutter already uses a native Glance widget, which is reused).
+`feature/widget` ([ADR 0006](adr/0006-word-of-the-day-widget.md)). `RefreshWordOfTheDayUseCase` holds Flutter's
+algorithm: up to 30 random Бел-Рус words from the search store (`ObjectBoxRandomWordSource`, random offset),
+skipping words the widget history marks as recent or similar, translated through `GetTranslationUseCase`, and
+rejected by `WordSimilarity` when the translation is the same word. The widget has its own DataStore
+(`word_of_the_day.preferences_pb`) for its history and the current word.
+
+`WordOfTheDayWorker` runs as one unique periodic job (hourly, `KEEP`), enqueued by the receiver on `onEnabled`
+and `onUpdate` (sent after app updates and reboots too) and cancelled on `onDisabled`; a new periodic job runs at
+once, so a new widget gets a word right away. After a refresh it calls `updateAll`, and
+`WordOfTheDayWidget.provideGlance` reads the current word through a Hilt entry point. A tap starts
+`MainActivity` with `WordLinkIntents.EXTRA_WORD_LINK`; the activity passes the parsed `WordLink` to the NavHost
+(`WordLinkEffect`), which opens the translation over the start screen. App links (9.1) will feed the same path.
 
 ## Analytics and crash reporting *(planned)*
 

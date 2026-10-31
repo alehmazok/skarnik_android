@@ -53,7 +53,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 2.8 | Share: link `skarnik.app/r/<dict>/<id>` with the word as subject (Android share sheet) | `widgets/action_share.dart`, `translation_cubit.dart` | ✅ translation PR |
 | 2.9 | Error state «Прабачце, адбылася памылка перакладу слова.» M3: shown in the screen with a «Паўтарыць» button instead of a 15 s snackbar over an endless spinner | `translation_page.dart` | ✅ translation PR |
 | 2.10 | Analytics: `translation`, `add_to_favorites`, share event | `firebase_analytics_translation_repository.dart` | ⬜ with the analytics/consent PR |
-| 2.11 | Open by id (deep link / widget) and open from a word (search, history, bookmarks). The route takes `langId` + `wordId` (+ the word to show while loading, and `saveToHistory`, false from history/bookmarks as in Flutter) | `app/presentation/skarnik_router.dart` | 🟨 route done in translation PR, used by history/bookmarks; deep links with 9.1 |
+| 2.11 | Open by id (deep link / widget) and open from a word (search, history, bookmarks). The route takes `langId` + `wordId` (+ the word to show while loading, and `saveToHistory`, false from history/bookmarks as in Flutter) | `app/presentation/skarnik_router.dart` | 🟨 route done in translation PR, used by history/bookmarks and the widget (`WordLinkIntents`); deep links with 9.1 |
 
 ## 3. History and bookmarks
 
@@ -97,9 +97,9 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 7.1 | Glance widget «Слова дня»: random Бел-Рус word with translation | `widget/`, `android/app/src/main/kotlin/.../widget/` | ⬜ |
-| 7.2 | Refresh hourly and once when added; skip words shown in the last 30 days (`widget_word_history_v1`); reject near-identical word/translation; fallback word | `widget/domain/use_case/refresh_widget_data.dart` | ⬜ |
-| 7.3 | Tap opens the word in the app | `widget/` | ⬜ |
+| 7.1 | Glance widget «Слова дня»: random Бел-Рус word with its translation as plain text. Same provider class (`by.mazokaleh.skarnik.widget.WordOfDayWidgetReceiver`), so widgets placed by the Flutter app stay on the home screen; the word they showed (home_widget's `HomeWidgetPreferences`) is kept. M3: Material You colours on Android 12+ (brand palette below), light/dark with the system, system corner radius, a «Слова дня» label above the word, and the word in its own case instead of upper case; the translation gets as many lines as the widget's height allows | `widget/`, `android/app/src/main/kotlin/.../widget/` | ✅ widget PR |
+| 7.2 | Refresh hourly and once when added; skip words shown in the last 30 days (`widget_word_history_v1`, migrated); reject near-identical word/translation (same normalisation, Levenshtein and 1.8 threshold); 30 attempts. Native: the hourly WorkManager job runs only while a widget is on the home screen (Flutter scheduled it for everyone at every app start and refreshed on every launch); a refresh that finds no word (no network) keeps the current word instead of switching to the fallback «халэмус»; history entries that no longer affect a pick are pruned. Flutter's leftover workmanager jobs are cancelled | `widget/domain/use_case/refresh_widget_data.dart`, `main.dart` | ✅ widget PR |
+| 7.3 | Tap opens the word in the app (over the start screen, saved to history); the fallback word just opens the app | `widget/` | ✅ widget PR |
 
 ## 8. Settings, consent, review
 

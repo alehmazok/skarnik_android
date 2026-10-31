@@ -8,6 +8,9 @@
         <item quantity="many">%1$d слоў у слоўніку</item>
         <item quantity="other">%1$d слова ў слоўніку</item>
     </plurals>
+    <!-- «Слова дня» home screen widget. -->
+    <string name="word_of_the_day_widget_label">Слова дня</string>
+    <string name="word_of_the_day_widget_description">Выпадковае слова і яго пераклад.</string>
     <string name="action_back">Назад</string>
     <string name="action_clear">Ачысціць</string>
 

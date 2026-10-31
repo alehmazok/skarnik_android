@@ -99,6 +99,13 @@ jobs:
             (adb logcat -b main,system,crash -v time > maestro-out/logcat-live.txt 2>&1 &)
             cd maestro-out && maestro test ../.maestro/ --format junit --output report.xml || (adb devices; grep -E "AndroidRuntime|FATAL|lowmemorykiller|lmkd|Watchdog|adbd|VocabularyViewModel" logcat-live.txt | tail -80; tail -40 logcat-live.txt; adb logcat -d > logcat.txt; grep -E "AndroidRuntime|FATAL|DownloadDictionary|WM-|SettingsViewModel|HistoryViewModel|BookmarksViewModel|VocabularyViewModel|FlutterPreferences|SearchViewModel|TranslationViewModel|GetTranslation|StressResolver|ObjectBox" logcat.txt | tail -60; adb shell uiautomator dump /sdcard/ui.xml >/dev/null; adb shell cat /sdcard/ui.xml; exit 1)
 
+      - name: Maestro and process log on failure
+        if: failure()
+        run: |
+          # Why the driver lost the device: Maestro's own log and process deaths around it.
+          tail -n 120 ~/.maestro/tests/*/maestro.log || true
+          grep -E "Process .* (died|has died)|Killing|am_kill|instrumentation|dev.mobile.maestro" maestro-out/logcat.txt | tail -60 || true
+
       - uses: actions/upload-artifact@v7
         if: always()
         with:

@@ -1,0 +1,27 @@
+# Word-of-the-day widget: a tap on the widget opens its word. Maestro cannot place a home screen widget, so the
+# flow starts the app with the same extra the widget's tap intent carries (WordLinkIntents.EXTRA_WORD_LINK).
+# Needs network: the translation comes from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: Open the word of the day from the widget
+tags:
+  - widget
+---
+- launchApp:
+    clearState: true
+    arguments:
+      word_link: "https://skarnik.app/r/belrus/27890"
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 60000
+- assertVisible:
+    id: translation_word
+- assertNotVisible:
+    id: translation_error
+- takeScreenshot: widget-word-opened
+# Back returns to the start screen, as from any word opened from outside.
+- back
+- extendedWaitUntil:
+    visible:
+      id: home_search
+    timeout: 10000

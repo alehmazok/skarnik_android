@@ -19,14 +19,14 @@ private val BrandRedLight = Color(0xFFE1251B)
 private val BrandRedDark = Color(0xFFFF4438)
 private val BrandDarkBackground = Color(0xFF0F0F10)
 
-private val BrandLightColors = lightColorScheme(
+internal val BrandLightColors = lightColorScheme(
     primary = BrandRedLight,
     onPrimary = Color.White,
     background = Color.White,
     surface = Color.White
 )
 
-private val BrandDarkColors = darkColorScheme(
+internal val BrandDarkColors = darkColorScheme(
     primary = BrandRedDark,
     onPrimary = Color.White,
     background = BrandDarkBackground,
