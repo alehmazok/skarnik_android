@@ -14,7 +14,7 @@ object ExternalActions {
     private const val TAG = "ExternalActions"
 
     /** The Play listing. Not [BuildConfig.APPLICATION_ID]: the debug build's id has no listing. */
-    private const val STORE_PACKAGE = "by.mazokaleh.skarnik"
+    const val STORE_PACKAGE = "by.mazokaleh.skarnik"
 
     /** «Skarnik 4.0.0 (123)», as Flutter's `getAppNameAndVersion`. */
     fun appNameAndVersion(context: Context): String =

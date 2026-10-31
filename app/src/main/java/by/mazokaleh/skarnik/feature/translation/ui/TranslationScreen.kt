@@ -53,6 +53,8 @@ import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.core.model.WordLink
+import by.mazokaleh.skarnik.feature.review.ui.ReviewPromptDialog
+import by.mazokaleh.skarnik.feature.review.ui.rememberReviewPromptState
 import by.mazokaleh.skarnik.feature.stress.ui.StressButton
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
@@ -96,7 +98,9 @@ fun TranslationScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    TranslationEffects(viewModel, route.redirectedFrom, snackbarHostState, onRedirect)
+    val reviewPrompt = rememberReviewPromptState()
+    TranslationEffects(viewModel, route.redirectedFrom, snackbarHostState, onRedirect, reviewPrompt::ask)
+    ReviewPromptDialog(reviewPrompt)
 
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
@@ -128,16 +132,18 @@ fun TranslationScreen(
     )
 }
 
-/** One-off events: redirects and snackbars. */
+/** One-off events: redirects, snackbars and the review prompt. */
 @Composable
 private fun TranslationEffects(
     viewModel: TranslationViewModel,
     redirectedFrom: String?,
     snackbarHostState: SnackbarHostState,
-    onRedirect: (target: WordLink, fromWord: String) -> Unit
+    onRedirect: (target: WordLink, fromWord: String) -> Unit,
+    onAskForReview: () -> Unit
 ) {
     val resources = LocalResources.current
     val currentOnRedirect by rememberUpdatedState(onRedirect)
+    val currentOnAskForReview by rememberUpdatedState(onAskForReview)
 
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
@@ -153,6 +159,7 @@ private fun TranslationEffects(
                     // Not awaited, so a quick second tap replaces the snackbar instead of queueing behind it.
                     launch { snackbarHostState.showSnackbar(resources.getString(text)) }
                 }
+                TranslationEvent.AskForReview -> currentOnAskForReview()
             }
         }
     }

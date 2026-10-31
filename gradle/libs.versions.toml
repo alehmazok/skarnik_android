@@ -23,6 +23,7 @@ ktlint-gradle = "14.2.0"
 detekt = "1.23.8"
 firebase-appdistribution = "5.3.1"
 firebase-bom = "35.1.0"
+play-review = "2.0.2"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "core-ktx" }
@@ -64,6 +65,8 @@ objectbox-windows = { module = "io.objectbox:objectbox-windows", version.ref = "
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+
+play-review-ktx = { module = "com.google.android.play:review-ktx", version.ref = "play-review" }
 
 junit = { module = "junit:junit", version.ref = "junit" }
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }

@@ -1,0 +1,58 @@
+# Review prompt (parity 8.7): the 10th translation view asks for a review. The CI emulator (google_apis) has
+# neither Google Play nor AppGallery, so nothing may appear and the translation must stay usable; on a device
+# with Play the store decides whether its sheet shows. Needs network for the first load; the next nine come
+# from the HTTP cache.
+appId: by.mazokaleh.skarnik.debug
+name: Review prompt after ten translations
+tags:
+  - review
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/decline-analytics.yaml
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- tapOn:
+    id: home_search
+- inputText: прывитанне
+- extendedWaitUntil:
+    visible:
+      text: прывітанне
+      childOf:
+        id: search_result
+    timeout: 10000
+- tapOn:
+    id: search_result
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- back
+- back
+# Views 2 to 9, opened from History; the 10th below asks for the review.
+- repeat:
+    times: 8
+    commands:
+      - tapOn:
+          id: history_item
+          index: 0
+      - extendedWaitUntil:
+          visible:
+            id: translation_text
+          timeout: 30000
+      - back
+- tapOn:
+    id: history_item
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- assertNotVisible:
+    id: review_app_gallery_dialog
+- assertNotVisible:
+    id: translation_error
+- takeScreenshot: review-after-ten-views

@@ -10,6 +10,7 @@ import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
+import by.mazokaleh.skarnik.feature.review.domain.ShouldAskForReviewUseCase
 import by.mazokaleh.skarnik.feature.stress.domain.stressCandidates
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
@@ -48,11 +49,14 @@ sealed interface TranslationEvent {
     data class Redirect(val target: WordLink, val fromWord: String) : TranslationEvent
 
     data class BookmarkChanged(val bookmarked: Boolean) : TranslationEvent
+
+    /** The 10th translation view: ask for a review (parity 8.7). Sent once per install. */
+    data object AskForReview : TranslationEvent
 }
 
 /**
  * Flutter's `TranslationCubit`: find the word in the index, get its translation through the source chain,
- * save it to history, check the bookmark.
+ * save it to history, check the bookmark, and count the view for the review prompt.
  */
 @HiltViewModel(assistedFactory = TranslationViewModel.Factory::class)
 class TranslationViewModel @AssistedInject constructor(
@@ -61,7 +65,8 @@ class TranslationViewModel @AssistedInject constructor(
     private val getTranslation: GetTranslationUseCase,
     private val history: HistoryRepository,
     private val bookmarks: BookmarksRepository,
-    private val analytics: Analytics
+    private val analytics: Analytics,
+    private val shouldAskForReview: ShouldAskForReviewUseCase
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TranslationUiState>(TranslationUiState.Loading(route.word))
     val uiState: StateFlow<TranslationUiState> = _uiState.asStateFlow()
@@ -127,6 +132,8 @@ class TranslationViewModel @AssistedInject constructor(
                 val bookmarked = suspendRunCatching { bookmarks.isBookmarked(word) }.getOrDefault(false)
                 val candidates = stressCandidates(word, result.translation.html)
                 analytics.log(AnalyticsEvent.TranslationViewed(result.translation))
+                // Counted after a translation loads, as in Flutter; not awaited by the screen.
+                viewModelScope.launch { if (shouldAskForReview()) _events.send(TranslationEvent.AskForReview) }
                 TranslationUiState.Loaded(result.translation, bookmarked, candidates)
             }
         }
