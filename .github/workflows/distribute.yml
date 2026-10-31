@@ -115,3 +115,39 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/mapping/release/mapping.txt
           retention-days: 30
+
+  # Cold-starts the minified release APK on an emulator: R8 problems usually crash on launch, which the
+  # debug-build e2e flows can't see.
+  smoke:
+    needs: distribute
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: skarnik-release
+          path: release
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Launch release APK
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          script: .github/scripts/release-smoke.sh "$(ls release/apk/release/*.apk | head -1)"
+
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: release-logcat
+          path: release-logcat.txt
+          retention-days: 14
