@@ -19,7 +19,9 @@ tags:
     visible:
       id: search_result
     timeout: 10000
-# «хата» has no longer words starting with it, so every dictionary lists one row and ТСБМ is on screen.
+# «хата» has no longer words starting with it, so each dictionary lists one row. On the small CI emulator the
+# keyboard and the letter row cover the last rows, so hide the keyboard first.
+- hideKeyboard
 - scrollUntilVisible:
     element:
       text: "Тлумачэнне слова"
