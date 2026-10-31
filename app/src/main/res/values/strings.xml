@@ -17,6 +17,7 @@
 
     <string name="tab_search">Пошук</string>
     <string name="tab_bookmarks">Закладкі</string>
+    <string name="tab_dictionary">Слоўнік</string>
 
     <string name="history_empty">Пачніце ўводзіць слова ў пошук…</string>
 
@@ -27,6 +28,12 @@
     <string name="bookmarks_sort_by_letter">Па алфавіце</string>
     <string name="bookmarks_removed">Выдалена з закладак.</string>
     <string name="action_undo">Вярнуць</string>
+
+    <string name="vocabulary_title">Слоўнік</string>
+    <string name="vocabulary_tab_tsbm">Тлумачальны</string>
+    <string name="vocabulary_tab_bel_rus">Бел-Рус</string>
+    <string name="vocabulary_tab_rus_bel">Рус-Бел</string>
+    <string name="vocabulary_jump_to_letter">Перайсці да літары «%1$s»</string>
 
     <string name="search_placeholder">Пошук слоў</string>
     <string name="search_hint">Пошук з аўтаматычнай падменай і|и, ў|щ, \'|ь|ъ, е|ё</string>

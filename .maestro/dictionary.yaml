@@ -1,0 +1,86 @@
+# Dictionary tab: browse each dictionary alphabetically, jump with the letter index, open a word (saved to
+# history). Each dictionary keeps its scroll position. Opening the word needs network, like the other flows.
+appId: by.mazokaleh.skarnik.debug
+name: Dictionary
+tags:
+  - dictionary
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- tapOn:
+    id: home_tab_dictionary
+
+# The explanatory dictionary opens first, at «А». The whole dictionary (~100k words) loads at once.
+- extendedWaitUntil:
+    visible:
+      id: vocabulary_item
+    timeout: 30000
+- assertVisible:
+    id: vocabulary_header
+    text: "А"
+- takeScreenshot: dictionary-tsbm
+
+# Jump to «К» with the index; its header sticks to the top.
+- tapOn:
+    id: vocabulary_index_letter
+    text: "К"
+- assertVisible:
+    id: vocabulary_header
+    text: "К"
+- assertVisible:
+    text: "к.*"
+    childOf:
+      id: vocabulary_item
+- takeScreenshot: dictionary-letter-k
+
+# Open the first «К» word; back returns to the same place.
+- tapOn:
+    id: vocabulary_item
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- back
+- assertVisible:
+    id: vocabulary_header
+    text: "К"
+
+# Russian–Belarusian has its own alphabet: «Щ» is in its index.
+- tapOn:
+    id: vocabulary_tab_rusbel
+- extendedWaitUntil:
+    visible:
+      id: vocabulary_header
+      text: "А"
+    timeout: 30000
+- tapOn:
+    id: vocabulary_index_letter
+    text: "Щ"
+- assertVisible:
+    id: vocabulary_header
+    text: "Щ"
+- assertVisible:
+    text: "щ.*"
+    childOf:
+      id: vocabulary_item
+- takeScreenshot: dictionary-rusbel-letter-shch
+
+# Back on the explanatory dictionary, it is still at «К».
+- tapOn:
+    id: vocabulary_tab_tsbm
+- assertVisible:
+    id: vocabulary_header
+    text: "К"
+
+# The opened word was saved to history.
+- tapOn:
+    id: home_tab_history
+- assertVisible:
+    text: "к.*"
+    childOf:
+      id: history_item

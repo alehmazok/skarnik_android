@@ -28,6 +28,12 @@ fun SkarnikNavHost() {
                             TranslationRoute(word.dictionary.langId, word.wordId, word.word, saveToHistory = false)
                         )
                     }
+                },
+                onDictionaryWordClick = { dictionary, word ->
+                    if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) {
+                        // Saved to history, as in Flutter.
+                        navController.navigate(TranslationRoute(dictionary.langId, word.wordId, word.word))
+                    }
                 }
             )
         }

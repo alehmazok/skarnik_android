@@ -63,15 +63,15 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 3.2 | Bookmarks tab: paged list, tap to open. Native: the list observes the history store (ObjectBox query as a Flow), so bookmarks added or removed elsewhere show at once. Flutter bug, not ported: the kept-alive tab never reloads after a bookmark changes on the translation screen | `favorites/` | ✅ history/bookmarks PR |
 | 3.3 | Bookmarks sort: by date added / alphabetical, remembered (`favorites_sort_order`, migrated from Flutter with the same values). M3: sort icon opens a dropdown menu with a check on the current order | `favorites/data/repository/shared_preferences_favorites_sort_repository.dart` | ✅ history/bookmarks PR |
 | 3.4 | Remove a bookmark with «Вярнуць» undo in the snackbar. Native: swipe from the end (as in Flutter) or the TalkBack action «Выдаліць з закладак»; the bookmark is removed at once and undo puts it back with its old id, so it keeps its place (Flutter delayed the delete by 4 s and lost it if the app closed) | `favorites/presentation/favorites_page.dart` | ✅ history/bookmarks PR |
-| 3.5 | Bottom navigation: History («Пошук»), Bookmarks, Dictionary; each tab keeps its own state. Native: tabs keep scroll position and data while hidden; back on Bookmarks returns to History first (M3). The Dictionary tab is added with 4.1; the navigation rail on wide screens comes with 0.5 | `home/presentation/home_shell.dart` | 🟨 History + Bookmarks in history/bookmarks PR; Dictionary with 4.1 |
+| 3.5 | Bottom navigation: History («Пошук»), Bookmarks, Dictionary; each tab keeps its own state. Native: tabs keep scroll position and data while hidden; back on Bookmarks or Dictionary returns to History first (M3). The navigation rail on wide screens comes with 0.5 | `home/presentation/home_shell.dart` | ✅ history/bookmarks PR, Dictionary in dictionary PR (rail with 0.5) |
 
 ## 4. Dictionary (vocabulary)
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 4.1 | Tabs: Тлумачальны, Бел-Рус, Рус-Бел | `vocabulary/presentation/vocabulary_page.dart` | ⬜ |
-| 4.2 | Alphabetical list with a letter index bar to jump | `vocabulary/presentation/widgets/alphabet_list_view.dart` | ⬜ |
-| 4.3 | Analytics: `vocabulary` | `vocabulary/data/repository/firebase_analytics_vocabulary_repository.dart` | ⬜ |
+| 4.1 | Tabs: Тлумачальны (first), Бел-Рус, Рус-Бел, each the whole dictionary from the search store; a dictionary loads when its tab is first shown and is kept while the home screen lives. M3: top app bar «Слоўнік» over a primary tab row; each dictionary keeps its own scroll position. New: «Паўтарыць» when the store cannot be read (Flutter showed an endless spinner) | `vocabulary/presentation/vocabulary_page.dart`, `vocabulary_cubit.dart` | ✅ dictionary PR |
+| 4.2 | Alphabetical list with a letter index bar to jump; tap opens the word and saves it to history. Native: words are sorted in Belarusian/Russian alphabet order and grouped by the stored `letter` under sticky letter headers, as in the iOS app (Flutter listed them in store order). The index shows the letters that have words (Flutter showed a fixed list, and its first letter never jumped); dragging shows the letter in a bubble with a light haptic tick (Flutter had none on Android); TalkBack gets a «Перайсці да літары» action per letter | `vocabulary/presentation/widgets/alphabet_list_view.dart` | ✅ dictionary PR |
+| 4.3 | Analytics: `vocabulary` | `vocabulary/data/repository/firebase_analytics_vocabulary_repository.dart` | ⬜ with the analytics/consent PR |
 
 ## 5. Offline dictionaries
 
