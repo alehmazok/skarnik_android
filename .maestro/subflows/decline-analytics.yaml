@@ -1,0 +1,9 @@
+# A clean install asks for analytics consent first (parity 8.6). Decline it, so the flow goes on as before.
+# The dialog is a separate window without test tags as ids, so it is matched by text.
+appId: by.mazokaleh.skarnik.debug
+---
+- extendedWaitUntil:
+    visible: "Не дазваляць"
+    timeout: 60000
+- tapOn: "Не дазваляць"
+- assertNotVisible: "Не дазваляць"

@@ -3,6 +3,7 @@ package by.mazokaleh.skarnik.feature.settings.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.mazokaleh.skarnik.core.analytics.AnalyticsConsent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
 import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
@@ -21,14 +22,22 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** [hasHistory] enables «Ачысціць гісторыю пошуку»; it follows the history store. */
-data class GeneralSettingsState(val appearance: Appearance = Appearance(), val hasHistory: Boolean = false)
+/**
+ * [hasHistory] enables «Ачысціць гісторыю пошуку»; it follows the history store. [analyticsEnabled] is the
+ * consent answer (off until the user allows it).
+ */
+data class GeneralSettingsState(
+    val appearance: Appearance = Appearance(),
+    val hasHistory: Boolean = false,
+    val analyticsEnabled: Boolean = false
+)
 
-/** The Settings rows besides offline dictionaries: appearance and search history. */
+/** The Settings rows besides offline dictionaries: appearance, analytics and search history. */
 @HiltViewModel
 class GeneralSettingsViewModel @Inject constructor(
     private val appearanceSettings: AppearanceSettings,
-    private val history: HistoryRepository
+    private val history: HistoryRepository,
+    private val analyticsConsent: AnalyticsConsent
 ) : ViewModel() {
     private val _events = Channel<SettingsEvent>(Channel.BUFFERED)
     val events: Flow<SettingsEvent> = _events.receiveAsFlow()
@@ -41,8 +50,12 @@ class GeneralSettingsViewModel @Inject constructor(
         history.observe(limit = 1).map { it.words.isNotEmpty() || it.hasMore }.catch {
             Log.e(TAG, "Cannot read history", it)
             emit(false)
+        },
+        analyticsConsent.state.map { it.granted }.catch {
+            Log.e(TAG, "Cannot read the analytics consent", it)
+            emit(false)
         }
-    ) { appearance, hasHistory -> GeneralSettingsState(appearance, hasHistory) }
+    ) { appearance, hasHistory, analyticsEnabled -> GeneralSettingsState(appearance, hasHistory, analyticsEnabled) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), GeneralSettingsState())
 
     fun setThemeMode(themeMode: ThemeMode) {
@@ -56,6 +69,14 @@ class GeneralSettingsViewModel @Inject constructor(
         viewModelScope.launch {
             suspendRunCatching { appearanceSettings.setDynamicColor(enabled) }
                 .onFailure { Log.e(TAG, "Cannot save the colour setting", it) }
+        }
+    }
+
+    /** The Settings switch counts as an answer too: the first-launch dialog is not shown after it. */
+    fun setAnalyticsEnabled(enabled: Boolean) {
+        viewModelScope.launch {
+            suspendRunCatching { analyticsConsent.setGranted(enabled) }
+                .onFailure { Log.e(TAG, "Cannot save the analytics consent", it) }
         }
     }
 

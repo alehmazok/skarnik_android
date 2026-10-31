@@ -2,10 +2,13 @@ package by.mazokaleh.skarnik.feature.vocabulary.ui
 
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
+import by.mazokaleh.skarnik.core.analytics.FakeAnalytics
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.vocabulary.domain.LoadVocabularyUseCase
 import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularyEntry
 import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularyRepository
+import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularyWord
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
 import kotlinx.coroutines.Dispatchers
@@ -29,7 +32,10 @@ class VocabularyViewModelTest {
             return listOf(VocabularyEntry(dictionary.langId, "слова ${dictionary.path}", "с", "слова"))
         }
     }
-    private val viewModel by lazy { VocabularyViewModel(LoadVocabularyUseCase(repository, Dispatchers.Unconfined)) }
+    private val analytics = FakeAnalytics()
+    private val viewModel by lazy {
+        VocabularyViewModel(LoadVocabularyUseCase(repository, Dispatchers.Unconfined), analytics)
+    }
 
     @Before
     fun setUp() {
@@ -39,6 +45,16 @@ class VocabularyViewModelTest {
     @After
     fun tearDown() {
         Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `an opened word is logged`() {
+        viewModel.onWordClick(Dictionary.Tsbm, VocabularyWord(7, "слова"))
+
+        assertEquals(
+            listOf<AnalyticsEvent>(AnalyticsEvent.VocabularyWordOpened(Dictionary.Tsbm, 7, "слова")),
+            analytics.events
+        )
     }
 
     @Test

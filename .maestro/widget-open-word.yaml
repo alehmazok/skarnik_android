@@ -10,6 +10,8 @@ tags:
     clearState: true
     arguments:
       word_link: "https://skarnik.app/r/belrus/27890"
+# The consent dialog shows over the opened word.
+- runFlow: subflows/decline-analytics.yaml
 - extendedWaitUntil:
     visible:
       id: translation_text

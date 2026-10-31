@@ -3,6 +3,8 @@ package by.mazokaleh.skarnik.feature.settings.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.mazokaleh.skarnik.core.analytics.Analytics
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.offline.domain.CheckDownloadRateLimitUseCase
@@ -57,6 +59,7 @@ class SettingsViewModel @Inject constructor(
     private val settings: OfflineDictionarySettings,
     private val checkRateLimit: CheckDownloadRateLimitUseCase,
     private val deleteDictionary: DeleteOfflineDictionaryUseCase,
+    private val analytics: Analytics,
     store: OfflineDictionaryStore
 ) : ViewModel() {
     private val _events = Channel<SettingsEvent>(Channel.BUFFERED)
@@ -85,8 +88,8 @@ class SettingsViewModel @Inject constructor(
     fun download(dictionary: Dictionary) {
         val status = (offline.value as? OfflineSectionState.Ready)?.items?.find { it.dictionary == dictionary }?.status
         if (status is OfflineDictionaryStatus.Downloading || status is OfflineDictionaryStatus.Downloaded) return
+        analytics.log(AnalyticsEvent.OfflineDictionaryDownloadClicked(dictionary))
         viewModelScope.launch {
-            // TODO(parity 5.6): log `offline_dictionary_download_click` with the analytics/consent PR.
             suspendRunCatching { checkRateLimit() }.fold(
                 onSuccess = { allowed ->
                     if (allowed) downloads.start(dictionary) else _events.send(SettingsEvent.RateLimited)

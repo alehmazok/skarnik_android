@@ -37,7 +37,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 1.6 | Extra letter buttons (и щ ъ · і ў ') while the keyboard is up; insert at the cursor. M3: a row of tonal buttons docked above the keyboard instead of floating action buttons | `search/presentation/widgets/letter_button.dart`, `search_extra_buttons.dart` | ✅ search PR |
 | 1.7 | Hint «Пошук з аўтаматычнай падменай…» on empty query; «Па запыце нічога не знойдзена» on no results. New: «Не атрымалася выканаць пошук.» on a store error (Flutter showed nothing) | `search/presentation/widgets/search_list_view.dart` | ✅ search PR |
 | 1.8 | Result row: word + dictionary name; tap opens translation and saves to history. Native: names in sentence case («Беларуска-рускі»). Saving to history is done by the translation screen once the translation loads, as in Flutter (`save_to_history`) | `search_list_view.dart` | ✅ search PR, translation PR |
-| 1.9 | Analytics: `search_performed`, `search_no_results`, `search_result_tapped` | `search/data/repository/firebase_analytics_search_repository.dart` | ⬜ with the analytics/consent PR |
+| 1.9 | Analytics: `search_performed` / `search_no_results` once results stayed 500 ms (`query`, `result_count`, `used_preposition_fallback`), `search_result_tapped` (word params: `word_id`, `lang_id`, `word`, `dict_name` = Flutter's enum name `belRus`/`rusBel`/`tsbm`, `dict_path`; `position` from 0, `query`) | `search/data/repository/firebase_analytics_search_repository.dart` | ✅ analytics PR |
 
 ## 2. Translation
 
@@ -52,7 +52,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 2.7 | Bookmark toggle with snackbar «Дададзена ў закладкі.» / «Выдалена з закладак.» | `widgets/action_favorites.dart` | ✅ translation PR |
 | 2.8 | Share: link `skarnik.app/r/<dict>/<id>` with the word as subject (Android share sheet) | `widgets/action_share.dart`, `translation_cubit.dart` | ✅ translation PR |
 | 2.9 | Error state «Прабачце, адбылася памылка перакладу слова.» M3: shown in the screen with a «Паўтарыць» button instead of a 15 s snackbar over an endless spinner | `translation_page.dart` | ✅ translation PR |
-| 2.10 | Analytics: `translation`, `add_to_favorites`, share event | `firebase_analytics_translation_repository.dart` | ⬜ with the analytics/consent PR |
+| 2.10 | Analytics: `translation` (`uri` = admin API address, word params, `source` local/api/cloud), `add_to_favorites` (adding only), `share` (`content_type` text/plain, `item_id` = link, `method` system) | `firebase_analytics_translation_repository.dart` | ✅ analytics PR |
 | 2.11 | Open by id (deep link / widget) and open from a word (search, history, bookmarks). The route takes `langId` + `wordId` (+ the word to show while loading, and `saveToHistory`, false from history/bookmarks as in Flutter) | `app/presentation/skarnik_router.dart` | 🟨 route done in translation PR, used by history/bookmarks and the widget (`WordLinkIntents`); deep links with 9.1 |
 
 ## 3. History and bookmarks
@@ -71,7 +71,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 |---|---|---|---|
 | 4.1 | Tabs: Тлумачальны (first), Бел-Рус, Рус-Бел, each the whole dictionary from the search store; a dictionary loads when its tab is first shown and is kept while the home screen lives. M3: top app bar «Слоўнік» over a primary tab row; each dictionary keeps its own scroll position. New: «Паўтарыць» when the store cannot be read (Flutter showed an endless spinner) | `vocabulary/presentation/vocabulary_page.dart`, `vocabulary_cubit.dart` | ✅ dictionary PR |
 | 4.2 | Alphabetical list with a letter index bar to jump; tap opens the word and saves it to history. Native: words are sorted in Belarusian/Russian alphabet order and grouped by the stored `letter` under sticky letter headers, as in the iOS app (Flutter listed them in store order). The index shows the letters that have words (Flutter showed a fixed list, and its first letter never jumped); dragging shows the letter in a bubble with a light haptic tick (Flutter had none on Android); TalkBack gets a «Перайсці да літары» action per letter | `vocabulary/presentation/widgets/alphabet_list_view.dart` | ✅ dictionary PR |
-| 4.3 | Analytics: `vocabulary` | `vocabulary/data/repository/firebase_analytics_vocabulary_repository.dart` | ⬜ with the analytics/consent PR |
+| 4.3 | Analytics: `vocabulary` (word params) when a word is opened from the Dictionary tab | `vocabulary/data/repository/firebase_analytics_vocabulary_repository.dart` | ✅ analytics PR |
 
 ## 5. Offline dictionaries
 
@@ -82,7 +82,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 5.3 | Rate limit: max 4 download starts per 5 minutes (`download_recent_attempts_at_ms`; not migrated, it only matters for 5 minutes) | `check_download_rate_limit.dart` | ✅ offline PR |
 | 5.4 | Delete an offline copy with confirmation. M3: the dialog's buttons name the action («Скасаваць» / «Выдаліць» instead of «Не» / «Так»); «Афлайн-копія слоўніка выдалена.» snackbar after it | `clear_downloaded_dictionary.dart` | ✅ offline PR |
 | 5.5 | Promo badge on the settings button until settings are opened (`offline_dictionaries_promo_seen`, migrated from Flutter) | `settings/presentation/offline_dictionaries_promo_cubit.dart` | ✅ offline PR |
-| 5.6 | Analytics: `offline_dictionary_download_click` | `firebase_analytics_settings_repository.dart` | ⬜ with the analytics/consent PR |
+| 5.6 | Analytics: `offline_dictionary_download_click` (`dict_name`, `dict_path`) on a tap that may start a download | `firebase_analytics_settings_repository.dart` | ✅ analytics PR |
 
 ## 6. Stress (націск)
 
@@ -91,7 +91,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 6.1 | «На́ціск» button on a translation; picker when the entry has several words. Candidates: the ТСБМ headword unless it is a phrase, else the single words of the entry's `#831b03` runs, sorted. M3: an assist chip under the headword (a dropdown menu for several candidates) instead of a text button in the top app bar | `translation/presentation/widgets/action_stress.dart`, `translation/domain/entity/translation.dart` | ✅ stress PR |
 | 6.2 | Resolve word list and stress table: starnik.by (`/api/wordList`, `/pravapis/<id>` page) first, skarnik_admin `/api/stress_words/` when starnik.by fails or has no exact match; never merged, a table only from the entry's own source (`shared/stress_spec.md`). Responses go through the shared 24 h HTTP cache. (The parity row said Supabase; Flutter moved the fallback to skarnik_admin) | `stress/` | ✅ stress PR |
 | 6.3 | Stress table screen with HTML cells and part-of-speech names; one match opens its table directly (the lookup screen is replaced, so back returns to the translation), homographs are listed first. M3: two columns with dividers instead of a bordered table; `.pytanne` muted and `.skarot` in the label colour role instead of fixed red; the stressed word and part of speech head the table. Not found and errors stay on the screen (errors with «Паўтарыць»); Flutter closed the screen with a snackbar when nothing was found and had no retry | `stress/presentation/stress_page.dart`, `stress_table_page.dart`, `strings.dart` | ✅ stress PR |
-| 6.4 | Analytics: `stress_clicked` | `stress/data/repository/firebase_analytics_stress_repository.dart` | ⬜ with the analytics/consent PR |
+| 6.4 | Analytics: `stress_clicked` (`word`) when the «На́ціск» screen opens; not again on retry | `stress/data/repository/firebase_analytics_stress_repository.dart` | ✅ analytics PR |
 
 ## 7. Word-of-the-day widget
 
@@ -106,14 +106,14 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
 | 8.1 | Settings: clear search history with confirmation; bookmarks stay. M3: the dialog title asks the question and the buttons name the action («Скасаваць» / «Ачысціць» instead of «Увага» + «Не» / «Так»); the row is disabled while history is empty; «Гісторыя паспяхова ачышчана.» snackbar after it. The History tab follows the store, so it empties at once | `settings/presentation/settings_page.dart` | ✅ settings PR |
-| 8.2 | Settings: analytics on/off switch | `settings_page.dart` | ⬜ |
+| 8.2 | Settings: «Аналітыка выкарыстання» switch in «Іншае», the same answer as the dialog (switching counts as an answer). Subtitle typo «зборы» fixed to «збор» | `settings_page.dart` | ✅ analytics PR |
 | 8.3 | Settings: «Напісаць распрацоўшчыкам»: email with «Skarnik 4.0.0 (123), Android» as subject (Flutter's format). Native: the body starts with the device and Android version. Addresses as in the iOS app (to belanghelp@gmail.com, bcc skarnikapp@gmail.com; Flutter's came from a build secret), in `gradle.properties`. A snackbar says so when there is no email app | `settings_cubit.dart` | ✅ settings PR |
 | 8.4 | Settings: «Ацаніць праграму» opens the store listing (`market://`, so Play or AppGallery), else the Play web page | `settings_cubit.dart` | ✅ settings PR |
 | 8.5 | «Пра Скарнік» bottom sheet: about text, links to starnik.by and drukarnik.app, email button, version. Native: «Працуе ў рэжыме анлайн.» is left out, since dictionaries can be downloaded for offline use | `settings/presentation/widgets/about_bottom_sheet.dart` | ✅ settings PR |
-| 8.6 | Analytics consent dialog on first launch; nothing sent before an answer (`analytics_consent_answered`, `analytics_consent_granted`) | `analytics_consent/` | ⬜ |
+| 8.6 | Analytics consent dialog on first launch, over any screen, not dismissible by back or outside tap; nothing sent before an answer (collection off in the manifest). Keys `analytics_consent_answered`, `analytics_consent_granted` migrated from Flutter, so people who answered are not asked again. Native: no advertising id; debug builds never send ([ADR 0007](adr/0007-analytics-and-consent.md)) | `analytics_consent/` | ✅ analytics PR |
 | 8.7 | In-app review after 10 translation views, asked once; AppGallery fallback dialog on Huawei (`review_translation_view_count`, `review_already_requested`) | `review/` | ⬜ |
 | 8.8 | Remote Config (HTTP cache lifetime) | `app/domain/use_case/init_remote_config.dart` | ⬜ |
-| 8.9 | Analytics: app open | `app/data/repository/firebase_analytics_app_repository.dart` | ⬜ |
+| 8.9 | Analytics: `app_open` when the activity starts fresh (not on rotation) | `app/data/repository/firebase_analytics_app_repository.dart` | ✅ analytics PR |
 
 ## 9. Deep links
 

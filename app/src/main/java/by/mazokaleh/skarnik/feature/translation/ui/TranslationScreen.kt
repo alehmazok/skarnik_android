@@ -105,7 +105,10 @@ fun TranslationScreen(
         snackbarHostState = snackbarHostState,
         onBack = onBack,
         onToggleBookmark = viewModel::toggleBookmark,
-        onShare = { context.shareTranslation(it) },
+        onShare = {
+            viewModel.onShare(it)
+            context.shareTranslation(it)
+        },
         onRetry = viewModel::retry,
         onStress = onStress,
         onLink = { href ->

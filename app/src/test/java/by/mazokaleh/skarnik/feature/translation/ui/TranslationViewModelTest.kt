@@ -1,6 +1,8 @@
 package by.mazokaleh.skarnik.feature.translation.ui
 
 import app.cash.turbine.test
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
+import by.mazokaleh.skarnik.core.analytics.FakeAnalytics
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.core.model.SavedWordsPage
@@ -34,6 +36,7 @@ class TranslationViewModelTest {
     private val route = TranslationRoute(langId = 1, wordId = 27890, word = "бурштын")
     private val history = mutableListOf<Word>()
     private val bookmarks = FakeBookmarks()
+    private val analytics = FakeAnalytics()
     private var api: RemoteTranslationSource = RemoteTranslationSource { _, _ ->
         TranslationEntry(stress = null, html = "янтарь", redirectTo = null)
     }
@@ -65,7 +68,8 @@ class TranslationViewModelTest {
 
             override fun observe(limit: Int): Flow<SavedWordsPage> = emptyFlow()
         },
-        bookmarks = bookmarks
+        bookmarks = bookmarks,
+        analytics = analytics
     )
 
     @Test
@@ -76,6 +80,7 @@ class TranslationViewModelTest {
         assertEquals("янтарь", loaded.translation.html)
         assertEquals(false, loaded.bookmarked)
         assertEquals(listOf(word), history)
+        assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.TranslationViewed(loaded.translation)), analytics.events)
     }
 
     @Test
@@ -148,6 +153,18 @@ class TranslationViewModelTest {
             assertEquals(TranslationEvent.BookmarkChanged(bookmarked = false), awaitItem())
             assertEquals(emptySet(), bookmarks.words)
         }
+        // Only adding is an event, as in Flutter.
+        assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.AddToFavorites(word)), analytics.events.drop(1))
+    }
+
+    @Test
+    fun `sharing logs the skarnik_app link`() = runTest {
+        val viewModel = viewModel()
+        val loaded = viewModel.uiState.value as TranslationUiState.Loaded
+
+        viewModel.onShare(loaded.translation)
+
+        assertEquals(AnalyticsEvent.Share("https://skarnik.app/r/belrus/27890"), analytics.events.last())
     }
 
     @Test

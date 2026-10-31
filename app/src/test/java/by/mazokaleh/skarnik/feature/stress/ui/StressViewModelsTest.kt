@@ -1,6 +1,8 @@
 package by.mazokaleh.skarnik.feature.stress.ui
 
 import app.cash.turbine.test
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
+import by.mazokaleh.skarnik.core.analytics.FakeAnalytics
 import by.mazokaleh.skarnik.feature.stress.domain.StressBackend
 import by.mazokaleh.skarnik.feature.stress.domain.StressResolver
 import by.mazokaleh.skarnik.feature.stress.domain.StressRow
@@ -41,6 +43,7 @@ class StressViewModelsTest {
 
     // The same fake behind both sources is enough here: the cascade itself is covered by StressResolverTest.
     private val resolver = StressResolver(backend, backend)
+    private val analytics = FakeAnalytics()
 
     @Before
     fun setUp() {
@@ -56,28 +59,37 @@ class StressViewModelsTest {
     fun `several matches are listed`() = runTest {
         words = pair
 
-        assertEquals(StressUiState.Choose(pair), StressViewModel(StressRoute("пара"), resolver).uiState.value)
+        assertEquals(StressUiState.Choose(pair), StressViewModel(StressRoute("пара"), resolver, analytics).uiState.value)
     }
 
     @Test
     fun `a single match opens its table`() = runTest {
         words = pair.take(1)
 
-        val viewModel = StressViewModel(StressRoute("пара"), resolver)
+        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
 
         viewModel.openTable.test { assertEquals(pair.first(), awaitItem()) }
         assertEquals(StressUiState.Loading, viewModel.uiState.value)
     }
 
     @Test
+    fun `opening the screen logs stress_clicked once, not on retry`() = runTest {
+        failure = IOException("offline")
+        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
+        viewModel.retry()
+
+        assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.StressClicked("пара")), analytics.events)
+    }
+
+    @Test
     fun `no match is not found`() = runTest {
-        assertEquals(StressUiState.NotFound, StressViewModel(StressRoute("пара"), resolver).uiState.value)
+        assertEquals(StressUiState.NotFound, StressViewModel(StressRoute("пара"), resolver, analytics).uiState.value)
     }
 
     @Test
     fun `an error can be retried`() = runTest {
         failure = IOException("offline")
-        val viewModel = StressViewModel(StressRoute("пара"), resolver)
+        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
         assertEquals(StressUiState.Error, viewModel.uiState.value)
 
         failure = null

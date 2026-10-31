@@ -2,6 +2,8 @@ package by.mazokaleh.skarnik.feature.settings.ui
 
 import app.cash.turbine.ReceiveTurbine
 import app.cash.turbine.test
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
+import by.mazokaleh.skarnik.core.analytics.FakeAnalytics
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.offline.domain.CheckDownloadRateLimitUseCase
 import by.mazokaleh.skarnik.feature.offline.domain.DeleteOfflineDictionaryUseCase
@@ -44,12 +46,14 @@ class SettingsViewModelTest {
         override fun observe(dictionary: Dictionary): Flow<DownloadJob?> = jobs.map { it[dictionary] }
     }
     private var now = 1_000_000L
+    private val analytics = FakeAnalytics()
 
     private fun viewModel() = SettingsViewModel(
         downloads = downloads,
         settings = settings,
         checkRateLimit = CheckDownloadRateLimitUseCase(settings) { now },
         deleteDictionary = DeleteOfflineDictionaryUseCase(store, settings),
+        analytics = analytics,
         store = store
     )
 
@@ -101,6 +105,7 @@ class SettingsViewModelTest {
             assertEquals(OfflineDictionaryStatus.Downloading(null), awaitItem().statuses()[Dictionary.BelRus])
             assertEquals(listOf(Dictionary.BelRus), downloads.started)
         }
+        assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.OfflineDictionaryDownloadClicked(Dictionary.BelRus)), analytics.events)
     }
 
     @Test

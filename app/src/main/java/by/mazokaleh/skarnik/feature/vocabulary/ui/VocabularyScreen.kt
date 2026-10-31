@@ -73,7 +73,10 @@ fun VocabularyScreen(
     viewModel: VocabularyViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    VocabularyPage(uiState, viewModel::select, viewModel::retry, onWordClick)
+    VocabularyPage(uiState, viewModel::select, viewModel::retry) { dictionary, word ->
+        viewModel.onWordClick(dictionary, word)
+        onWordClick(dictionary, word)
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -1,0 +1,41 @@
+# Analytics consent: a clean install asks once and cannot be skipped with back; the answer is kept across
+# launches and Settings has the same switch.
+appId: by.mazokaleh.skarnik.debug
+name: Analytics consent
+tags:
+  - consent
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible: "(?s)Дазвольце збіраць ананімную статыстыку.*"
+    timeout: 60000
+- takeScreenshot: consent-dialog
+# Back does not dismiss it: the user has to choose.
+- back
+- assertVisible: "Не дазваляць"
+- tapOn: "Дазволіць"
+- assertNotVisible: "Не дазваляць"
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+
+# The same answer in Settings; switching it off is an answer too.
+- tapOn:
+    id: settings_button
+- scrollUntilVisible:
+    element:
+      id: settings_analytics
+- takeScreenshot: consent-settings
+- tapOn:
+    id: settings_analytics
+
+# Answered: the next launch does not ask again.
+- stopApp
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- assertNotVisible: "Не дазваляць"

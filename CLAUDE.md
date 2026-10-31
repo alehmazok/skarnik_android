@@ -94,6 +94,7 @@ Resources are pinned to `be` (`withAppLocale()` in `attachBaseContext`) so plura
 on any device. Dark theme, TalkBack labels, large fonts, edge-to-edge, predictive back. minSdk 24.
 
 **Analytics, crashes and secrets.** Same Firebase Analytics event names as Flutter (listed in parity
-register); nothing is sent before consent. Crash reporting is Sentry (org `skarnik`), not Crashlytics. Secrets
+register); nothing is sent before consent. ViewModels log with `Analytics.log(AnalyticsEvent)` and never wait for
+it; a new event is a new `AnalyticsEvent` subclass ([ADR 0007](docs/adr/0007-analytics-and-consent.md)). Crash reporting is Sentry (org `skarnik`), not Crashlytics. Secrets
 (incl. the Sentry DSN) only via `local.properties` / GitHub Secrets, never in code or git. The admin API host,
-Supabase URL and Supabase publishable key are public config, not secrets: they live in `gradle.properties`.
+Supabase URL, Supabase publishable key and Firebase client config are public config, not secrets: they live in `gradle.properties`.

@@ -3,10 +3,13 @@ package by.mazokaleh.skarnik.feature.vocabulary.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.mazokaleh.skarnik.core.analytics.Analytics
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.vocabulary.domain.LoadVocabularyUseCase
 import by.mazokaleh.skarnik.feature.vocabulary.domain.Vocabulary
+import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularyWord
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -36,7 +39,10 @@ sealed interface VocabularyContent {
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
-class VocabularyViewModel @Inject constructor(private val loadVocabulary: LoadVocabularyUseCase) : ViewModel() {
+class VocabularyViewModel @Inject constructor(
+    private val loadVocabulary: LoadVocabularyUseCase,
+    private val analytics: Analytics
+) : ViewModel() {
     private val request = MutableStateFlow(Request(VOCABULARY_DICTIONARIES.first(), attempt = 0))
     private val loaded = mutableMapOf<Dictionary, Vocabulary>()
 
@@ -68,6 +74,10 @@ class VocabularyViewModel @Inject constructor(private val loadVocabulary: LoadVo
 
     fun select(dictionary: Dictionary) {
         request.value = Request(dictionary, attempt = 0)
+    }
+
+    fun onWordClick(dictionary: Dictionary, word: VocabularyWord) {
+        analytics.log(AnalyticsEvent.VocabularyWordOpened(dictionary, word.wordId, word.word))
     }
 
     fun retry() {

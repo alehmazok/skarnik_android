@@ -6,6 +6,7 @@ tags:
 ---
 - launchApp:
     clearState: true
+- runFlow: subflows/decline-analytics.yaml
 # First launch unpacks the 60 MB search index, so allow time on a slow CI emulator.
 - extendedWaitUntil:
     visible:

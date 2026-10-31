@@ -3,6 +3,8 @@ package by.mazokaleh.skarnik.feature.translation.ui
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.mazokaleh.skarnik.core.analytics.Analytics
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.WordLink
@@ -58,7 +60,8 @@ class TranslationViewModel @AssistedInject constructor(
     private val words: WordRepository,
     private val getTranslation: GetTranslationUseCase,
     private val history: HistoryRepository,
-    private val bookmarks: BookmarksRepository
+    private val bookmarks: BookmarksRepository,
+    private val analytics: Analytics
 ) : ViewModel() {
     private val _uiState = MutableStateFlow<TranslationUiState>(TranslationUiState.Loading(route.word))
     val uiState: StateFlow<TranslationUiState> = _uiState.asStateFlow()
@@ -83,6 +86,7 @@ class TranslationViewModel @AssistedInject constructor(
         viewModelScope.launch {
             suspendRunCatching { if (bookmark) bookmarks.add(word) else bookmarks.remove(word) }
                 .onSuccess {
+                    if (bookmark) analytics.log(AnalyticsEvent.AddToFavorites(word))
                     _uiState.update { state ->
                         if (state is TranslationUiState.Loaded) state.copy(bookmarked = bookmark) else state
                     }
@@ -90,6 +94,11 @@ class TranslationViewModel @AssistedInject constructor(
                 }
                 .onFailure { Log.e(TAG, "Cannot change the bookmark", it) }
         }
+    }
+
+    /** The share sheet opens with this translation's link. */
+    fun onShare(translation: Translation) {
+        analytics.log(AnalyticsEvent.Share(translation.shareUrl))
     }
 
     private fun load() {
@@ -117,6 +126,7 @@ class TranslationViewModel @AssistedInject constructor(
                 }
                 val bookmarked = suspendRunCatching { bookmarks.isBookmarked(word) }.getOrDefault(false)
                 val candidates = stressCandidates(word, result.translation.html)
+                analytics.log(AnalyticsEvent.TranslationViewed(result.translation))
                 TranslationUiState.Loaded(result.translation, bookmarked, candidates)
             }
         }
