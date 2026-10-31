@@ -45,7 +45,10 @@ by.mazokaleh.skarnik
     ├── search/            word search
     ├── translation/       translation screen, source chain, HTML renderer
     ├── history/ favorites/   History and Bookmarks tabs, their repositories and the sort setting
-    ├── vocabulary/ settings/ stress/ widget/   (planned)
+    ├── vocabulary/        Dictionary tab: whole dictionaries in alphabetical order, letter index
+    ├── offline/           offline dictionary downloads: Supabase pages, WorkManager job, rate limit
+    ├── settings/          Settings screen (offline section so far) and the settings button with its badge
+    ├── stress/ widget/    (planned)
 ```
 
 Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cases, feature models, only
@@ -70,7 +73,7 @@ tests can swap them.
 
 Navigation Compose with type-safe routes (`@Serializable` objects/classes). Target graph, mirroring Flutter:
 
-- `HomeRoute` holds the bottom bar: History (start), Bookmarks, Dictionary (vocabulary, planned). Tabs switch
+- `HomeRoute` holds the bottom bar: History (start), Bookmarks, Dictionary (vocabulary). Tabs switch
   inside the one destination; a `SaveableStateHolder` keeps each tab's scroll position and its ViewModel lives
   on the `HomeRoute` entry, so hidden tabs keep their data. Back on another tab returns to History. Search and
   Translation open full screen above it.
@@ -143,6 +146,17 @@ re-runs a limited query (`limit + 1` rows, the extra one tells whether more foll
 limit by 25 when the last row shows. Bookmarks sort by id (date added) or by `word`. Removing a bookmark deletes
 it at once; undo puts the same row back with its old id, so it keeps its place in the date order.
 
+## Dictionary (vocabulary)
+
+`feature/vocabulary` lists a whole dictionary (~100k words) from the search store. `ObjectBoxVocabularyRepository`
+reads it with `Query.forEach` (one entity at a time) on the IO dispatcher; `LoadVocabularyUseCase` sorts it on the
+default dispatcher with an `Alphabet` sort key (each letter mapped to a private-use character in Belarusian or
+Russian alphabet order, since code-point order puts ё, і, ў after я) and groups it by the stored `letter`, as the
+iOS app does. Each `VocabularySection` knows its header's row in the flat list, so the letter index jumps with
+`LazyListState.scrollToItem` in O(1). The ViewModel lives on the `HomeRoute` entry and keeps every dictionary it
+has loaded (a few MB each). The list is one `LazyColumn` with sticky headers; `LetterIndexBar` maps a touch or
+drag to a letter and opts out of the system back gesture at the screen edge.
+
 ## Settings (DataStore)
 
 One Preferences DataStore, `files/datastore/settings.preferences_pb`, provided by `core/datastore`. Flutter's
@@ -151,11 +165,29 @@ Each feature contributes a `FlutterPreferencesMigration` into a Hilt set; it cop
 sets a `migrated_from_flutter_<name>` flag. An unreadable Flutter file counts as empty. Keys keep Flutter's
 names and values (`favorites_sort_order` = `dateAdded` | `alphabetical`).
 
+## Offline dictionaries
+
+`feature/offline` ([ADR 0004](adr/0004-offline-downloads-in-workmanager.md)). Tapping a dictionary in Settings
+checks the rate limit (4 starts per 5 minutes) and enqueues unique work `offline_dictionary_<path>` (policy
+`KEEP`, so a second tap never runs a parallel download). `DownloadDictionaryWorker` (Hilt worker; WorkManager is
+initialised by `SkarnikApplication` with `HiltWorkerFactory`) runs `DownloadDictionaryUseCase`:
+
+1. Count the dictionary in Supabase (`Prefer: count=exact`, `Content-Range`). Drop a cursor that has no stored
+   words behind it.
+2. Fetch `main_word` keyset pages (`id > cursor`, `order=id.asc`, 5000 asked, Supabase may return fewer) until a
+   page is empty; write each page into the translation store in one transaction (unique `key` replaces), then
+   save the page's last `id` as `download_cursor_<path>`. Each request is retried 5 times on `IOException`.
+3. Clear the cursor. Progress goes out through `setProgress`.
+
+Download requests use the app's OkHttp client without the HTTP cache and with a longer call timeout. The
+Settings row combines three flows: the job's `WorkInfo`, the stored word count (`BoxStore.changes`) and the
+cursor; `OfflineDictionaryStatus.of` turns them into not downloaded / downloading / downloaded / failed. The
+translation screen reads downloaded words first (`ObjectBoxLocalTranslationSource`).
+
 ## Background work and widget *(planned)*
 
-WorkManager refreshes the word-of-the-day widget hourly plus once on first add, as Flutter does; offline
-dictionary downloads run as resumable work with a persisted cursor. The widget is Glance (Flutter already
-uses a native Glance widget, which is reused).
+WorkManager refreshes the word-of-the-day widget hourly plus once on first add, as Flutter does. The widget is
+Glance (Flutter already uses a native Glance widget, which is reused).
 
 ## Analytics and crash reporting *(planned)*
 

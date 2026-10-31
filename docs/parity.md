@@ -18,7 +18,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 |---|---|---|---|
 | 0.1 | Same app id `by.mazokaleh.skarnik`; installs as an update | `android/app/build.gradle` | ✅ skeleton PR |
 | 0.2 | Open existing ObjectBox stores (search, history, translation) at `app_flutter/objectbox_*`; seed the search index from the bundled asset on first launch | `app/data/repository/objectbox_database_repository.dart` | ✅ skeleton PR; emulator upgrade 3.6.0 → 4.0.0 passed 2026-10-30 (all stores byte-identical, no re-seed) |
-| 0.3 | Migrate Flutter settings into DataStore (each key with its feature, listed below). Source is `files/datastore/FlutterSharedPreferences.preferences_pb` (`SharedPreferencesAsync`), not the XML file. Each feature adds a one-time `FlutterPreferencesMigration` to the app's `settings` store; Flutter's file is left untouched | various `shared_preferences_*_repository.dart` | 🟨 mechanism + `favorites_sort_order` in history/bookmarks PR; other keys with their features |
+| 0.3 | Migrate Flutter settings into DataStore (each key with its feature, listed below). Source is `files/datastore/FlutterSharedPreferences.preferences_pb` (`SharedPreferencesAsync`), not the XML file. Each feature adds a one-time `FlutterPreferencesMigration` to the app's `settings` store; Flutter's file is left untouched | various `shared_preferences_*_repository.dart` | 🟨 mechanism + `favorites_sort_order` in history/bookmarks PR; download cursors + promo flag in offline PR; other keys with their features |
 | 0.3a | Delete Flutter's HTTP cache `DioCache.db` once after the upgrade (cache only, not migrated; native uses OkHttp's cache in `cache/http`) | `translation/data/http/skarnik_dio.dart` | ⬜ with the settings migration |
 | 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
 | 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | 🟨 theme done, settings toggles with the settings PR |
@@ -63,26 +63,26 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 3.2 | Bookmarks tab: paged list, tap to open. Native: the list observes the history store (ObjectBox query as a Flow), so bookmarks added or removed elsewhere show at once. Flutter bug, not ported: the kept-alive tab never reloads after a bookmark changes on the translation screen | `favorites/` | ✅ history/bookmarks PR |
 | 3.3 | Bookmarks sort: by date added / alphabetical, remembered (`favorites_sort_order`, migrated from Flutter with the same values). M3: sort icon opens a dropdown menu with a check on the current order | `favorites/data/repository/shared_preferences_favorites_sort_repository.dart` | ✅ history/bookmarks PR |
 | 3.4 | Remove a bookmark with «Вярнуць» undo in the snackbar. Native: swipe from the end (as in Flutter) or the TalkBack action «Выдаліць з закладак»; the bookmark is removed at once and undo puts it back with its old id, so it keeps its place (Flutter delayed the delete by 4 s and lost it if the app closed) | `favorites/presentation/favorites_page.dart` | ✅ history/bookmarks PR |
-| 3.5 | Bottom navigation: History («Пошук»), Bookmarks, Dictionary; each tab keeps its own state. Native: tabs keep scroll position and data while hidden; back on Bookmarks returns to History first (M3). The Dictionary tab is added with 4.1; the navigation rail on wide screens comes with 0.5 | `home/presentation/home_shell.dart` | 🟨 History + Bookmarks in history/bookmarks PR; Dictionary with 4.1 |
+| 3.5 | Bottom navigation: History («Пошук»), Bookmarks, Dictionary; each tab keeps its own state. Native: tabs keep scroll position and data while hidden; back on Bookmarks or Dictionary returns to History first (M3). The navigation rail on wide screens comes with 0.5 | `home/presentation/home_shell.dart` | ✅ history/bookmarks PR, Dictionary in dictionary PR (rail with 0.5) |
 
 ## 4. Dictionary (vocabulary)
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 4.1 | Tabs: Тлумачальны, Бел-Рус, Рус-Бел | `vocabulary/presentation/vocabulary_page.dart` | ⬜ |
-| 4.2 | Alphabetical list with a letter index bar to jump | `vocabulary/presentation/widgets/alphabet_list_view.dart` | ⬜ |
-| 4.3 | Analytics: `vocabulary` | `vocabulary/data/repository/firebase_analytics_vocabulary_repository.dart` | ⬜ |
+| 4.1 | Tabs: Тлумачальны (first), Бел-Рус, Рус-Бел, each the whole dictionary from the search store; a dictionary loads when its tab is first shown and is kept while the home screen lives. M3: top app bar «Слоўнік» over a primary tab row; each dictionary keeps its own scroll position. New: «Паўтарыць» when the store cannot be read (Flutter showed an endless spinner) | `vocabulary/presentation/vocabulary_page.dart`, `vocabulary_cubit.dart` | ✅ dictionary PR |
+| 4.2 | Alphabetical list with a letter index bar to jump; tap opens the word and saves it to history. Native: words are sorted in Belarusian/Russian alphabet order and grouped by the stored `letter` under sticky letter headers, as in the iOS app (Flutter listed them in store order). The index shows the letters that have words (Flutter showed a fixed list, and its first letter never jumped); dragging shows the letter in a bubble with a light haptic tick (Flutter had none on Android); TalkBack gets a «Перайсці да літары» action per letter | `vocabulary/presentation/widgets/alphabet_list_view.dart` | ✅ dictionary PR |
+| 4.3 | Analytics: `vocabulary` | `vocabulary/data/repository/firebase_analytics_vocabulary_repository.dart` | ⬜ with the analytics/consent PR |
 
 ## 5. Offline dictionaries
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 5.1 | Settings section «Афлайн доступ»: per dictionary download / progress «N / M слоў» / downloaded count | `settings/presentation/widgets/offline_dictionaries_section.dart` | ⬜ |
-| 5.2 | Paged download from Supabase, resumable via cursor (`download_cursor_<dict>`), stale-cursor reset | `translation/domain/use_case/download_dictionary.dart` | ⬜ |
-| 5.3 | Rate limit: max 4 download starts per 5 minutes (`download_recent_attempts_at_ms`) | `check_download_rate_limit.dart` | ⬜ |
-| 5.4 | Delete an offline copy with confirmation | `clear_downloaded_dictionary.dart` | ⬜ |
-| 5.5 | Promo badge on the settings button until settings are opened (`offline_dictionaries_promo_seen`) | `settings/presentation/offline_dictionaries_promo_cubit.dart` | ⬜ |
-| 5.6 | Analytics: `offline_dictionary_download_click` | `firebase_analytics_settings_repository.dart` | ⬜ |
+| 5.1 | Settings section «Афлайн доступ»: per dictionary download / progress «N / M слоў» / downloaded count. M3: Settings open from a settings button in the trailing slot of the start screen's search bar; rows are `ListItem`s under a list subheader, counts use Belarusian plurals. The other Settings rows (8.x) come with the settings PR | `settings/presentation/widgets/offline_dictionaries_section.dart` | ✅ offline PR |
+| 5.2 | Paged download from Supabase, resumable via cursor (`download_cursor_<dict>`, migrated from Flutter), stale-cursor reset, 5 attempts per request. Native: the download is a WorkManager job ([ADR 0004](adr/0004-offline-downloads-in-workmanager.md)), so it survives leaving Settings and the process being killed, and resumes from the cursor (Flutter's download died with the app). An unfinished download shows the error row and resumes on tap | `translation/domain/use_case/download_dictionary.dart` | ✅ offline PR |
+| 5.3 | Rate limit: max 4 download starts per 5 minutes (`download_recent_attempts_at_ms`; not migrated, it only matters for 5 minutes) | `check_download_rate_limit.dart` | ✅ offline PR |
+| 5.4 | Delete an offline copy with confirmation. M3: the dialog's buttons name the action («Скасаваць» / «Выдаліць» instead of «Не» / «Так»); «Афлайн-копія слоўніка выдалена.» snackbar after it | `clear_downloaded_dictionary.dart` | ✅ offline PR |
+| 5.5 | Promo badge on the settings button until settings are opened (`offline_dictionaries_promo_seen`, migrated from Flutter) | `settings/presentation/offline_dictionaries_promo_cubit.dart` | ✅ offline PR |
+| 5.6 | Analytics: `offline_dictionary_download_click` | `firebase_analytics_settings_repository.dart` | ⬜ with the analytics/consent PR |
 
 ## 6. Stress (націск)
 
@@ -127,5 +127,5 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
 | 10.1 | Signed release build with the existing upload key; Play, plus Huawei AppGallery | `android/fastlane/` | ⬜ |
-| 10.1a | New: every merge to `main` goes to Firebase App Distribution (group `internal`), signed with the upload key ([ADR 0004](adr/0004-firebase-app-distribution.md)) | `android/fastlane/Fastfile` (`firebase` lane) | 🟨 workflow PR; needs repository secrets |
+| 10.1a | New: every merge to `main` goes to Firebase App Distribution (group `internal`), signed with the upload key ([ADR 0005](adr/0005-firebase-app-distribution.md)) | `android/fastlane/Fastfile` (`firebase` lane) | 🟨 workflow PR; needs repository secrets |
 | 10.2 | Upgrade test: Flutter 3.6.0 with history, bookmarks and an offline dictionary → native build keeps all of it | — | ⬜ |

@@ -23,15 +23,18 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import by.mazokaleh.skarnik.R
+import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.feature.favorites.ui.BookmarksScreen
 import by.mazokaleh.skarnik.feature.history.ui.HistoryScreen
+import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularyWord
+import by.mazokaleh.skarnik.feature.vocabulary.ui.VocabularyScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
 data object HomeRoute
 
-/** Bottom navigation destinations. The Dictionary tab joins with the vocabulary feature. */
+/** Bottom navigation destinations. */
 enum class HomeTab(
     @StringRes val label: Int,
     @DrawableRes val icon: Int,
@@ -39,7 +42,8 @@ enum class HomeTab(
     val testTag: String
 ) {
     History(R.string.tab_search, R.drawable.ic_search, R.drawable.ic_search, "home_tab_history"),
-    Bookmarks(R.string.tab_bookmarks, R.drawable.ic_bookmark_border, R.drawable.ic_bookmark, "home_tab_bookmarks")
+    Bookmarks(R.string.tab_bookmarks, R.drawable.ic_bookmark_border, R.drawable.ic_bookmark, "home_tab_bookmarks"),
+    Vocabulary(R.string.tab_dictionary, R.drawable.ic_book_outlined, R.drawable.ic_book, "home_tab_dictionary")
 }
 
 /**
@@ -47,7 +51,12 @@ enum class HomeTab(
  * tab shows; back on another tab returns to History first, as M3 navigation asks.
  */
 @Composable
-fun HomeScreen(onSearchClick: () -> Unit, onWordClick: (SavedWord) -> Unit) {
+fun HomeScreen(
+    onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
+    onWordClick: (SavedWord) -> Unit,
+    onDictionaryWordClick: (Dictionary, VocabularyWord) -> Unit
+) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.History) }
     val tabStates = rememberSaveableStateHolder()
     BackHandler(enabled = tab != HomeTab.History) { tab = HomeTab.History }
@@ -60,8 +69,9 @@ fun HomeScreen(onSearchClick: () -> Unit, onWordClick: (SavedWord) -> Unit) {
         Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
             tabStates.SaveableStateProvider(tab) {
                 when (tab) {
-                    HomeTab.History -> HistoryScreen(onSearchClick = onSearchClick, onWordClick = onWordClick)
+                    HomeTab.History -> HistoryScreen(onSearchClick, onSettingsClick, onWordClick)
                     HomeTab.Bookmarks -> BookmarksScreen(onWordClick = onWordClick)
+                    HomeTab.Vocabulary -> VocabularyScreen(onWordClick = onDictionaryWordClick)
                 }
             }
         }

@@ -17,6 +17,7 @@
 
     <string name="tab_search">Пошук</string>
     <string name="tab_bookmarks">Закладкі</string>
+    <string name="tab_dictionary">Слоўнік</string>
 
     <string name="history_empty">Пачніце ўводзіць слова ў пошук…</string>
 
@@ -27,6 +28,12 @@
     <string name="bookmarks_sort_by_letter">Па алфавіце</string>
     <string name="bookmarks_removed">Выдалена з закладак.</string>
     <string name="action_undo">Вярнуць</string>
+
+    <string name="vocabulary_title">Слоўнік</string>
+    <string name="vocabulary_tab_tsbm">Тлумачальны</string>
+    <string name="vocabulary_tab_bel_rus">Бел-Рус</string>
+    <string name="vocabulary_tab_rus_bel">Рус-Бел</string>
+    <string name="vocabulary_jump_to_letter">Перайсці да літары «%1$s»</string>
 
     <string name="search_placeholder">Пошук слоў</string>
     <string name="search_hint">Пошук з аўтаматычнай падменай і|и, ў|щ, \'|ь|ъ, е|ё</string>
@@ -44,4 +51,30 @@
     <string name="action_share">Падзяліцца</string>
     <string name="action_bookmark_add">Дадаць у закладкі</string>
     <string name="action_bookmark_remove">Выдаліць з закладак</string>
+    <string name="settings_title">Налады</string>
+    <string name="settings_open">Налады</string>
+    <string name="settings_offline_section">Афлайн доступ</string>
+    <string name="offline_download">Спампаваць для афлайн доступу</string>
+    <string name="offline_download_error">Адбылася памылка падчас спампоўкі слоўніка.</string>
+    <string name="offline_rate_limited">Занадта шмат спроб спампоўкі. Паспрабуйце праз некалькі хвілін.</string>
+    <string name="offline_downloading">Спампоўваецца…</string>
+    <plurals name="offline_progress">
+        <item quantity="one">%1$d / %2$d слова</item>
+        <item quantity="few">%1$d / %2$d словы</item>
+        <item quantity="many">%1$d / %2$d слоў</item>
+        <item quantity="other">%1$d / %2$d слова</item>
+    </plurals>
+    <plurals name="offline_downloaded">
+        <item quantity="one">Спампавана: %1$d слова</item>
+        <item quantity="few">Спампавана: %1$d словы</item>
+        <item quantity="many">Спампавана: %1$d слоў</item>
+        <item quantity="other">Спампавана: %1$d слова</item>
+    </plurals>
+    <string name="offline_delete">Выдаліць афлайн-копію</string>
+    <string name="offline_delete_title">Выдаліць афлайн-копію?</string>
+    <string name="offline_delete_confirmation">Вы сапраўды жадаеце выдаліць афлайн-копію слоўніка «%1$s»?</string>
+    <string name="offline_deleted">Афлайн-копія слоўніка выдалена.</string>
+    <string name="offline_delete_error">Не атрымалася выдаліць афлайн-копію.</string>
+    <string name="action_cancel">Скасаваць</string>
+    <string name="action_delete">Выдаліць</string>
 </resources>

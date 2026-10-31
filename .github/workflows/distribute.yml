@@ -1,6 +1,6 @@
 name: Firebase App Distribution
 
-# Every merge to main goes to the "internal" tester group as a signed, minified release APK (docs/adr/0004).
+# Every merge to main goes to the "internal" tester group as a signed, minified release APK (docs/adr/0005).
 # Pull requests that touch the release build only build it, to catch signing and R8 problems before merge.
 on:
   push:
@@ -68,12 +68,32 @@ jobs:
           } > "$RUNNER_TEMP/release-notes.txt"
           cat "$RUNNER_TEMP/release-notes.txt" >> "$GITHUB_STEP_SUMMARY"
 
-      - name: Upload to Firebase App Distribution
-        if: github.event_name != 'pull_request' && env.HAS_SIGNING_KEY == 'true' && env.HAS_FIREBASE_CREDENTIALS == 'true'
+      # Fails early if the upload key is wrong; prints only the certificate digest.
+      - name: Check signature
+        if: env.HAS_SIGNING_KEY == 'true'
+        run: |
+          APKSIGNER="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)/apksigner"
+          "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/*.apk | grep -i "SHA-256 digest"
+
+      # Read-only calls with the service account: the API is reachable, it may read releases of the app,
+      # and the tester group exists. Runs on PRs too, so a bad key shows up before a merge.
+      - name: Check Firebase access
+        if: env.HAS_FIREBASE_CREDENTIALS == 'true'
         env:
           FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          API: https://firebaseappdistribution.googleapis.com/v1/projects/690309283484
+          APP_ID: 1:690309283484:android:3c2521a8af9d651ad03759
         run: |
           echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/firebase-sa.json" --quiet
+          TOKEN=$(gcloud auth print-access-token)
+          curl -sS --fail-with-body -o /dev/null -H "Authorization: Bearer $TOKEN" "$API/apps/$APP_ID/releases?pageSize=1"
+          curl -sS --fail-with-body -o /dev/null -H "Authorization: Bearer $TOKEN" "$API/groups/internal"
+          echo "Firebase App Distribution access OK" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload to Firebase App Distribution
+        if: github.event_name != 'pull_request' && env.HAS_SIGNING_KEY == 'true' && env.HAS_FIREBASE_CREDENTIALS == 'true'
+        run: |
           ./gradlew appDistributionUploadRelease -Pskarnik.versionCode="$VERSION_CODE" \
             --serviceCredentialsFile="$RUNNER_TEMP/firebase-sa.json" \
             --releaseNotesFile="$RUNNER_TEMP/release-notes.txt"

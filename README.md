@@ -118,7 +118,7 @@ exists in the repository root (gitignored, same format as skarnik-flutter's: `st
 
 Every merge to `main` builds a signed release APK and uploads it to the Firebase App Distribution group
 `internal` of the `skarnik-app` project ([.github/workflows/distribute.yml](.github/workflows/distribute.yml),
-[ADR 0004](docs/adr/0004-firebase-app-distribution.md)). Run it by hand from Actions → Firebase App
+[ADR 0005](docs/adr/0005-firebase-app-distribution.md)). Run it by hand from Actions → Firebase App
 Distribution → Run workflow. It needs these repository secrets (Settings → Secrets and variables → Actions):
 
 | Secret | Value |

@@ -33,6 +33,7 @@ import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.core.ui.ListMessage
 import by.mazokaleh.skarnik.core.ui.SavedWordItem
 import by.mazokaleh.skarnik.core.ui.SavedWordList
+import by.mazokaleh.skarnik.feature.settings.ui.SettingsButton
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 
 object HistoryTestTags {
@@ -47,11 +48,12 @@ object HistoryTestTags {
 @Composable
 fun HistoryScreen(
     onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onWordClick: (SavedWord) -> Unit,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HistoryContent(uiState, onSearchClick, onWordClick, viewModel::loadMore)
+    HistoryContent(uiState, onSearchClick, onWordClick, viewModel::loadMore) { SettingsButton(onSettingsClick) }
 }
 
 @Composable
@@ -59,9 +61,10 @@ private fun HistoryContent(
     uiState: HistoryUiState,
     onSearchClick: () -> Unit,
     onWordClick: (SavedWord) -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
+    settingsButton: @Composable () -> Unit
 ) {
-    Scaffold(topBar = { SearchEntry(onSearchClick) }) { padding ->
+    Scaffold(topBar = { SearchEntry(onSearchClick, settingsButton) }) { padding ->
         val modifier = Modifier.padding(padding)
         when (uiState) {
             HistoryUiState.Loading -> Box(modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -95,10 +98,11 @@ private fun HistoryContent(
 
 /**
  * A collapsed M3 search bar. It only opens the search screen, so it is a button styled as the bar rather
- * than a focusable text field (which would keep focus and reopen search on return).
+ * than a focusable text field (which would keep focus and reopen search on return). Settings sit in its
+ * trailing slot, as M3 places app-level actions on a search bar.
  */
 @Composable
-private fun SearchEntry(onClick: () -> Unit) {
+private fun SearchEntry(onClick: () -> Unit, trailing: @Composable () -> Unit) {
     Surface(
         onClick = onClick,
         modifier = Modifier
@@ -110,7 +114,7 @@ private fun SearchEntry(onClick: () -> Unit) {
         shape = CircleShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh
     ) {
-        Row(Modifier.padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.padding(start = 16.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 painter = painterResource(R.drawable.ic_search),
                 contentDescription = null,
@@ -118,10 +122,11 @@ private fun SearchEntry(onClick: () -> Unit) {
             )
             Text(
                 text = stringResource(R.string.search_placeholder),
-                modifier = Modifier.padding(start = 16.dp),
+                modifier = Modifier.padding(start = 16.dp).weight(1f),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+            trailing()
         }
     }
 }
@@ -133,5 +138,5 @@ private fun HistoryContentPreview() {
         SavedWord(2, Dictionary.BelRus, 10, "прывітанне", "п"),
         SavedWord(1, Dictionary.Tsbm, 11, "дзякуй", "д")
     )
-    SkarnikTheme { HistoryContent(HistoryUiState.Ready(words, hasMore = false), {}, {}, {}) }
+    SkarnikTheme { HistoryContent(HistoryUiState.Ready(words, hasMore = false), {}, {}, {}, {}) }
 }

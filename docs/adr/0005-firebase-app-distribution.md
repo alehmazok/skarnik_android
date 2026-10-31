@@ -1,4 +1,4 @@
-# 0004. Firebase App Distribution for tester builds
+# 0005. Firebase App Distribution for tester builds
 
 **Status:** Accepted (2026-10-31)
 

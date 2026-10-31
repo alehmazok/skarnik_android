@@ -70,7 +70,7 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             resValue("string", "app_name", "Skarnik")
             signingConfig = signingConfigs.findByName("release")
-            // Firebase App Distribution (docs/adr/0004). The Firebase Android app is the one Flutter
+            // Firebase App Distribution (docs/adr/0005). The Firebase Android app is the one Flutter
             // registered for this application id; credentials and release notes come from CI.
             firebaseAppDistribution {
                 appId = "1:690309283484:android:3c2521a8af9d651ad03759"
@@ -94,6 +94,13 @@ android {
 
     testOptions {
         unitTests.isReturnDefaultValues = true
+        unitTests.all {
+            // Show assertion messages in the CI log, not only in the uploaded report.
+            it.testLogging {
+                events("failed")
+                exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+            }
+        }
     }
 
     androidResources {
@@ -144,6 +151,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.datastore.preferences)
+    implementation(libs.androidx.work.runtime.ktx)
+    implementation(libs.androidx.hilt.work)
 
     implementation(platform(libs.compose.bom))
     implementation(libs.compose.ui)
@@ -153,6 +162,7 @@ dependencies {
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+    ksp(libs.androidx.hilt.compiler)
 
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.serialization.json)
