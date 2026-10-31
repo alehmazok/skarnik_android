@@ -23,7 +23,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -36,6 +36,7 @@ import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.offline.domain.DownloadProgress
 import by.mazokaleh.skarnik.feature.offline.domain.OfflineDictionaryStatus
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -51,7 +52,7 @@ object SettingsTestTags {
 fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewModel()) {
     val offline by viewModel.offline.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
+    val resources = LocalResources.current
     LaunchedEffect(viewModel) {
         viewModel.events.collect { event ->
             val message = when (event) {
@@ -59,8 +60,9 @@ fun SettingsScreen(onBack: () -> Unit, viewModel: SettingsViewModel = hiltViewMo
                 SettingsEvent.Deleted -> R.string.offline_deleted
                 SettingsEvent.DeleteFailed -> R.string.offline_delete_error
             }
+            // A new message replaces the one showing; showSnackbar suspends until dismissed, hence launch.
             snackbarHostState.currentSnackbarData?.dismiss()
-            snackbarHostState.showSnackbar(context.getString(message))
+            launch { snackbarHostState.showSnackbar(resources.getString(message)) }
         }
     }
     SettingsContent(offline, snackbarHostState, onBack, viewModel::download, viewModel::delete)
