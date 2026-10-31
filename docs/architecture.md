@@ -134,8 +134,9 @@ flowchart LR
   the word to history (unless opened from history/bookmarks) and reads the bookmark state.
 - Any source may answer with `redirect_to` (a `WordLink`: `skarnik.by/<dict>/<id>`, `skarnik.app/r/...` or a bare
   path); the target replaces the alias in the back stack and shows «Перанакіравана з «…»».
-- Both network sources go through one OkHttp client; a network interceptor makes successful GETs fresh for 24 h
-  in a 20 MB disk cache (`cache/http`). Remote Config takes over the lifetime later.
+- Both network sources go through one OkHttp client; a network interceptor makes successful GETs fresh in a
+  20 MB disk cache (`cache/http`) for Remote Config's `http_cache_duration_in_hours` (24 h by default). The app
+  fetches Remote Config at every start without waiting for it (`core/config/RemoteConfig`).
 - `translationHtmlToAnnotatedString` parses the HTML with jsoup and maps legacy colours to colour-scheme roles;
   links are `LinkAnnotation`s. The text is selectable.
 - History and bookmark writes live in `feature/history/data` and `feature/favorites/data`; the tabs that list

@@ -192,6 +192,7 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
+    implementation(libs.firebase.config)
     implementation(libs.play.review)
 
     testImplementation(libs.junit)

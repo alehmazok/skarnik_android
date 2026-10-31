@@ -39,4 +39,5 @@ the SDK deactivated.
 - No Firebase secret in CI; a new Firebase app would mean editing `gradle.properties`.
 - Release builds from App Distribution report like store builds once a tester allows analytics, as Flutter's did.
 - Every Maestro flow that starts from a clean install declines the dialog first (`subflows/decline-analytics.yaml`).
-- Remote Config (8.8) will reuse the same Firebase configuration.
+- Remote Config (8.8) reuses the same Firebase configuration. Its fetch is not analytics and runs before consent,
+  as in Flutter: it sends a Firebase installation id and no events.

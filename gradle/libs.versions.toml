@@ -65,6 +65,7 @@ objectbox-windows = { module = "io.objectbox:objectbox-windows", version.ref = "
 
 firebase-bom = { module = "com.google.firebase:firebase-bom", version.ref = "firebase-bom" }
 firebase-analytics = { module = "com.google.firebase:firebase-analytics" }
+firebase-config = { module = "com.google.firebase:firebase-config" }
 
 # Not review-ktx: its Kotlin helpers reference a Play services annotation that R8 cannot find.
 play-review = { module = "com.google.android.play:review", version.ref = "play-review" }
