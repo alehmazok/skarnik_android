@@ -83,6 +83,18 @@ class ObjectBoxHistoryAndBookmarksTest {
     }
 
     @Test
+    fun `clearing history keeps bookmarks`() = runTest {
+        history.save(hello)
+        history.save(bye)
+        bookmarks.add(hello)
+
+        history.clear()
+
+        assertEquals(0, stores.historyBox.count())
+        assertTrue(bookmarks.isBookmarked(hello))
+    }
+
+    @Test
     fun `bookmarks are added once and removed per dictionary`() = runTest {
         bookmarks.add(hello)
         bookmarks.add(hello)

@@ -40,10 +40,14 @@ sealed interface SettingsEvent {
     data object Deleted : SettingsEvent
 
     data object DeleteFailed : SettingsEvent
+
+    data object HistoryCleared : SettingsEvent
+
+    data object HistoryClearFailed : SettingsEvent
 }
 
 /**
- * Settings, for now the «Афлайн доступ» section. Downloads run in WorkManager, so the rows follow the job, the
+ * The «Афлайн доступ» section of Settings. Downloads run in WorkManager, so the rows follow the job, the
  * store and the resume cursor rather than anything this ViewModel holds: leaving the screen never stops a
  * download (Flutter kept an app-wide cubit for that). Opening the screen clears the promo badge.
  */

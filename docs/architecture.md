@@ -47,7 +47,7 @@ by.mazokaleh.skarnik
     ├── history/ favorites/   History and Bookmarks tabs, their repositories and the sort setting
     ├── vocabulary/        Dictionary tab: whole dictionaries in alphabetical order, letter index
     ├── offline/           offline dictionary downloads: Supabase pages, WorkManager job, rate limit
-    ├── settings/          Settings screen (offline section so far) and the settings button with its badge
+    ├── settings/          Settings screen (offline, appearance, history, contact, About sheet), settings button
     ├── stress/            «На́ціск»: stress candidates, starnik.by → skarnik_admin lookup, stress table
     ├── widget/            «Слова дня» Glance widget, hourly refresh worker, word picker
 ```
@@ -60,8 +60,10 @@ modules only if build times call for it.
 
 `ui/theme/SkarnikTheme` takes `ThemeMode` (System/Light/Dark) and `useDynamicColor`. Dynamic colour
 (Android 12+) is the default; the brand palette (white/`#E1251B`, `#0F0F10`/`#FF4438`, as on skarnik.app) is
-used when the user turns dynamic colour off or the device is older. Both settings are stored in DataStore by
-the settings feature and read once at the root. Translation HTML colours are mapped to colour-scheme roles so
+used when the user turns dynamic colour off or the device is older. Both settings live in
+`core/settings/AppearanceSettings` (DataStore keys `theme_mode`, `dynamic_color`); `MainActivity` collects them
+and composes nothing until the first value arrives, so a forced theme never flashes the system one. It also
+re-applies `enableEdgeToEdge` with the chosen dark/light, so system bar icons follow the app theme. Translation HTML colours are mapped to colour-scheme roles so
 they stay readable in every scheme.
 
 ## Dependency injection

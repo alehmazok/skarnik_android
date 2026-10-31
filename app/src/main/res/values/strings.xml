@@ -78,6 +78,29 @@
     <string name="offline_delete_confirmation">Вы сапраўды жадаеце выдаліць афлайн-копію слоўніка «%1$s»?</string>
     <string name="offline_deleted">Афлайн-копія слоўніка выдалена.</string>
     <string name="offline_delete_error">Не атрымалася выдаліць афлайн-копію.</string>
+    <string name="settings_appearance_section">Выгляд</string>
+    <string name="settings_theme">Тэма</string>
+    <string name="settings_theme_system">Як у сістэме</string>
+    <string name="settings_theme_light">Светлая</string>
+    <string name="settings_theme_dark">Цёмная</string>
+    <string name="settings_dynamic_color">Колеры шпалер</string>
+    <string name="settings_dynamic_color_description">Колеры праграмы падбіраюцца пад шпалеры. Выключыце, каб вярнуць чырвоныя колеры Скарніка.</string>
+    <string name="settings_other_section">Іншае</string>
+    <string name="settings_clear_history">Ачысціць гісторыю пошуку</string>
+    <string name="settings_clear_history_title">Ачысціць гісторыю пошуку?</string>
+    <string name="settings_clear_history_confirmation">Усе словы знікнуць з гісторыі пошуку. Закладкі застануцца.</string>
+    <string name="settings_history_cleared">Гісторыя паспяхова ачышчана.</string>
+    <string name="settings_history_clear_error">Не атрымалася ачысціць гісторыю.</string>
+    <string name="settings_write_to_developers">Напісаць распрацоўшчыкам</string>
+    <string name="settings_rate_app">Ацаніць праграму</string>
+    <string name="settings_about">Пра Скарнік</string>
+    <string name="settings_no_app">Няма праграмы, каб гэта адкрыць.</string>
+    <string name="about_title">Пра Скарнік</string>
+    <!-- HTML, read with AnnotatedString.fromHtml. -->
+    <string name="about_text"><![CDATA[Гэтая праграма — Android-кліент сайта <a href="https://skarnik.by">skarnik.by</a>.<br><br>1. <b>Тлумачальны</b> слоўнік беларускай мовы змяшчае больш за 95 тысяч слоў. Створаны на аснове акадэмічнага выдання пад рэдакцыяй К. Крапівы — пяцітомніка 1977-1984 гг.<br>2. <b>Беларуска-рускі</b> слоўнік змяшчае больш за 100 тысяч слоў. Гэта «адваротны» слоўнік ад руска-беларускага.<br>3. <b>Руска-беларускі</b> слоўнік таксама змяшчае больш за 100 тысяч слоў. За аснову ўзяты акадэмічны слоўнік пад рэдакцыяй Я. Коласа, К. Крапівы і П. Глебкі.<br><br>Сайт skarnik.by пачаў працаваць 7 жніўня 2012 года.]]></string>
+    <string name="about_useful_links">Карысныя спасылкі</string>
+    <string name="about_starnik_description">Спецпошук — спецыяльны пошук па базе слоў. Адваротны слоўнік беларускай мовы — падабраць рыфму або скласці крыжаванку.</string>
+    <string name="about_drukarnik_description">Друкарнік — праверка арфаграфіі, хуткія падказкі, моўны бот, прыгожая беларуская мова і добры настрой.</string>
     <string name="action_cancel">Скасаваць</string>
     <string name="action_delete">Выдаліць</string>
     <!-- Stress (націск). The title keeps Flutter's combining acute accent (U+0301). -->

@@ -19,9 +19,9 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 0.1 | Same app id `by.mazokaleh.skarnik`; installs as an update | `android/app/build.gradle` | ✅ skeleton PR |
 | 0.2 | Open existing ObjectBox stores (search, history, translation) at `app_flutter/objectbox_*`; seed the search index from the bundled asset on first launch | `app/data/repository/objectbox_database_repository.dart` | ✅ skeleton PR; emulator upgrade 3.6.0 → 4.0.0 passed 2026-10-30 (all stores byte-identical, no re-seed) |
 | 0.3 | Migrate Flutter settings into DataStore (each key with its feature, listed below). Source is `files/datastore/FlutterSharedPreferences.preferences_pb` (`SharedPreferencesAsync`), not the XML file. Each feature adds a one-time `FlutterPreferencesMigration` to the app's `settings` store; Flutter's file is left untouched | various `shared_preferences_*_repository.dart` | 🟨 mechanism + `favorites_sort_order` in history/bookmarks PR; download cursors + promo flag in offline PR; other keys with their features |
-| 0.3a | Delete Flutter's HTTP cache `DioCache.db` once after the upgrade (cache only, not migrated; native uses OkHttp's cache in `cache/http`) | `translation/data/http/skarnik_dio.dart` | ⬜ with the settings migration |
+| 0.3a | Delete Flutter's HTTP cache `DioCache.db` once after the upgrade (cache only, not migrated; native uses OkHttp's cache in `cache/http`) | `translation/data/http/skarnik_dio.dart` | ✅ settings PR (`context.deleteDatabase("DioCache.db")` at every start, a no-op once gone) |
 | 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
-| 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | 🟨 theme done, settings toggles with the settings PR |
+| 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | ✅ settings PR: «Выгляд» section with «Тэма» (single-choice dialog: Як у сістэме / Светлая / Цёмная) and «Колеры шпалер» (Android 12+ only); keys `theme_mode`, `dynamic_color` in the app's DataStore. System bar icons follow the chosen theme |
 | 0.5 | Adaptive layout: list + translation side by side on wide screens | `widgets/master_detail_view.dart`, `widgets/breakpoints.dart` | ⬜ |
 | 0.6 | Crash reporting, release-only. **Sentry** (org `skarnik`) instead of Crashlytics (Aleh, 2026-10-30) | `main.dart` | ⬜ |
 
@@ -77,7 +77,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 5.1 | Settings section «Афлайн доступ»: per dictionary download / progress «N / M слоў» / downloaded count. M3: Settings open from a settings button in the trailing slot of the start screen's search bar; rows are `ListItem`s under a list subheader, counts use Belarusian plurals. The other Settings rows (8.x) come with the settings PR | `settings/presentation/widgets/offline_dictionaries_section.dart` | ✅ offline PR |
+| 5.1 | Settings section «Афлайн доступ»: per dictionary download / progress «N / M слоў» / downloaded count. M3: Settings open from a settings button in the trailing slot of the start screen's search bar; rows are `ListItem`s under list subheaders («Афлайн доступ», «Выгляд», «Іншае»), counts use Belarusian plurals | `settings/presentation/widgets/offline_dictionaries_section.dart` | ✅ offline PR |
 | 5.2 | Paged download from Supabase, resumable via cursor (`download_cursor_<dict>`, migrated from Flutter), stale-cursor reset, 5 attempts per request. Native: the download is a WorkManager job ([ADR 0004](adr/0004-offline-downloads-in-workmanager.md)), so it survives leaving Settings and the process being killed, and resumes from the cursor (Flutter's download died with the app). An unfinished download shows the error row and resumes on tap | `translation/domain/use_case/download_dictionary.dart` | ✅ offline PR |
 | 5.3 | Rate limit: max 4 download starts per 5 minutes (`download_recent_attempts_at_ms`; not migrated, it only matters for 5 minutes) | `check_download_rate_limit.dart` | ✅ offline PR |
 | 5.4 | Delete an offline copy with confirmation. M3: the dialog's buttons name the action («Скасаваць» / «Выдаліць» instead of «Не» / «Так»); «Афлайн-копія слоўніка выдалена.» snackbar after it | `clear_downloaded_dictionary.dart` | ✅ offline PR |
@@ -105,11 +105,11 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 8.1 | Settings: clear search history with confirmation | `settings/presentation/settings_page.dart` | ⬜ |
+| 8.1 | Settings: clear search history with confirmation; bookmarks stay. M3: the dialog title asks the question and the buttons name the action («Скасаваць» / «Ачысціць» instead of «Увага» + «Не» / «Так»); the row is disabled while history is empty; «Гісторыя паспяхова ачышчана.» snackbar after it. The History tab follows the store, so it empties at once | `settings/presentation/settings_page.dart` | ✅ settings PR |
 | 8.2 | Settings: analytics on/off switch | `settings_page.dart` | ⬜ |
-| 8.3 | Settings: «Напісаць распрацоўшчыкам» (email with device info) | `settings_cubit.dart` | ⬜ |
-| 8.4 | Settings: «Ацаніць праграму» | `settings_cubit.dart` | ⬜ |
-| 8.5 | «Пра Скарнік» bottom sheet: about text, links to starnik.by and drukarnik.app, version | `settings/presentation/widgets/about_bottom_sheet.dart` | ⬜ |
+| 8.3 | Settings: «Напісаць распрацоўшчыкам»: email with «Skarnik 4.0.0 (123), Android» as subject (Flutter's format). Native: the body starts with the device and Android version. Addresses as in the iOS app (to belanghelp@gmail.com, bcc skarnikapp@gmail.com; Flutter's came from a build secret), in `gradle.properties`. A snackbar says so when there is no email app | `settings_cubit.dart` | ✅ settings PR |
+| 8.4 | Settings: «Ацаніць праграму» opens the store listing (`market://`, so Play or AppGallery), else the Play web page | `settings_cubit.dart` | ✅ settings PR |
+| 8.5 | «Пра Скарнік» bottom sheet: about text, links to starnik.by and drukarnik.app, email button, version. Native: «Працуе ў рэжыме анлайн.» is left out, since dictionaries can be downloaded for offline use | `settings/presentation/widgets/about_bottom_sheet.dart` | ✅ settings PR |
 | 8.6 | Analytics consent dialog on first launch; nothing sent before an answer (`analytics_consent_answered`, `analytics_consent_granted`) | `analytics_consent/` | ⬜ |
 | 8.7 | In-app review after 10 translation views, asked once; AppGallery fallback dialog on Huawei (`review_translation_view_count`, `review_already_requested`) | `review/` | ⬜ |
 | 8.8 | Remote Config (HTTP cache lifetime) | `app/domain/use_case/init_remote_config.dart` | ⬜ |

@@ -50,6 +50,10 @@ class ObjectBoxHistoryRepository @Inject constructor(
         }
     }
 
+    override suspend fun clear() = withContext(ioDispatcher) {
+        database.stores().historyBox.removeAll()
+    }
+
     override fun observe(limit: Int): Flow<SavedWordsPage> = flow {
         val stores = database.stores()
         emitAll(
