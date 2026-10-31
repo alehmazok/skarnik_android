@@ -61,7 +61,7 @@ tags:
 - tapOn: "Ачысціць"
 - assertVisible: "Гісторыя паспяхова ачышчана."
 
-# About sheet. On the small CI screen the sheet opens half-way, so check its first paragraph.
+# About sheet. It opens fully expanded, so its links are on screen too.
 - scrollUntilVisible:
     element:
       id: settings_about
@@ -70,6 +70,7 @@ tags:
 - extendedWaitUntil:
     visible: "(?s)Гэтая праграма — Android-кліент сайта skarnik\\.by.*"
     timeout: 10000
+- assertVisible: "Карысныя спасылкі"
 - takeScreenshot: settings-about
 - back
 
