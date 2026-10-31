@@ -46,6 +46,8 @@ android {
         buildConfigField("String", "SUPABASE_URL", "\"${property("skarnik.supabaseUrl")}\"")
         buildConfigField("String", "SUPABASE_KEY", "\"${property("skarnik.supabaseKey")}\"")
         buildConfigField("String", "STARNIK_BASE_URL", "\"${property("skarnik.starnikBaseUrl")}\"")
+        buildConfigField("String", "DEV_EMAIL", "\"${property("skarnik.devEmail")}\"")
+        buildConfigField("String", "DEV_EMAIL_BCC", "\"${property("skarnik.devEmailBcc")}\"")
     }
 
     signingConfigs {

@@ -61,6 +61,8 @@ class TranslationViewModelTest {
                 history += word
             }
 
+            override suspend fun clear() = Unit
+
             override fun observe(limit: Int): Flow<SavedWordsPage> = emptyFlow()
         },
         bookmarks = bookmarks

@@ -30,6 +30,8 @@ class HistoryViewModelTest {
     private val repository = object : HistoryRepository {
         override suspend fun save(word: Word) = Unit
 
+        override suspend fun clear() = Unit
+
         override fun observe(limit: Int): Flow<SavedWordsPage> {
             requestedLimits += limit
             return stored.map { SavedWordsPage(it.take(limit), hasMore = it.size > limit) }
@@ -82,6 +84,8 @@ class HistoryViewModelTest {
     fun `shows an error when the stores cannot be opened`() = runTest {
         val failing = object : HistoryRepository {
             override suspend fun save(word: Word) = Unit
+
+            override suspend fun clear() = Unit
 
             override fun observe(limit: Int): Flow<SavedWordsPage> = flow { error("corrupt store") }
         }

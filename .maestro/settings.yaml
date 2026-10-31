@@ -1,0 +1,79 @@
+# Settings: switch the theme, clear search history (bookmarks stay) and open «Пра Скарнік».
+# Opening a word needs network, like the other flows.
+appId: by.mazokaleh.skarnik.debug
+name: Settings
+tags:
+  - settings
+---
+- launchApp:
+    clearState: true
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+
+# Put a word in history: open the first ТСБМ word from the Dictionary tab.
+- tapOn:
+    id: home_tab_dictionary
+- extendedWaitUntil:
+    visible:
+      id: vocabulary_item
+    timeout: 30000
+- tapOn:
+    id: vocabulary_item
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- back
+- tapOn:
+    id: home_tab_history
+- assertNotVisible:
+    id: history_empty
+
+# Theme: the dialog applies the choice at once.
+- tapOn:
+    id: settings_button
+- scrollUntilVisible:
+    element:
+      id: settings_theme
+- assertVisible:
+    id: settings_theme_value
+    text: "Як у сістэме"
+- tapOn:
+    id: settings_theme
+# Dialogs are separate windows without test tags as ids, so options are picked by their text.
+- tapOn: "Цёмная"
+- assertVisible:
+    id: settings_theme_value
+    text: "Цёмная"
+- takeScreenshot: settings-dark
+
+# Clear history after confirming.
+- scrollUntilVisible:
+    element:
+      id: settings_clear_history
+- tapOn:
+    id: settings_clear_history
+- assertVisible: "Ачысціць гісторыю пошуку?"
+- tapOn: "Ачысціць"
+- assertVisible: "Гісторыя паспяхова ачышчана."
+
+# About sheet.
+- scrollUntilVisible:
+    element:
+      id: settings_about
+- tapOn:
+    id: settings_about
+- extendedWaitUntil:
+    visible: "Карысныя спасылкі"
+    timeout: 10000
+- takeScreenshot: settings-about
+- back
+
+# History is empty again.
+- tapOn:
+    id: settings_back
+- assertVisible:
+    id: history_empty
