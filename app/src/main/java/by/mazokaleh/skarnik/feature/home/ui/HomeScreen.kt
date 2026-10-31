@@ -53,6 +53,7 @@ enum class HomeTab(
 @Composable
 fun HomeScreen(
     onSearchClick: () -> Unit,
+    onSettingsClick: () -> Unit,
     onWordClick: (SavedWord) -> Unit,
     onDictionaryWordClick: (Dictionary, VocabularyWord) -> Unit
 ) {
@@ -68,7 +69,7 @@ fun HomeScreen(
         Box(Modifier.padding(padding).consumeWindowInsets(padding)) {
             tabStates.SaveableStateProvider(tab) {
                 when (tab) {
-                    HomeTab.History -> HistoryScreen(onSearchClick = onSearchClick, onWordClick = onWordClick)
+                    HomeTab.History -> HistoryScreen(onSearchClick, onSettingsClick, onWordClick)
                     HomeTab.Bookmarks -> BookmarksScreen(onWordClick = onWordClick)
                     HomeTab.Vocabulary -> VocabularyScreen(onWordClick = onDictionaryWordClick)
                 }

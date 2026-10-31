@@ -51,4 +51,30 @@
     <string name="action_share">Падзяліцца</string>
     <string name="action_bookmark_add">Дадаць у закладкі</string>
     <string name="action_bookmark_remove">Выдаліць з закладак</string>
+    <string name="settings_title">Налады</string>
+    <string name="settings_open">Налады</string>
+    <string name="settings_offline_section">Афлайн доступ</string>
+    <string name="offline_download">Спампаваць для афлайн доступу</string>
+    <string name="offline_download_error">Адбылася памылка падчас спампоўкі слоўніка.</string>
+    <string name="offline_rate_limited">Занадта шмат спроб спампоўкі. Паспрабуйце праз некалькі хвілін.</string>
+    <string name="offline_downloading">Спампоўваецца…</string>
+    <plurals name="offline_progress">
+        <item quantity="one">%1$d / %2$d слова</item>
+        <item quantity="few">%1$d / %2$d словы</item>
+        <item quantity="many">%1$d / %2$d слоў</item>
+        <item quantity="other">%1$d / %2$d слова</item>
+    </plurals>
+    <plurals name="offline_downloaded">
+        <item quantity="one">Спампавана: %1$d слова</item>
+        <item quantity="few">Спампавана: %1$d словы</item>
+        <item quantity="many">Спампавана: %1$d слоў</item>
+        <item quantity="other">Спампавана: %1$d слова</item>
+    </plurals>
+    <string name="offline_delete">Выдаліць афлайн-копію</string>
+    <string name="offline_delete_title">Выдаліць афлайн-копію?</string>
+    <string name="offline_delete_confirmation">Вы сапраўды жадаеце выдаліць афлайн-копію слоўніка «%1$s»?</string>
+    <string name="offline_deleted">Афлайн-копія слоўніка выдалена.</string>
+    <string name="offline_delete_error">Не атрымалася выдаліць афлайн-копію.</string>
+    <string name="action_cancel">Скасаваць</string>
+    <string name="action_delete">Выдаліць</string>
 </resources>
