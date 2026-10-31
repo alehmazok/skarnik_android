@@ -25,7 +25,6 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.DpSize
@@ -102,10 +101,7 @@ private fun IndexLetter(letter: String, onJump: () -> Unit, modifier: Modifier =
     Box(
         modifier
             .fillMaxWidth()
-            .testTag(VocabularyTestTags.INDEX_LETTER)
             .semantics(mergeDescendants = true) {
-                // A merged node does not expose its text, so the letter is its description (TalkBack, Maestro).
-                contentDescription = letter
                 onClick(label = jumpLabel) {
                     onJump()
                     true
@@ -113,7 +109,13 @@ private fun IndexLetter(letter: String, onJump: () -> Unit, modifier: Modifier =
             },
         contentAlignment = Alignment.Center
     ) {
-        Text(text = letter, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+        // The tag sits on the text: accessibility reports the text on this node, not on the merged parent.
+        Text(
+            text = letter,
+            modifier = Modifier.testTag(VocabularyTestTags.INDEX_LETTER),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary
+        )
     }
 }
 
