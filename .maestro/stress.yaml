@@ -13,14 +13,20 @@ tags:
     timeout: 60000
 - tapOn:
     id: home_search
-- inputText: вада
+- inputText: бульба
 # Open the ТСБМ entry: its headword is the stress candidate, so the chip opens the lookup straight away.
 - extendedWaitUntil:
     visible:
+      id: search_result
+    timeout: 10000
+# Results of all three dictionaries are mixed; the ТСБМ row may be below the fold.
+- scrollUntilVisible:
+    element:
       text: "Тлумачэнне слова"
       childOf:
         id: search_result
-    timeout: 10000
+    direction: DOWN
+    timeout: 15000
 - tapOn:
     text: "Тлумачэнне слова"
     childOf:
