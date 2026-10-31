@@ -1,4 +1,4 @@
-# Stress: open a ТСБМ word, tap «На́ціск», read its stress table, go back to the translation.
+# Stress: open a ТСБМ word from the Dictionary tab, tap «На́ціск», read its stress table, go back to the translation.
 # Needs network: the table comes from starnik.by (or skarnik_admin when starnik.by has nothing).
 appId: by.mazokaleh.skarnik.debug
 name: Stress table
@@ -11,28 +11,17 @@ tags:
     visible:
       id: history_empty
     timeout: 60000
+# Open the first ТСБМ word from the Dictionary tab (ТСБМ opens first, at «А»): a ТСБМ headword is its own stress
+# candidate, so the chip opens the lookup straight away. (Search mixes dictionaries, and on the small CI
+# emulator the ТСБМ row is hard to reach.)
 - tapOn:
-    id: home_search
-- inputText: хата
-# Open the ТСБМ entry: its headword is the stress candidate, so the chip opens the lookup straight away.
+    id: home_tab_dictionary
 - extendedWaitUntil:
     visible:
-      id: search_result
-    timeout: 10000
-# «хата» has no longer words starting with it, so each dictionary lists one row. On the small CI emulator the
-# keyboard and the letter row cover the last rows, so hide the keyboard first.
-- hideKeyboard
-- scrollUntilVisible:
-    element:
-      text: "Тлумачэнне слова"
-      childOf:
-        id: search_result
-    direction: DOWN
-    timeout: 15000
+      id: vocabulary_item
+    timeout: 30000
 - tapOn:
-    text: "Тлумачэнне слова"
-    childOf:
-      id: search_result
+    id: vocabulary_item
     index: 0
 - extendedWaitUntil:
     visible:
