@@ -87,8 +87,13 @@ jobs:
           echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
           gcloud auth activate-service-account --key-file="$RUNNER_TEMP/firebase-sa.json" --quiet
           TOKEN=$(gcloud auth print-access-token)
-          curl -sS --fail-with-body -o /dev/null -H "Authorization: Bearer $TOKEN" "$API/apps/$APP_ID/releases?pageSize=1"
-          curl -sS --fail-with-body -o /dev/null -H "Authorization: Bearer $TOKEN" "$API/groups/internal"
+          # Print only error bodies: a release list carries signed download links.
+          check() {
+            curl -sS --fail-with-body -o "$RUNNER_TEMP/response.json" -H "Authorization: Bearer $TOKEN" "$1" \
+              || { cat "$RUNNER_TEMP/response.json"; return 1; }
+          }
+          check "$API/apps/$APP_ID/releases?pageSize=1"
+          check "$API/groups/internal"
           echo "Firebase App Distribution access OK" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload to Firebase App Distribution
