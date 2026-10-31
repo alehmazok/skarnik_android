@@ -74,8 +74,8 @@ tags:
     id: offline_delete
 - assertVisible: "Вы сапраўды жадаеце выдаліць афлайн-копію слоўніка «Тлумачальны»?"
 - takeScreenshot: offline-delete-dialog
-- tapOn:
-    id: offline_delete_confirm
+# Dialogs are separate windows without test tags as ids, so the button is picked by its text.
+- tapOn: "Выдаліць"
 - extendedWaitUntil:
     visible:
       id: offline_status_tsbm
