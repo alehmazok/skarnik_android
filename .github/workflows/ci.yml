@@ -94,6 +94,9 @@ jobs:
           disable-animations: true
           script: |
             adb install -r apk/*.apk
+            # The emulator cannot verify app links (no assetlinks.json for the debug key), so approve the link
+            # hosts for the debug app as a user would ("Open supported links"); .maestro/app-links.yaml needs it.
+            adb shell pm set-app-links-user-selection --user 0 --package by.mazokaleh.skarnik.debug true all
             mkdir -p maestro-out
             # Stream logcat to a file from the start, so a device that drops off adb still leaves its last log.
             (adb logcat -b main,system,crash -v time > maestro-out/logcat-live.txt 2>&1 &)

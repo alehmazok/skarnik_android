@@ -1,5 +1,6 @@
 # App links (parity 9.1): a skarnik.by link starts the app on that word; a skarnik.app share link opens over a
-# running app. `autoVerify` grants the debug app the link hosts on the emulator, as a verified install would be.
+# running app. The debug app is not verified for the link hosts, so approve them once after installing, as CI does:
+#   adb shell pm set-app-links-user-selection --user 0 --package by.mazokaleh.skarnik.debug true all
 # Needs network: translations come from the admin API (or Supabase).
 appId: by.mazokaleh.skarnik.debug
 name: Open words from skarnik.by and skarnik.app links
@@ -10,7 +11,6 @@ tags:
 # Cold start from a legacy site link (Russian-Belarusian «нерв»).
 - openLink:
     link: "https://www.skarnik.by/rusbel/47880"
-    autoVerify: true
 # The consent dialog shows over the opened word.
 - runFlow: subflows/decline-analytics.yaml
 - extendedWaitUntil:
@@ -24,7 +24,6 @@ tags:
 # A share link while the app runs replaces the open word (onNewIntent).
 - openLink:
     link: "https://skarnik.app/r/belrus/27890"
-    autoVerify: true
 - extendedWaitUntil:
     notVisible:
       id: translation_word
