@@ -119,8 +119,8 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 9.1 | Open `skarnik.by/<dict>/<id>` and `skarnik.app/r/<dict>/<id>` (http/https, optional www) in the app | `app/domain/use_case/handle_app_link.dart`, `AndroidManifest.xml` | ⬜ |
-| 9.2 | Verified App Links (`autoVerify`) | `AndroidManifest.xml` | ⬜ |
+| 9.1 | Open `skarnik.by/<dict>/<id>` and `skarnik.app/r/<dict>/<id>` (http/https, optional www) in the app | `app/domain/use_case/handle_app_link.dart`, `AndroidManifest.xml` | ✅ app links PR: VIEW filters on `MainActivity`, parsed by `WordLink` (same regex), opened over History by `WordLinkEffect` (cold start and `onNewIntent`), saved to history. A link that does not parse opens the app, as in Flutter. Native: on `skarnik.app` only `/r/` is claimed, so the landing page stays in the browser (Flutter claimed `skarnik.app/belrus/…` too, a path the site does not serve) |
+| 9.2 | Verified App Links (`autoVerify`) | `AndroidManifest.xml` | 🟨 app links PR: `autoVerify` on both filters. Verification also needs `/.well-known/assetlinks.json` with the Play app signing key's SHA-256 on `skarnik.app` and `skarnik.by` (+ `www.`); `skarnik.app` does not serve it yet. Until then Android 12+ opens the links in the browser unless the user turns on «Open supported links» |
 
 ## 10. Release
 
