@@ -192,7 +192,7 @@ dependencies {
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.analytics)
-    implementation(libs.play.review.ktx)
+    implementation(libs.play.review)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)
