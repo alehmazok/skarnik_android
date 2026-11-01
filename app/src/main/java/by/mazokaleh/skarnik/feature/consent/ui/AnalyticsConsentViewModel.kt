@@ -1,10 +1,10 @@
 package by.mazokaleh.skarnik.feature.consent.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.analytics.AnalyticsConsent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +27,7 @@ class AnalyticsConsentViewModel @Inject constructor(private val consent: Analyti
 
     val showDialog: StateFlow<Boolean> = combine(
         consent.state.map { !it.answered }.catch {
-            Log.e(TAG, "Cannot read the analytics consent", it)
+            logError(TAG, "Cannot read the analytics consent", it)
             emit(true)
         },
         answeredHere
@@ -38,7 +38,7 @@ class AnalyticsConsentViewModel @Inject constructor(private val consent: Analyti
         answeredHere.value = true
         viewModelScope.launch {
             suspendRunCatching { consent.setGranted(granted) }
-                .onFailure { Log.e(TAG, "Cannot save the analytics consent", it) }
+                .onFailure { logError(TAG, "Cannot save the analytics consent", it) }
         }
     }
 

@@ -1,9 +1,9 @@
 package by.mazokaleh.skarnik.feature.favorites.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.SAVED_WORDS_PAGE_SIZE
 import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
@@ -62,7 +62,7 @@ class BookmarksViewModel @Inject constructor(
                 .map<_, BookmarksUiState> { BookmarksUiState.Ready(it.words, it.hasMore, sortOrder) }
         }
         .catch {
-            Log.e(TAG, "Cannot read bookmarks", it)
+            logError(TAG, "Cannot read bookmarks", it)
             emit(BookmarksUiState.Error)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), BookmarksUiState.Loading)
@@ -77,7 +77,7 @@ class BookmarksViewModel @Inject constructor(
     fun setSortOrder(sortOrder: BookmarksSortOrder) {
         viewModelScope.launch {
             suspendRunCatching { sortRepository.setSortOrder(sortOrder) }
-                .onFailure { Log.e(TAG, "Cannot save the sort order", it) }
+                .onFailure { logError(TAG, "Cannot save the sort order", it) }
         }
     }
 
@@ -85,7 +85,7 @@ class BookmarksViewModel @Inject constructor(
         viewModelScope.launch {
             suspendRunCatching { bookmarks.remove(bookmark) }.fold(
                 onSuccess = { _events.send(BookmarksEvent.Removed(bookmark)) },
-                onFailure = { Log.e(TAG, "Cannot remove a bookmark", it) }
+                onFailure = { logError(TAG, "Cannot remove a bookmark", it) }
             )
         }
     }
@@ -93,7 +93,7 @@ class BookmarksViewModel @Inject constructor(
     fun undoRemove(bookmark: SavedWord) {
         viewModelScope.launch {
             suspendRunCatching { bookmarks.restore(bookmark) }
-                .onFailure { Log.e(TAG, "Cannot restore a bookmark", it) }
+                .onFailure { logError(TAG, "Cannot restore a bookmark", it) }
         }
     }
 

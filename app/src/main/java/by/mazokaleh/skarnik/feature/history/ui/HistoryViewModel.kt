@@ -1,8 +1,8 @@
 package by.mazokaleh.skarnik.feature.history.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.SAVED_WORDS_PAGE_SIZE
 import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
@@ -39,7 +39,7 @@ class HistoryViewModel @Inject constructor(private val history: HistoryRepositor
         .flatMapLatest { history.observe(it) }
         .map<_, HistoryUiState> { HistoryUiState.Ready(it.words, it.hasMore) }
         .catch {
-            Log.e(TAG, "Cannot read history", it)
+            logError(TAG, "Cannot read history", it)
             emit(HistoryUiState.Error)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), HistoryUiState.Loading)

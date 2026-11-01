@@ -1,11 +1,11 @@
 package by.mazokaleh.skarnik.feature.vocabulary.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.vocabulary.domain.LoadVocabularyUseCase
 import by.mazokaleh.skarnik.feature.vocabulary.domain.Vocabulary
@@ -59,7 +59,7 @@ class VocabularyViewModel @Inject constructor(
                         VocabularyContent.Ready(vocabulary)
                     },
                     onFailure = {
-                        Log.e(TAG, "Cannot load ${dictionary.path}", it)
+                        logError(TAG, "Cannot load ${dictionary.path}", it)
                         VocabularyContent.Error
                     }
                 )

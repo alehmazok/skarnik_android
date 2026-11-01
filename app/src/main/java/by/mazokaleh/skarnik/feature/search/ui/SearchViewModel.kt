@@ -1,11 +1,11 @@
 package by.mazokaleh.skarnik.feature.search.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.feature.search.domain.SearchWord
 import by.mazokaleh.skarnik.feature.search.domain.SearchWordsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -76,7 +76,7 @@ class SearchViewModel @Inject constructor(
                 }
             },
             onFailure = {
-                Log.e(TAG, "Search failed for '$query'", it)
+                logError(TAG, "Search failed for '$query'", it)
                 SearchUiState.Error
             }
         )

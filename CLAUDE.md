@@ -95,6 +95,6 @@ on any device. Dark theme, TalkBack labels, large fonts, edge-to-edge, predictiv
 
 **Analytics, crashes and secrets.** Same Firebase Analytics event names as Flutter (listed in parity
 register); nothing is sent before consent. ViewModels log with `Analytics.log(AnalyticsEvent)` and never wait for
-it; a new event is a new `AnalyticsEvent` subclass ([ADR 0007](docs/adr/0007-analytics-and-consent.md)). Crash reporting is Sentry (org `skarnik`), not Crashlytics. Secrets
+it; a new event is a new `AnalyticsEvent` subclass ([ADR 0007](docs/adr/0007-analytics-and-consent.md)). Crash reporting is Sentry (org `skarnik`), not Crashlytics ([ADR 0008](docs/adr/0008-sentry-crash-reporting.md)): log caught errors with `logError(tag, message, error)`, never bare `Log.e`, so they reach Sentry as non-fatals. Secrets
 (incl. the Sentry DSN) only via `local.properties` / GitHub Secrets, never in code or git. The admin API host,
 Supabase URL, Supabase publishable key and Firebase client config are public config, not secrets: they live in `gradle.properties`.

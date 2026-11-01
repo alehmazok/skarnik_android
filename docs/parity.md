@@ -23,7 +23,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 | 0.4 | Light/dark theme following the system | `app/presentation/skarnik_app.dart` | ✅ skeleton PR |
 | 0.4a | New: System/Light/Dark setting; Material You dynamic colour with a switch to the brand palette (agreed 2026-10-30) | — | ✅ settings PR: «Выгляд» section with «Тэма» (single-choice dialog: Як у сістэме / Светлая / Цёмная) and «Колеры шпалер» (Android 12+ only); keys `theme_mode`, `dynamic_color` in the app's DataStore. System bar icons follow the chosen theme |
 | 0.5 | Adaptive layout: list + translation side by side on wide screens | `widgets/master_detail_view.dart`, `widgets/breakpoints.dart` | ⬜ |
-| 0.6 | Crash reporting, release-only. **Sentry** (org `skarnik`) instead of Crashlytics (Aleh, 2026-10-30) | `main.dart` | ⬜ |
+| 0.6 | Crash reporting, release-only. **Sentry** (org `skarnik`) instead of Crashlytics (Aleh, 2026-10-30) | `main.dart`, `logging.dart` | ✅ Sentry PR ([ADR 0008](adr/0008-sentry-crash-reporting.md)): crashes, ANRs and native crashes from release builds with the `SENTRY_DSN` secret (debug and local builds send nothing). Non-fatals as Flutter's SEVERE log records, via `logError`, except network/HTTP failures; only the exception and tag, never the log message. Not gated by the analytics consent, as Crashlytics wasn't; no IP, user id, screenshots or tap breadcrumbs. App Distribution builds report as environment `internal`. R8 mappings go to Sentry once the `SENTRY_AUTH_TOKEN` secret exists |
 
 ## 1. Search
 

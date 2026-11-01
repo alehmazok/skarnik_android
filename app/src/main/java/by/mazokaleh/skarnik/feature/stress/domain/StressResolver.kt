@@ -2,6 +2,7 @@ package by.mazokaleh.skarnik.feature.stress.domain
 
 import android.util.Log
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import javax.inject.Inject
 
 /**
@@ -21,7 +22,7 @@ class StressResolver @Inject constructor(
         return suspendRunCatching { fallback.exactMatches(word) }.fold(
             onSuccess = { if (it.isEmpty()) StressResult.NotFound else StressResult.Found(it) },
             onFailure = {
-                Log.e(TAG, "skarnik_admin cannot resolve «$word»", it)
+                logError(TAG, "skarnik_admin cannot resolve «$word»", it)
                 StressResult.Failed(it)
             }
         )
@@ -36,7 +37,7 @@ class StressResolver @Inject constructor(
         return suspendRunCatching { backend.stressTable(id) }.fold(
             onSuccess = { if (it.isEmpty()) StressResult.NotFound else StressResult.Found(it) },
             onFailure = {
-                Log.e(TAG, "Cannot load the stress table $source/$id", it)
+                logError(TAG, "Cannot load the stress table $source/$id", it)
                 StressResult.Failed(it)
             }
         )
