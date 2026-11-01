@@ -4,7 +4,6 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -23,6 +22,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.withAppLocale
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
@@ -64,7 +64,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val appearanceFlow = remember {
                 appearanceSettings.appearance.catch {
-                    Log.e(TAG, "Cannot read the appearance settings", it)
+                    logError(TAG, "Cannot read the appearance settings", it)
                     emit(Appearance())
                 }
             }

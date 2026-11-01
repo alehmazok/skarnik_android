@@ -1,7 +1,6 @@
 package by.mazokaleh.skarnik.feature.widget.data
 
 import android.content.Context
-import android.util.Log
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.updateAll
 import androidx.hilt.work.HiltWorker
@@ -11,6 +10,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.feature.widget.domain.RefreshWordOfTheDayUseCase
 import by.mazokaleh.skarnik.feature.widget.domain.WordOfTheDayStore
 import by.mazokaleh.skarnik.feature.widget.ui.WordOfTheDayWidget
@@ -34,7 +34,7 @@ class WordOfTheDayWorker @AssistedInject constructor(
             return Result.success()
         }
         suspendRunCatching { refresh() }
-            .onFailure { Log.e(TAG, "Cannot refresh the word of the day", it) }
+            .onFailure { logError(TAG, "Cannot refresh the word of the day", it) }
             .getOrNull()
             ?.let { word ->
                 store.save(word)

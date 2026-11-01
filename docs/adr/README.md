@@ -15,3 +15,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | [0005](0005-firebase-app-distribution.md) | Firebase App Distribution via its Gradle plugin, on every merge to main | Accepted |
 | [0006](0006-word-of-the-day-widget.md) | Word-of-the-day widget: Glance, a periodic job while placed, state in its own DataStore | Accepted |
 | [0007](0007-analytics-and-consent.md) | Analytics: Firebase without the google-services plugin, one typed event logger, off until consent | Accepted |
+| [0008](0008-sentry-crash-reporting.md) | Crash reporting: Sentry SDK without its Gradle plugin, not gated by analytics consent, non-fatals without network errors | Accepted |

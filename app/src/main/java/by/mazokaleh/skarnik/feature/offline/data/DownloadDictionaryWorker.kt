@@ -1,13 +1,13 @@
 package by.mazokaleh.skarnik.feature.offline.data
 
 import android.content.Context
-import android.util.Log
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.Data
 import androidx.work.WorkerParameters
 import androidx.work.workDataOf
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.offline.domain.DownloadDictionaryUseCase
 import by.mazokaleh.skarnik.feature.offline.domain.DownloadProgress
@@ -31,7 +31,7 @@ class DownloadDictionaryWorker @AssistedInject constructor(
         }.fold(
             onSuccess = { Result.success() },
             onFailure = {
-                Log.e(TAG, "Cannot download ${dictionary.path}", it)
+                logError(TAG, "Cannot download ${dictionary.path}", it)
                 Result.failure()
             }
         )

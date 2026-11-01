@@ -1,10 +1,10 @@
 package by.mazokaleh.skarnik.feature.settings.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.analytics.AnalyticsConsent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
 import by.mazokaleh.skarnik.core.settings.ThemeMode
@@ -44,15 +44,15 @@ class GeneralSettingsViewModel @Inject constructor(
 
     val state: StateFlow<GeneralSettingsState> = combine(
         appearanceSettings.appearance.catch {
-            Log.e(TAG, "Cannot read the appearance settings", it)
+            logError(TAG, "Cannot read the appearance settings", it)
             emit(Appearance())
         },
         history.observe(limit = 1).map { it.words.isNotEmpty() || it.hasMore }.catch {
-            Log.e(TAG, "Cannot read history", it)
+            logError(TAG, "Cannot read history", it)
             emit(false)
         },
         analyticsConsent.state.map { it.granted }.catch {
-            Log.e(TAG, "Cannot read the analytics consent", it)
+            logError(TAG, "Cannot read the analytics consent", it)
             emit(false)
         }
     ) { appearance, hasHistory, analyticsEnabled -> GeneralSettingsState(appearance, hasHistory, analyticsEnabled) }
@@ -61,14 +61,14 @@ class GeneralSettingsViewModel @Inject constructor(
     fun setThemeMode(themeMode: ThemeMode) {
         viewModelScope.launch {
             suspendRunCatching { appearanceSettings.setThemeMode(themeMode) }
-                .onFailure { Log.e(TAG, "Cannot save the theme", it) }
+                .onFailure { logError(TAG, "Cannot save the theme", it) }
         }
     }
 
     fun setDynamicColor(enabled: Boolean) {
         viewModelScope.launch {
             suspendRunCatching { appearanceSettings.setDynamicColor(enabled) }
-                .onFailure { Log.e(TAG, "Cannot save the colour setting", it) }
+                .onFailure { logError(TAG, "Cannot save the colour setting", it) }
         }
     }
 
@@ -76,7 +76,7 @@ class GeneralSettingsViewModel @Inject constructor(
     fun setAnalyticsEnabled(enabled: Boolean) {
         viewModelScope.launch {
             suspendRunCatching { analyticsConsent.setGranted(enabled) }
-                .onFailure { Log.e(TAG, "Cannot save the analytics consent", it) }
+                .onFailure { logError(TAG, "Cannot save the analytics consent", it) }
         }
     }
 
@@ -85,7 +85,7 @@ class GeneralSettingsViewModel @Inject constructor(
             suspendRunCatching { history.clear() }.fold(
                 onSuccess = { _events.send(SettingsEvent.HistoryCleared) },
                 onFailure = {
-                    Log.e(TAG, "Cannot clear history", it)
+                    logError(TAG, "Cannot clear history", it)
                     _events.send(SettingsEvent.HistoryClearFailed)
                 }
             )

@@ -1,11 +1,11 @@
 package by.mazokaleh.skarnik.feature.translation.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
@@ -97,7 +97,7 @@ class TranslationViewModel @AssistedInject constructor(
                     }
                     _events.send(TranslationEvent.BookmarkChanged(bookmark))
                 }
-                .onFailure { Log.e(TAG, "Cannot change the bookmark", it) }
+                .onFailure { logError(TAG, "Cannot change the bookmark", it) }
         }
     }
 
@@ -110,7 +110,7 @@ class TranslationViewModel @AssistedInject constructor(
         _uiState.value = TranslationUiState.Loading(route.word)
         loading = viewModelScope.launch {
             _uiState.value = suspendRunCatching { loadTranslation() }.getOrElse {
-                Log.e(TAG, "Cannot translate ${route.langId}/${route.wordId}", it)
+                logError(TAG, "Cannot translate ${route.langId}/${route.wordId}", it)
                 TranslationUiState.Error(route.word)
             }
         }
@@ -127,7 +127,7 @@ class TranslationViewModel @AssistedInject constructor(
             }
             is TranslationResult.Found -> {
                 if (route.saveToHistory) {
-                    suspendRunCatching { history.save(word) }.onFailure { Log.e(TAG, "Cannot save to history", it) }
+                    suspendRunCatching { history.save(word) }.onFailure { logError(TAG, "Cannot save to history", it) }
                 }
                 val bookmarked = suspendRunCatching { bookmarks.isBookmarked(word) }.getOrDefault(false)
                 val candidates = stressCandidates(word, result.translation.html)

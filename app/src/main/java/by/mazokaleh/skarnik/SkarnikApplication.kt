@@ -7,6 +7,8 @@ import androidx.work.Configuration
 import by.mazokaleh.skarnik.core.analytics.AnalyticsConsent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
 import by.mazokaleh.skarnik.core.config.RemoteConfig
+import by.mazokaleh.skarnik.core.crash.CrashReporting
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.network.FlutterHttpCacheCleaner
 import by.mazokaleh.skarnik.feature.widget.data.WordOfTheDayWork
 import dagger.hilt.android.HiltAndroidApp
@@ -35,6 +37,8 @@ class SkarnikApplication :
         get() = Configuration.Builder().setWorkerFactory(workerFactory).build()
 
     override fun onCreate() {
+        // First, so crashes while Hilt builds the graph in super.onCreate() are reported too (release builds only).
+        CrashReporting.start(this)
         super.onCreate()
         // Enqueues a database write on WorkManager's own thread; nothing waits for it.
         WordOfTheDayWork.cancelFlutterJobs(this)
@@ -43,7 +47,7 @@ class SkarnikApplication :
         // DataStore reads on its own IO scope. Collection is off by default (manifest) until this applies a "yes".
         MainScope().launch {
             suspendRunCatching { analyticsConsent.applyStored() }
-                .onFailure { Log.e("SkarnikApplication", "Cannot apply the analytics consent", it) }
+                .onFailure { logError("SkarnikApplication", "Cannot apply the analytics consent", it) }
         }
         // Nothing waits for it (Flutter didn't either): until it succeeds, the last activated values or the defaults
         // apply. A failure (offline, throttled) is retried at the next start.

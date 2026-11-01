@@ -1,11 +1,11 @@
 package by.mazokaleh.skarnik.feature.settings.ui
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.feature.offline.domain.CheckDownloadRateLimitUseCase
 import by.mazokaleh.skarnik.feature.offline.domain.DeleteOfflineDictionaryUseCase
@@ -68,14 +68,15 @@ class SettingsViewModel @Inject constructor(
     val offline: StateFlow<OfflineSectionState> = combine(Dictionary.entries.map { item(it, store) }) { it.toList() }
         .map<_, OfflineSectionState> { OfflineSectionState.Ready(it) }
         .catch {
-            Log.e(TAG, "Cannot read offline dictionaries", it)
+            logError(TAG, "Cannot read offline dictionaries", it)
             emit(OfflineSectionState.Error)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), OfflineSectionState.Loading)
 
     init {
         viewModelScope.launch {
-            suspendRunCatching { settings.markPromoSeen() }.onFailure { Log.e(TAG, "Cannot save the promo flag", it) }
+            suspendRunCatching { settings.markPromoSeen() }
+                .onFailure { logError(TAG, "Cannot save the promo flag", it) }
         }
     }
 
@@ -94,7 +95,7 @@ class SettingsViewModel @Inject constructor(
                 onSuccess = { allowed ->
                     if (allowed) downloads.start(dictionary) else _events.send(SettingsEvent.RateLimited)
                 },
-                onFailure = { Log.e(TAG, "Cannot check the download rate limit", it) }
+                onFailure = { logError(TAG, "Cannot check the download rate limit", it) }
             )
         }
     }
@@ -104,7 +105,7 @@ class SettingsViewModel @Inject constructor(
             suspendRunCatching { deleteDictionary(dictionary) }.fold(
                 onSuccess = { _events.send(SettingsEvent.Deleted) },
                 onFailure = {
-                    Log.e(TAG, "Cannot delete ${dictionary.path}", it)
+                    logError(TAG, "Cannot delete ${dictionary.path}", it)
                     _events.send(SettingsEvent.DeleteFailed)
                 }
             )
@@ -123,7 +124,7 @@ class SettingsBadgeViewModel @Inject constructor(settings: OfflineDictionarySett
     val showBadge: StateFlow<Boolean> = settings.promoSeen
         .map { !it }
         .catch {
-            Log.e(TAG, "Cannot read the promo flag", it)
+            logError(TAG, "Cannot read the promo flag", it)
             emit(false)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), false)

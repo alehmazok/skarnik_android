@@ -28,6 +28,12 @@ val keystoreProperties =
 // The Firebase Android app Flutter registered for this application id (gradle.properties).
 val firebaseAppId = property("skarnik.firebaseAppId").toString()
 
+// Sentry (docs/adr/0008): -Pskarnik.sentryDsn or the SENTRY_DSN environment variable; empty means off.
+val sentryDsn =
+    providers.gradleProperty("skarnik.sentryDsn").orElse(providers.environmentVariable("SENTRY_DSN")).getOrElse("")
+val sentryEnvironment = providers.gradleProperty("skarnik.sentryEnvironment").getOrElse("production")
+val sentryProguardUuid = providers.gradleProperty("skarnik.sentryProguardUuid").getOrElse("")
+
 android {
     // Same id as the Flutter app, so the native build installs as an update and keeps user data.
     namespace = "by.mazokaleh.skarnik"
@@ -79,6 +85,10 @@ android {
             resValue("string", "app_name", "Debug Skarnik")
             // Debug builds never send analytics: events only go to Logcat (tag "Analytics").
             manifestPlaceholders["analyticsDeactivated"] = "true"
+            // Debug builds never report crashes: an empty DSN keeps Sentry off.
+            buildConfigField("String", "SENTRY_DSN", "\"\"")
+            buildConfigField("String", "SENTRY_ENVIRONMENT", "\"debug\"")
+            buildConfigField("String", "SENTRY_PROGUARD_UUID", "\"\"")
         }
         release {
             isMinifyEnabled = true
@@ -86,6 +96,11 @@ android {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             resValue("string", "app_name", "Skarnik")
             manifestPlaceholders["analyticsDeactivated"] = "false"
+            // Crash reporting (docs/adr/0008). The DSN comes from the SENTRY_DSN secret in CI; without it (a local
+            // build) Sentry stays off. The ProGuard UUID ties a crash to the R8 mapping CI uploads for this build.
+            buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
+            buildConfigField("String", "SENTRY_ENVIRONMENT", "\"$sentryEnvironment\"")
+            buildConfigField("String", "SENTRY_PROGUARD_UUID", "\"$sentryProguardUuid\"")
             signingConfig = signingConfigs.findByName("release")
             // Firebase App Distribution (docs/adr/0005). The Firebase Android app is the one Flutter
             // registered for this application id; credentials and release notes come from CI.
@@ -194,6 +209,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.config)
     implementation(libs.play.review)
+    implementation(libs.sentry.android)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)

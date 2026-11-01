@@ -228,8 +228,14 @@ collection on or off when it changes, and re-applies it at every app start. `Ana
 root shows the non-dismissible dialog until there is an answer; the Settings switch writes the same answer.
 Debug builds have collection deactivated for good and print events to Logcat (tag `Analytics`).
 
-Remote Config (8.8) and Sentry crash reporting (0.6, sponsored org `skarnik`, instead of Crashlytics) are still
-to come.
+Remote Config (8.8) is fetched at app start, without waiting, by `core/config/RemoteConfig`.
+
+Crash reporting ([ADR 0008](adr/0008-sentry-crash-reporting.md)): Sentry (sponsored org `skarnik`) instead of
+Crashlytics. `CrashReporting.start` runs first in `SkarnikApplication.onCreate`, only in release builds that got a
+DSN (the `SENTRY_DSN` secret in CI); the SDK reports crashes, ANRs and native crashes. Caught errors go through
+`logError(tag, message, error)`, which logs to Logcat and reports a non-fatal, except network and HTTP failures
+(`IOException`). Only the exception and tag are sent; messages and screenshots, which can hold the user's query,
+are not.
 
 ## Testing
 

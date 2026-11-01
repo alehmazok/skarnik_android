@@ -90,6 +90,12 @@
             android:name="google_analytics_adid_collection_enabled"
             android:value="false" />
 
+        <!-- Crash reporting (docs/adr/0008): CrashReporting starts Sentry from SkarnikApplication, only in release
+             builds that have a DSN, so the SDK's own content provider must not. -->
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false" />
+
         <!-- WorkManager is initialised by SkarnikApplication with Hilt's worker factory, not by App Startup. -->
         <provider
             android:name="androidx.startup.InitializationProvider"
