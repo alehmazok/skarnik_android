@@ -30,7 +30,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ListItem
-import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SearchBar
 import androidx.compose.material3.SearchBarDefaults
@@ -63,7 +62,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
+import by.mazokaleh.skarnik.core.model.WordLink
+import by.mazokaleh.skarnik.core.ui.isWord
 import by.mazokaleh.skarnik.core.ui.nameRes
+import by.mazokaleh.skarnik.core.ui.selectedWord
+import by.mazokaleh.skarnik.core.ui.wordListItemColors
 import by.mazokaleh.skarnik.feature.search.domain.SearchWord
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 import kotlinx.serialization.Serializable
@@ -87,7 +90,12 @@ private val RUSSIAN_LETTERS = listOf("и", "щ", "ъ")
 private val BELARUSIAN_LETTERS = listOf("і", "ў", "'")
 
 @Composable
-fun SearchScreen(onBack: () -> Unit, onWordClick: (SearchWord) -> Unit, viewModel: SearchViewModel = hiltViewModel()) {
+fun SearchScreen(
+    onBack: () -> Unit,
+    onWordClick: (SearchWord) -> Unit,
+    openWord: WordLink? = null,
+    viewModel: SearchViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val queryState = rememberTextFieldState()
     LaunchedEffect(queryState) {
@@ -96,6 +104,7 @@ fun SearchScreen(onBack: () -> Unit, onWordClick: (SearchWord) -> Unit, viewMode
     SearchContent(
         uiState = uiState,
         queryState = queryState,
+        openWord = openWord,
         onBack = onBack,
         onWordClick = { word, position ->
             viewModel.onResultClick(word, position)
@@ -113,6 +122,7 @@ fun SearchScreen(onBack: () -> Unit, onWordClick: (SearchWord) -> Unit, viewMode
 private fun SearchContent(
     uiState: SearchUiState,
     queryState: TextFieldState,
+    openWord: WordLink?,
     onBack: () -> Unit,
     onWordClick: (SearchWord, Int) -> Unit
 ) {
@@ -147,7 +157,15 @@ private fun SearchContent(
                 )
         ) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
-                SearchResults(uiState = uiState, onWordClick = onWordClick)
+                SearchResults(
+                    uiState = uiState,
+                    openWord = openWord,
+                    onWordClick = { word, position ->
+                        // On wide screens the word opens beside the results, where the keyboard would cover it.
+                        keyboardController?.hide()
+                        onWordClick(word, position)
+                    }
+                )
             }
             if (WindowInsets.isImeVisible) {
                 ExtraLetters(onLetter = { queryState.insertAtCursor(it) })
@@ -196,7 +214,7 @@ private fun SearchInputField(
 }
 
 @Composable
-private fun SearchResults(uiState: SearchUiState, onWordClick: (SearchWord, Int) -> Unit) {
+private fun SearchResults(uiState: SearchUiState, openWord: WordLink?, onWordClick: (SearchWord, Int) -> Unit) {
     when (uiState) {
         SearchUiState.Hint -> Message(stringResource(R.string.search_hint), SearchTestTags.HINT)
         is SearchUiState.NothingFound -> Message(
@@ -206,13 +224,15 @@ private fun SearchResults(uiState: SearchUiState, onWordClick: (SearchWord, Int)
         SearchUiState.Error -> Message(stringResource(R.string.search_error), SearchTestTags.ERROR)
         is SearchUiState.Results -> LazyColumn(Modifier.fillMaxSize()) {
             itemsIndexed(uiState.words, key = { _, word -> word.id }) { position, word ->
+                val selected = openWord.isWord(word.dictionary, word.wordId)
                 ListItem(
                     headlineContent = { Text(word.word) },
                     supportingContent = { Text(stringResource(word.dictionary.nameRes)) },
                     // The expanded search bar already draws the container.
-                    colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                    colors = wordListItemColors(selected, containerColor = Color.Transparent),
                     modifier = Modifier
                         .clickable { onWordClick(word, position) }
+                        .selectedWord(selected)
                         .testTag(SearchTestTags.RESULT)
                 )
             }
@@ -285,6 +305,7 @@ private fun SearchContentPreview() {
                 )
             ),
             queryState = rememberTextFieldState("прыв"),
+            openWord = null,
             onBack = {},
             onWordClick = { _, _ -> }
         )

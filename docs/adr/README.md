@@ -16,3 +16,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | [0006](0006-word-of-the-day-widget.md) | Word-of-the-day widget: Glance, a periodic job while placed, state in its own DataStore | Accepted |
 | [0007](0007-analytics-and-consent.md) | Analytics: Firebase without the google-services plugin, one typed event logger, off until consent | Accepted |
 | [0008](0008-sentry-crash-reporting.md) | Crash reporting: Sentry SDK without its Gradle plugin, not gated by analytics consent, non-fatals without network errors | Accepted |
+| [0009](0009-wide-screen-list-detail.md) | Wide screens: own list–detail layout with a nested NavHost per list | Accepted |

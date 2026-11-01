@@ -1,0 +1,94 @@
+# Wide screen (parity 0.5): a navigation rail instead of the bottom bar, and words open beside the list they were
+# tapped in. CI runs this folder after resizing the emulator to 1280x800 dp (`adb shell wm size` / `wm density`).
+# Needs network: translations come from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: Wide screen list and translation
+tags:
+  - wide
+---
+- launchApp:
+    clearState: true
+- runFlow: ../subflows/decline-analytics.yaml
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- assertVisible:
+    id: home_navigation_rail
+- assertNotVisible:
+    id: home_navigation_bar
+- assertVisible:
+    id: translation_placeholder
+
+# Search: the word opens beside the results, which stay on screen.
+- tapOn:
+    id: home_search
+- inputText: прывитанне
+- extendedWaitUntil:
+    visible:
+      text: прывітанне
+      childOf:
+        id: search_result
+    timeout: 10000
+- tapOn:
+    id: search_result
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- assertVisible:
+    id: search_field
+- assertVisible:
+    id: search_result
+- takeScreenshot: wide-search
+# Back first empties the pane, then closes the search.
+- back
+- assertVisible:
+    id: translation_placeholder
+- assertVisible:
+    id: search_field
+- back
+- assertVisible:
+    id: home_search
+
+# History lists the word; it opens beside the list.
+- tapOn:
+    text: "прыв.*"
+    childOf:
+      id: history_item
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- assertVisible:
+    id: history_list
+- takeScreenshot: wide-history
+
+# Each tab has its own pane: the Dictionary tab starts empty and opens its word beside the list.
+- tapOn:
+    id: home_tab_dictionary
+- extendedWaitUntil:
+    visible:
+      id: vocabulary_item
+    timeout: 30000
+- assertVisible:
+    id: translation_placeholder
+- tapOn:
+    id: vocabulary_item
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- assertVisible:
+    id: vocabulary_list
+- takeScreenshot: wide-dictionary
+
+# Back to History: its word is still open.
+- tapOn:
+    id: home_tab_history
+- assertVisible:
+    id: translation_text
+- assertVisible:
+    id: history_list

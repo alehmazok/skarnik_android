@@ -89,7 +89,8 @@ colours in screens: use `MaterialTheme.colorScheme`.
 
 **UI.** Material 3 guidelines come first (Aleh, 2026-10-30): do not copy Flutter screen layouts, navigation
 or UX flows blindly. Where M3 has a better pattern (SearchBar, navigation bar/rail by window size, bottom
-sheets, etc.), use it and note the deviation in the feature's row in `docs/parity.md`. All user-visible strings in Belarusian in `res/values/strings.xml` (use `plurals` for counts).
+sheets, etc.), use it and note the deviation in the feature's row in `docs/parity.md`. Lists whose rows open a word go
+through `ListDetailLayout` (word beside the list from 840 dp, [ADR 0009](docs/adr/0009-wide-screen-list-detail.md)). All user-visible strings in Belarusian in `res/values/strings.xml` (use `plurals` for counts).
 Resources are pinned to `be` (`withAppLocale()` in `attachBaseContext`) so plurals follow Belarusian rules
 on any device. Dark theme, TalkBack labels, large fonts, edge-to-edge, predictive back. minSdk 24.
 

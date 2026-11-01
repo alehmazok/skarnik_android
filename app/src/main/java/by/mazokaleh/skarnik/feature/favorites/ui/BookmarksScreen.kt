@@ -46,9 +46,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.SavedWord
+import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.ui.ListMessage
 import by.mazokaleh.skarnik.core.ui.SavedWordItem
 import by.mazokaleh.skarnik.core.ui.SavedWordList
+import by.mazokaleh.skarnik.core.ui.isWord
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 import kotlinx.coroutines.flow.filter
@@ -65,7 +67,11 @@ object BookmarksTestTags {
 }
 
 @Composable
-fun BookmarksScreen(onWordClick: (SavedWord) -> Unit, viewModel: BookmarksViewModel = hiltViewModel()) {
+fun BookmarksScreen(
+    onWordClick: (SavedWord) -> Unit,
+    openWord: WordLink? = null,
+    viewModel: BookmarksViewModel = hiltViewModel()
+) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val resources = LocalResources.current
@@ -91,6 +97,7 @@ fun BookmarksScreen(onWordClick: (SavedWord) -> Unit, viewModel: BookmarksViewMo
     BookmarksContent(
         uiState = uiState,
         snackbarHostState = snackbarHostState,
+        openWord = openWord,
         onWordClick = onWordClick,
         onRemove = viewModel::remove,
         onSortOrderChange = viewModel::setSortOrder,
@@ -103,6 +110,7 @@ fun BookmarksScreen(onWordClick: (SavedWord) -> Unit, viewModel: BookmarksViewMo
 private fun BookmarksContent(
     uiState: BookmarksUiState,
     snackbarHostState: SnackbarHostState,
+    openWord: WordLink?,
     onWordClick: (SavedWord) -> Unit,
     onRemove: (SavedWord) -> Unit,
     onSortOrderChange: (BookmarksSortOrder) -> Unit,
@@ -133,7 +141,13 @@ private fun BookmarksContent(
                     onLoadMore = onLoadMore,
                     modifier = modifier.testTag(BookmarksTestTags.LIST)
                 ) { word ->
-                    BookmarkItem(word, onWordClick, onRemove, Modifier.animateItem())
+                    BookmarkItem(
+                        word = word,
+                        selected = openWord.isWord(word.dictionary, word.wordId),
+                        onClick = onWordClick,
+                        onRemove = onRemove,
+                        modifier = Modifier.animateItem()
+                    )
                 }
             }
             BookmarksUiState.Error -> ListMessage(
@@ -182,6 +196,7 @@ private fun SortMenu(sortOrder: BookmarksSortOrder, onSortOrderChange: (Bookmark
 @Composable
 private fun BookmarkItem(
     word: SavedWord,
+    selected: Boolean,
     onClick: (SavedWord) -> Unit,
     onRemove: (SavedWord) -> Unit,
     modifier: Modifier = Modifier
@@ -213,7 +228,8 @@ private fun BookmarkItem(
         SavedWordItem(
             word = word,
             onClick = { onClick(word) },
-            modifier = Modifier.testTag(BookmarksTestTags.ITEM)
+            modifier = Modifier.testTag(BookmarksTestTags.ITEM),
+            selected = selected
         )
     }
 }
@@ -246,6 +262,7 @@ private fun BookmarksContentPreview() {
         BookmarksContent(
             uiState = BookmarksUiState.Ready(words, hasMore = false, sortOrder = BookmarksSortOrder.DateAdded),
             snackbarHostState = remember { SnackbarHostState() },
+            openWord = WordLink(Dictionary.BelRus, 10),
             onWordClick = {},
             onRemove = {},
             onSortOrderChange = {},

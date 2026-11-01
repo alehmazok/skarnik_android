@@ -48,13 +48,14 @@ fun SavedWordList(
     }
 }
 
-/** A row: the word and its dictionary, as in search results. */
+/** A row: the word and its dictionary, as in search results. [selected]: its translation shows beside the list. */
 @Composable
-fun SavedWordItem(word: SavedWord, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SavedWordItem(word: SavedWord, onClick: () -> Unit, modifier: Modifier = Modifier, selected: Boolean = false) {
     ListItem(
         headlineContent = { Text(word.word) },
         supportingContent = { Text(stringResource(word.dictionary.nameRes)) },
-        modifier = modifier.clickable(onClick = onClick)
+        modifier = modifier.clickable(onClick = onClick).selectedWord(selected),
+        colors = wordListItemColors(selected)
     )
 }
 
