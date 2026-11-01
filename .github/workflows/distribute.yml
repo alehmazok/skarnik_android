@@ -204,7 +204,8 @@ jobs:
 
       - name: No Sentry mapping upload
         if: env.HAS_SENTRY_AUTH_TOKEN != 'true'
-        run: echo "::warning::R8 mapping not sent to Sentry: add the SENTRY_AUTH_TOKEN repository secret (README, Crash reporting)."
+        run: |
+          echo "::warning::R8 mapping not sent to Sentry: add the SENTRY_AUTH_TOKEN repository secret (README)."
 
       - name: Missing secrets
         if: env.HAS_SIGNING_KEY != 'true' || env.HAS_FIREBASE_CREDENTIALS != 'true'
