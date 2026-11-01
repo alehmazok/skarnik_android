@@ -131,6 +131,6 @@ Distribution → Run workflow. It needs these repository secrets (Settings → S
 | `SENTRY_DSN` | DSN of the Android project in the Sentry org `skarnik`; turns crash reporting on in the release build |
 | `SENTRY_AUTH_TOKEN` | Sentry auth token with `project:releases` scope; uploads the R8 mapping so stack traces are readable |
 
-The project slug for the mapping upload is the repository variable `SENTRY_PROJECT` (default `skarnik-android`).
+The project slug for the mapping upload is the repository variable `SENTRY_PROJECT` (default `skarnik_android`).
 Without these secrets the workflow still builds, and warns that nothing was uploaded. To upload from a local machine:
 `./gradlew assembleRelease appDistributionUploadRelease --serviceCredentialsFile=/path/to/key.json`.

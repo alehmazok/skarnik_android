@@ -190,13 +190,13 @@ jobs:
             --releaseNotesFile="$PWD/release/release-notes.txt"
 
       # Without the mapping, Sentry shows R8-obfuscated stack traces for this build. Org "skarnik"; the project slug is
-      # the repository variable SENTRY_PROJECT, "skarnik-android" by default.
+      # the repository variable SENTRY_PROJECT, "skarnik_android" by default.
       - name: Upload R8 mapping to Sentry
         if: env.HAS_SENTRY_AUTH_TOKEN == 'true'
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: skarnik
-          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT || 'skarnik-android' }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT || 'skarnik_android' }}
         run: |
           npx --yes @sentry/cli@3.5.0 upload-proguard \
             --uuid "$(cat release/mapping/release/sentry-proguard-uuid.txt)" \
