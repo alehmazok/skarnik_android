@@ -82,7 +82,11 @@ Navigation Compose with type-safe routes (`@Serializable` objects/classes). Targ
   on the `HomeRoute` entry, so hidden tabs keep their data. Back on another tab returns to History. Search and
   Translation open full screen above it.
 - Full-screen: Search, Settings, Translation(`langId`, `wordId`, `word`), Stress(`word`) → StressTable(`id`, `source`, `word`, `tableName`).
-- Large screens: list–detail (search/history/bookmarks list with translation beside it).
+- Wide screens ([ADR 0009](adr/0009-wide-screen-list-detail.md)): a `NavigationRail` replaces the bar from 600 dp.
+  From 840 dp each tab and the search screen show their list at 360 dp with the tapped word beside it, in a
+  nested `NavHost` per list (`navigation/TranslationPane.kt`: placeholder → translation → links and stress
+  screens); the open row is highlighted. Below 840 dp a tap opens the word full screen; a word still open when the
+  window narrows takes the list's place until back.
 - Deep links `skarnik.by/<dict>/<id>` and `skarnik.app/r/<dict>/<id>` open Translation.
 
 ## Local storage

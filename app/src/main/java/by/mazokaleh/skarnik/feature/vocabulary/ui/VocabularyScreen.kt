@@ -45,7 +45,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
+import by.mazokaleh.skarnik.core.model.WordLink
+import by.mazokaleh.skarnik.core.ui.isWord
+import by.mazokaleh.skarnik.core.ui.selectedWord
 import by.mazokaleh.skarnik.core.ui.shortNameRes
+import by.mazokaleh.skarnik.core.ui.wordListItemColors
 import by.mazokaleh.skarnik.feature.vocabulary.domain.Vocabulary
 import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularySection
 import by.mazokaleh.skarnik.feature.vocabulary.domain.VocabularyWord
@@ -70,10 +74,11 @@ object VocabularyTestTags {
 @Composable
 fun VocabularyScreen(
     onWordClick: (Dictionary, VocabularyWord) -> Unit,
+    openWord: WordLink? = null,
     viewModel: VocabularyViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    VocabularyPage(uiState, viewModel::select, viewModel::retry) { dictionary, word ->
+    VocabularyPage(uiState, openWord, viewModel::select, viewModel::retry) { dictionary, word ->
         viewModel.onWordClick(dictionary, word)
         onWordClick(dictionary, word)
     }
@@ -83,6 +88,7 @@ fun VocabularyScreen(
 @Composable
 private fun VocabularyPage(
     uiState: VocabularyUiState,
+    openWord: WordLink?,
     onSelect: (Dictionary) -> Unit,
     onRetry: () -> Unit,
     onWordClick: (Dictionary, VocabularyWord) -> Unit
@@ -103,7 +109,12 @@ private fun VocabularyPage(
                 CircularProgressIndicator(Modifier.testTag(VocabularyTestTags.LOADING))
             }
             is VocabularyContent.Ready -> listStates.SaveableStateProvider(uiState.dictionary) {
-                VocabularyList(content.vocabulary, onWordClick = { onWordClick(uiState.dictionary, it) }, modifier)
+                VocabularyList(
+                    vocabulary = content.vocabulary,
+                    isOpen = { openWord.isWord(uiState.dictionary, it.wordId) },
+                    onWordClick = { onWordClick(uiState.dictionary, it) },
+                    modifier = modifier
+                )
             }
             VocabularyContent.Error -> VocabularyError(onRetry, modifier)
         }
@@ -126,7 +137,12 @@ private fun DictionaryTabs(selected: Dictionary, onSelect: (Dictionary) -> Unit)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun VocabularyList(vocabulary: Vocabulary, onWordClick: (VocabularyWord) -> Unit, modifier: Modifier) {
+private fun VocabularyList(
+    vocabulary: Vocabulary,
+    isOpen: (VocabularyWord) -> Boolean,
+    onWordClick: (VocabularyWord) -> Unit,
+    modifier: Modifier
+) {
     val listState = rememberLazyListState()
     val scope = rememberCoroutineScope()
     var activeLetter by remember { mutableStateOf<String?>(null) }
@@ -140,11 +156,14 @@ private fun VocabularyList(vocabulary: Vocabulary, onWordClick: (VocabularyWord)
                         SectionHeader(section.letter)
                     }
                     items(section.words, key = { it.wordId }, contentType = { WORD_CONTENT_TYPE }) { word ->
+                        val selected = isOpen(word)
                         ListItem(
                             headlineContent = { Text(word.word) },
                             modifier = Modifier
                                 .clickable { onWordClick(word) }
-                                .testTag(VocabularyTestTags.ITEM)
+                                .selectedWord(selected)
+                                .testTag(VocabularyTestTags.ITEM),
+                            colors = wordListItemColors(selected)
                         )
                     }
                 }
@@ -221,6 +240,12 @@ private fun VocabularyPagePreview() {
         )
     )
     SkarnikTheme {
-        VocabularyPage(VocabularyUiState(Dictionary.Tsbm, VocabularyContent.Ready(vocabulary)), {}, {}, { _, _ -> })
+        VocabularyPage(
+            VocabularyUiState(Dictionary.Tsbm, VocabularyContent.Ready(vocabulary)),
+            WordLink(Dictionary.Tsbm, 2),
+            {},
+            {},
+            { _, _ -> }
+        )
     }
 }

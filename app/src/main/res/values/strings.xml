@@ -46,6 +46,7 @@
 
     <string name="translation_into_russian">Пераклад на рускую мову</string>
     <string name="translation_into_belarusian">Пераклад на беларускую мову</string>
+    <string name="translation_select_word">Абярыце слова са спіса</string>
     <string name="translation_error">Прабачце, адбылася памылка перакладу слова.</string>
     <string name="translation_redirected_from">Перанакіравана з «%1$s»</string>
     <string name="translation_bookmark_added">Дададзена ў закладкі.</string>

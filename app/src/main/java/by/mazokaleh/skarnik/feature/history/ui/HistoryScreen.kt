@@ -30,9 +30,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.SavedWord
+import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.ui.ListMessage
 import by.mazokaleh.skarnik.core.ui.SavedWordItem
 import by.mazokaleh.skarnik.core.ui.SavedWordList
+import by.mazokaleh.skarnik.core.ui.isWord
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsButton
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 
@@ -50,15 +52,19 @@ fun HistoryScreen(
     onSearchClick: () -> Unit,
     onSettingsClick: () -> Unit,
     onWordClick: (SavedWord) -> Unit,
+    openWord: WordLink? = null,
     viewModel: HistoryViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    HistoryContent(uiState, onSearchClick, onWordClick, viewModel::loadMore) { SettingsButton(onSettingsClick) }
+    HistoryContent(uiState, openWord, onSearchClick, onWordClick, viewModel::loadMore) {
+        SettingsButton(onSettingsClick)
+    }
 }
 
 @Composable
 private fun HistoryContent(
     uiState: HistoryUiState,
+    openWord: WordLink?,
     onSearchClick: () -> Unit,
     onWordClick: (SavedWord) -> Unit,
     onLoadMore: () -> Unit,
@@ -82,7 +88,8 @@ private fun HistoryContent(
                     SavedWordItem(
                         word = word,
                         onClick = { onWordClick(word) },
-                        modifier = Modifier.animateItem().testTag(HistoryTestTags.ITEM)
+                        modifier = Modifier.animateItem().testTag(HistoryTestTags.ITEM),
+                        selected = openWord.isWord(word.dictionary, word.wordId)
                     )
                 }
             }
@@ -138,5 +145,5 @@ private fun HistoryContentPreview() {
         SavedWord(2, Dictionary.BelRus, 10, "прывітанне", "п"),
         SavedWord(1, Dictionary.Tsbm, 11, "дзякуй", "д")
     )
-    SkarnikTheme { HistoryContent(HistoryUiState.Ready(words, hasMore = false), {}, {}, {}, {}) }
+    SkarnikTheme { HistoryContent(HistoryUiState.Ready(words, hasMore = false), null, {}, {}, {}, {}) }
 }

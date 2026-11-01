@@ -15,5 +15,8 @@ Rules:
 - Flows start from `clearState: true` unless the flow is about kept state (upgrade, history).
 - `takeScreenshot` at the end state of each journey; CI uploads them as an artifact.
 - Steps shared by several flows live in `subflows/` (not run on their own) and take parameters through `env`.
+- `wide/` holds flows for an expanded window (navigation rail, word beside the list). They are not run with the
+  rest: resize the device first (`adb shell wm size 1280x800 && adb shell wm density 160`), then
+  `maestro test .maestro/wide/`; reset with `wm size reset && wm density reset`.
 - `app-links.yaml` needs the link hosts approved for the debug app once after installing (CI does it):
   `adb shell pm set-app-links-user-selection --user 0 --package by.mazokaleh.skarnik.debug true all`.

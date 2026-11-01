@@ -85,10 +85,11 @@ object TranslationTestTags {
     const val SHARE = "translation_share"
 }
 
+/** [onBack] is null for a word opened beside a list (wide screens): the list is the way back, so no back arrow. */
 @Composable
 fun TranslationScreen(
     route: TranslationRoute,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onOpenWord: (WordLink) -> Unit,
     onRedirect: (target: WordLink, fromWord: String) -> Unit,
     onStress: (word: String) -> Unit,
@@ -182,7 +183,7 @@ private fun TranslationEffects(
 private fun TranslationContent(
     uiState: TranslationUiState,
     snackbarHostState: SnackbarHostState,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onToggleBookmark: () -> Unit,
     onShare: (Translation) -> Unit,
     onRetry: () -> Unit,
@@ -194,11 +195,13 @@ private fun TranslationContent(
             TopAppBar(
                 title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = stringResource(R.string.action_back)
-                        )
+                    if (onBack != null) {
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                painter = painterResource(R.drawable.ic_arrow_back),
+                                contentDescription = stringResource(R.string.action_back)
+                            )
+                        }
                     }
                 },
                 actions = {
