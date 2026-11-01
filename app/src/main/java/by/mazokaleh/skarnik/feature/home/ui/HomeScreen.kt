@@ -68,11 +68,7 @@ enum class HomeTab(
  * first, as M3 navigation asks. [onOpenTranslation] opens a word full screen, below 840 dp.
  */
 @Composable
-fun HomeScreen(
-    onSearchClick: () -> Unit,
-    onSettingsClick: () -> Unit,
-    onOpenTranslation: (TranslationRoute) -> Unit
-) {
+fun HomeScreen(onSearchClick: () -> Unit, onSettingsClick: () -> Unit, onOpenTranslation: (TranslationRoute) -> Unit) {
     var tab by rememberSaveable { mutableStateOf(HomeTab.History) }
     val tabStates = rememberSaveableStateHolder()
     BackHandler(enabled = tab != HomeTab.History) { tab = HomeTab.History }
@@ -132,8 +128,7 @@ private fun HomeTabContent(
     }
 }
 
-private fun SavedWord.toTranslationRoute() =
-    TranslationRoute(dictionary.langId, wordId, word, saveToHistory = false)
+private fun SavedWord.toTranslationRoute() = TranslationRoute(dictionary.langId, wordId, word, saveToHistory = false)
 
 @Composable
 private fun HomeNavigationBar(selected: HomeTab, onSelect: (HomeTab) -> Unit) {
