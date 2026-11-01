@@ -50,7 +50,7 @@ data class CrashReportingConfig(val dsn: String, val environment: String, val pr
         fun fromBuildConfig() = CrashReportingConfig(
             dsn = BuildConfig.SENTRY_DSN,
             environment = BuildConfig.SENTRY_ENVIRONMENT,
-            proguardUuid = BuildConfig.SENTRY_PROGUARD_UUID,
+            proguardUuid = BuildConfig.SENTRY_PROGUARD_UUID
         )
     }
 }
