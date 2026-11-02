@@ -72,7 +72,7 @@ jobs:
             for f in app/src/release/generated/baselineProfiles/*.txt; do
               if [ -f "$f" ]; then echo "$(basename "$f"): $(wc -l < "$f") rules"; fi
             done
-          } >> "$GITHUB_STEP_SUMMARY"
+          } | tee -a "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v7
         if: always()
