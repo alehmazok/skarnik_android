@@ -67,10 +67,11 @@ jobs:
             echo "| Compilation | timeToInitialDisplay | timeToFullDisplay |"
             echo "|---|---|---|"
             find baselineprofile/build/outputs -name '*benchmarkData.json' -exec jq -r '.benchmarks[] |
-              "| \(.name) | \(.metrics.timeToInitialDisplayMs.median // "–") ms | \(.metrics.timeToFullDisplayMs.median // "–") ms |"' {} \;
+              "| \(.name) | \(.metrics.timeToInitialDisplayMs.median // "–") ms | \(.metrics.timeToFullDisplayMs.median // "–") ms |"' {} \; 2>/dev/null || true
             echo
-            echo "Profile: $(wc -l < app/src/release/generated/baselineProfiles/baseline-prof.txt) rules," \
-              "startup profile: $(wc -l < app/src/release/generated/baselineProfiles/startup-prof.txt) rules"
+            for f in app/src/release/generated/baselineProfiles/*.txt; do
+              [ -f "$f" ] && echo "$(basename "$f"): $(wc -l < "$f") rules"
+            done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v7

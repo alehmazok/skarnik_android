@@ -5,7 +5,6 @@ import androidx.benchmark.macro.CompilationMode
 import androidx.benchmark.macro.StartupMode
 import androidx.benchmark.macro.StartupTimingMetric
 import androidx.benchmark.macro.junit4.MacrobenchmarkRule
-import androidx.test.filters.LargeTest
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -18,7 +17,6 @@ import org.junit.runners.Parameterized
  * -Pandroid.testInstrumentationRunnerArguments.androidx.benchmark.enabledRules=Macrobenchmark`.
  */
 @RunWith(Parameterized::class)
-@LargeTest
 class StartupBenchmark(private val compilation: Compilation) {
     @get:Rule
     val rule = MacrobenchmarkRule()
