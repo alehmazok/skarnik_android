@@ -17,3 +17,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | [0007](0007-analytics-and-consent.md) | Analytics: Firebase without the google-services plugin, one typed event logger, off until consent | Accepted |
 | [0008](0008-sentry-crash-reporting.md) | Crash reporting: Sentry SDK without its Gradle plugin, not gated by analytics consent, non-fatals without network errors | Accepted |
 | [0009](0009-wide-screen-list-detail.md) | Wide screens: own list–detail layout with a nested NavHost per list | Accepted |
+| [0010](0010-baseline-profile.md) | Startup performance: committed Baseline Profile generated on CI's emulator, profileinstaller, startup macrobenchmark | Accepted |

@@ -30,3 +30,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "skarnik"
 include(":app")
+include(":baselineprofile")

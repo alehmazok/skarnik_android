@@ -55,7 +55,8 @@ by.mazokaleh.skarnik
 
 Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cases, feature models, only
 if needed) and `ui/` (screens, ViewModels, UiState). A single Gradle module for now; features move into
-modules only if build times call for it.
+modules only if build times call for it. `:baselineprofile` is a test module that only generates the Baseline
+Profile and benchmarks startup ([ADR 0010](adr/0010-baseline-profile.md)).
 
 ## Theme
 
