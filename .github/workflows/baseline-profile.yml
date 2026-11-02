@@ -70,7 +70,7 @@ jobs:
               "| \(.name) | \(.metrics.timeToInitialDisplayMs.median // "–") ms | \(.metrics.timeToFullDisplayMs.median // "–") ms |"' {} \; 2>/dev/null || true
             echo
             for f in app/src/release/generated/baselineProfiles/*.txt; do
-              [ -f "$f" ] && echo "$(basename "$f"): $(wc -l < "$f") rules"
+              if [ -f "$f" ]; then echo "$(basename "$f"): $(wc -l < "$f") rules"; fi
             done
           } >> "$GITHUB_STEP_SUMMARY"
 
