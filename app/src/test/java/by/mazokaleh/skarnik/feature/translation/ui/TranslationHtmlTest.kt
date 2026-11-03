@@ -5,6 +5,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.TextUnit
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -41,6 +42,16 @@ class TranslationHtmlTest {
         assertEquals(Color.Blue, text.colorOf("муж."))
         assertEquals(Color.Gray, text.colorOf("заст."))
         assertEquals(Color.Black, text.colorOf("іншае"))
+    }
+
+    @Test
+    fun `font size attribute does not change the text size`() {
+        val text = render(
+            """благожелательность — <font size="+2" color="#831b03">добразычлівасць</font>, """ +
+                """<font size="5">-ці</font>"""
+        )
+
+        assertTrue(text.spanStyles.none { it.item.fontSize != TextUnit.Unspecified })
     }
 
     @Test
