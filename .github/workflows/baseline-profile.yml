@@ -1,8 +1,8 @@
 name: Baseline Profile
 
 # Generates the app's Baseline Profile and startup profile on an emulator, commits them, and benchmarks cold start
-# with and without the profile (docs/adr/0010). Run it from the Actions tab after changes to startup or the main
-# screens; pull requests that change the generator run it too.
+# with and without the profile (docs/adr/0010). Run it from the Actions tab (on main or on a feature branch) after
+# changes to startup or the main screens; pull requests that change the generator run it as a check only.
 on:
   workflow_dispatch:
   pull_request:
@@ -83,10 +83,11 @@ jobs:
             baselineprofile/build/outputs/
           retention-days: 14
 
-      # Same-repository pull requests get the profile pushed to their branch; a manual run on main pushes it to the
-      # baseline-profile/update branch and opens a pull request. CI is started by hand for the new commit.
+      # Only a manual run commits: on a branch it pushes the profile to that branch, on main to baseline-profile/update
+      # with a pull request. CI is started by hand for the new commit. Pull request runs only check that the generator
+      # and the benchmark still work, so re-running them does not keep adding commits.
       - name: Commit the profile
-        if: github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
           SOURCE_BRANCH: ${{ github.head_ref || github.ref_name }}

@@ -22,9 +22,10 @@ gain is checked.
   flings, Bookmarks. Elements are found by the test tags the Maestro flows use.
 - **Committed, regenerated on demand.** The profile lives in `app/src/release/generated/baselineProfiles/`; release
   builds only pack it (`automaticGenerationDuringBuild = false`), so a release never depends on an emulator.
-  `.github/workflows/baseline-profile.yml` (manual, and on pull requests that change the generator) regenerates it
-  on the same API 35 emulator as the Maestro job, pushes it to the branch (from main: to `baseline-profile/update`
-  with a pull request) and starts CI for that commit.
+  `.github/workflows/baseline-profile.yml`, run by hand, regenerates it on the same API 35 emulator as the Maestro
+  job, pushes it to the branch it ran on (from main: to `baseline-profile/update` with a pull request) and starts CI
+  for that commit. Pull requests that change the generator run it as a check only, without committing, so
+  re-running their checks does not keep adding commits.
 - **`profileinstaller` in the app**, so APK installs (App Distribution, AppGallery) compile the profile on the
   first launches too, not only Play installs.
 - **`StartupBenchmark`** measures cold start to History with no compilation and with the profile
