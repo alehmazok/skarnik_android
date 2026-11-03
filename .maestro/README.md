@@ -20,3 +20,6 @@ Rules:
   `maestro test .maestro/wide/`; reset with `wm size reset && wm density reset`.
 - `app-links.yaml` needs the link hosts approved for the debug app once after installing (CI does it):
   `adb shell pm set-app-links-user-selection --user 0 --package by.mazokaleh.skarnik.debug true all`.
+- CI runs the flows through `.github/scripts/maestro-flows.sh`: one Maestro session per flow, so an emulator
+  that drops off adb for a moment costs one flow, not all later ones. A flow that failed because the device went
+  away runs once more (listed in the job summary); a failed assertion is never retried.
