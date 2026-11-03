@@ -9,8 +9,11 @@ data class WordOfTheDay(val wordId: Long, val word: String, val translation: Str
     val link: String? get() = if (wordId > 0) "https://skarnik.app/r/${Dictionary.BelRus.path}/$wordId" else null
 
     companion object {
-        /** Shown until the first refresh succeeds; the same word as in Flutter. */
-        val Fallback = WordOfTheDay(wordId = -1, word = "халэмус", translation = "гибель, конец")
+        /**
+         * Shown until the first refresh succeeds. Flutter showed «халэмус» («гибель, конец»); Aleh replaced it
+         * with a word that reads well on a fresh home screen.
+         */
+        val Fallback = WordOfTheDay(wordId = -1, word = "удзячны", translation = "благодарный, признательный")
     }
 }
 
