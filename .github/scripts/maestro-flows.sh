@@ -10,6 +10,9 @@ set -uo pipefail
 
 OUT=$(realpath -m "$1")
 shift
+# Flows are given relative to the repo; Maestro runs from the output dir so screenshots land there.
+FLOWS=()
+for flow in "$@"; do FLOWS+=("$(realpath "$flow")"); done
 mkdir -p "$OUT"
 cd "$OUT" || exit 1
 
@@ -73,7 +76,7 @@ print_diagnostics() {
 
 failed=()
 retried=()
-for flow in "$@"; do
+for flow in "${FLOWS[@]}"; do
   name=$(basename "$flow" .yaml)
   wait_for_device || exit 1
   start_logcat
@@ -101,7 +104,7 @@ done
 [ -n "${LOGCAT_PID:-}" ] && kill "$LOGCAT_PID" 2>/dev/null
 
 {
-  echo "### Maestro: $# flows, ${#failed[@]} failed"
+  echo "### Maestro: ${#FLOWS[@]} flows, ${#failed[@]} failed"
   [ ${#retried[@]} -gt 0 ] && echo "Ran again after the emulator dropped off adb: ${retried[*]}"
   [ ${#failed[@]} -gt 0 ] && echo "Failed: ${failed[*]}"
 } | tee -a "$SUMMARY"
