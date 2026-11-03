@@ -14,6 +14,7 @@ plugins {
     // Must come after the kapt plugin: it hooks its annotation processor into kapt.
     alias(libs.plugins.objectbox)
     alias(libs.plugins.firebase.appdistribution)
+    alias(libs.plugins.baselineprofile)
 }
 
 // Release signing with the Play upload key, the same one skarnik-flutter signs with. key.properties
@@ -149,6 +150,26 @@ android {
     }
 }
 
+// Baseline and startup profiles (docs/adr/0010). The baselineprofile module generates them on CI's emulator
+// (.github/workflows/baseline-profile.yml) into src/release/generated/baselineProfiles/, which is committed; a
+// release build only packs that file and never runs the generator.
+baselineProfile {
+    automaticGenerationDuringBuild = false
+    // R8 puts the classes of the startup profile into the first dex file, so cold start reads less of the APK.
+    dexLayoutOptimization = true
+}
+
+androidComponents {
+    // The plugin's benchmarkRelease and nonMinifiedRelease build types copy release, which is unsigned without the
+    // upload key (pull requests, local builds). They only ever run on test devices, so they use the debug key.
+    onVariants(selector().withBuildType("benchmarkRelease")) { variant ->
+        variant.signingConfig.setConfig(android.signingConfigs.getByName("debug"))
+    }
+    onVariants(selector().withBuildType("nonMinifiedRelease")) { variant ->
+        variant.signingConfig.setConfig(android.signingConfigs.getByName("debug"))
+    }
+}
+
 ksp {
     arg("dagger.fastInit", "enabled")
 }
@@ -210,6 +231,8 @@ dependencies {
     implementation(libs.firebase.config)
     implementation(libs.play.review)
     implementation(libs.sentry.android)
+    implementation(libs.androidx.profileinstaller)
+    baselineProfile(project(":baselineprofile"))
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlin.test)

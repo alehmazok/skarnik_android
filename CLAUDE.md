@@ -31,6 +31,7 @@ asking. Product questions go to Aleh as a single multiple-choice question with a
 ./gradlew testDebugUnitTest              # JVM unit tests, incl. ObjectBox against the real seed DB
 ./gradlew assembleDebug                  # debug APK (id by.mazokaleh.skarnik.debug)
 maestro test .maestro/                   # end-to-end flows on a running emulator (after installDebug)
+./gradlew :app:generateReleaseBaselineProfile   # regenerate the Baseline Profile on a connected device (API 33+)
 ```
 
 JDK 17. The cloud environment has no Android SDK or Maven access, so CI is the build of record there.
@@ -71,8 +72,9 @@ packages under `feature/<name>/{data,domain,ui}`; shared code under `core/`. No 
 **Threading and performance.** No disk or network on the main thread: inject `@IoDispatcher` /
 `@DefaultDispatcher`, never call `Dispatchers.IO` directly in classes. Stores open lazily via
 `SkarnikDatabase.stores()`. Compose: immutable/stable UI state, `key` in lazy lists, `collectAsStateWithLifecycle`.
-R8 full mode with resource shrinking in release. Baseline Profile and startup macrobenchmark come with the
-first real screens.
+R8 full mode with resource shrinking in release. The Baseline Profile in `app/src/release/generated/` is
+committed; rerun the «Baseline Profile» workflow after changing startup or the main screens, and add a feature's
+key journey to `baselineprofile/.../Journeys.kt` ([ADR 0010](docs/adr/0010-baseline-profile.md)).
 
 **Quality.** ktlint (android_studio style) + detekt + Android Lint must pass. Unit tests for logic and
 ViewModels (JUnit4, kotlin.test, coroutines-test, Turbine, fakes over mocks). Compose UI tests for key screens.

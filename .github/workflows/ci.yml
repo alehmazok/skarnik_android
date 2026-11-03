@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The baseline-profile workflow starts CI for the profile commit it pushes (pushes by GITHUB_TOKEN start nothing).
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -60,7 +62,8 @@ jobs:
   e2e:
     needs: build
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # One Maestro session per flow adds about 10 s per flow, and a retried flow can add a few minutes.
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v7
 
@@ -85,27 +88,31 @@ jobs:
           curl -fsSL "https://get.maestro.mobile.dev" | bash
           echo "$HOME/.maestro/bin" >> "$GITHUB_PATH"
 
+      # The emulator used to drop off adb for a few seconds under load, most often right after the Offline
+      # dictionaries flow writes ~97k ТСБМ words into ObjectBox, and every later flow then failed. It gets all four
+      # runner cores and more RAM, and maestro-flows.sh runs one Maestro session per flow, waits for the device
+      # before each and re-runs a flow once only when the device went away during it.
       - name: Maestro flows
         uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 35
           target: google_apis
           arch: x86_64
+          cores: 4
+          ram-size: 4096M
+          disk-size: 6G
+          emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none -camera-front none
           disable-animations: true
           script: |
             adb install -r apk/*.apk
             # The emulator cannot verify app links (no assetlinks.json for the debug key), so approve the link
             # hosts for the debug app as a user would ("Open supported links"); .maestro/app-links.yaml needs it.
             adb shell pm set-app-links-user-selection --user 0 --package by.mazokaleh.skarnik.debug true all
-            mkdir -p maestro-out
-            # Stream logcat to a file from the start, so a device that drops off adb still leaves its last log.
-            (adb logcat -b main,system,crash -v time > maestro-out/logcat-live.txt 2>&1 &)
-            cd maestro-out && maestro test ../.maestro/ --format junit --output report.xml || (adb devices; grep -E "AndroidRuntime|FATAL|lowmemorykiller|lmkd|Watchdog|adbd|VocabularyViewModel" logcat-live.txt | tail -80; tail -40 logcat-live.txt; adb logcat -d > logcat.txt; grep -E "AndroidRuntime|FATAL|DownloadDictionary|WM-|SettingsViewModel|HistoryViewModel|BookmarksViewModel|VocabularyViewModel|FlutterPreferences|SearchViewModel|TranslationViewModel|GetTranslation|StressResolver|ObjectBox|Analytics|MainActivity" logcat.txt | tail -60; adb shell uiautomator dump /sdcard/ui.xml >/dev/null; adb shell cat /sdcard/ui.xml; exit 1)
-            # Wide-screen flows (parity 0.5): the same emulator as a 1280x800 dp tablet in landscape. Each script
-            # line runs in its own shell, so the cd is repeated.
+            .github/scripts/maestro-flows.sh maestro-out .maestro/*.yaml
+            # Wide-screen flows (parity 0.5): the same emulator as a 1280x800 dp tablet in landscape.
             adb shell wm size 1280x800
             adb shell wm density 160
-            cd maestro-out && maestro test ../.maestro/wide/ --format junit --output report-wide.xml || (adb devices; grep -E "AndroidRuntime|FATAL|lowmemorykiller|lmkd|Watchdog|adbd|VocabularyViewModel" logcat-live.txt | tail -80; tail -40 logcat-live.txt; adb logcat -d > logcat.txt; grep -E "AndroidRuntime|FATAL|DownloadDictionary|WM-|SettingsViewModel|HistoryViewModel|BookmarksViewModel|VocabularyViewModel|FlutterPreferences|SearchViewModel|TranslationViewModel|GetTranslation|StressResolver|ObjectBox|Analytics|MainActivity" logcat.txt | tail -60; adb shell uiautomator dump /sdcard/ui.xml >/dev/null; adb shell cat /sdcard/ui.xml; exit 1)
+            .github/scripts/maestro-flows.sh maestro-out .maestro/wide/*.yaml
 
       - name: Maestro and process log on failure
         if: failure()
@@ -113,9 +120,8 @@ jobs:
           # Which step failed in which flow: the JUnit report has every failure, the log the commands around it.
           grep -o '<testcase[^>]*name="[^"]*"\|<failure[^<]*' maestro-out/report*.xml | grep -B1 '<failure' || true
           grep -h -B12 -E "FAILED" ~/.maestro/tests/*/maestro.log | cut -c1-300 | head -150 || true
-          # Why the driver lost the device: Maestro's own log and process deaths around it.
-          tail -n 120 ~/.maestro/tests/*/maestro.log || true
-          grep -E "Process .* (died|has died)|Killing|am_kill|instrumentation|dev.mobile.maestro" maestro-out/logcat.txt | tail -60 || true
+          # Why the driver lost the device: process deaths (maestro-flows.sh prints each failed flow's own log).
+          grep -hE "Process .* (died|has died)|Killing|am_kill|instrumentation|dev.mobile.maestro" maestro-out/logcat-*.txt | tail -60 || true
 
       - uses: actions/upload-artifact@v7
         if: always()
