@@ -126,7 +126,7 @@ class RefreshWordOfTheDayUseCaseTest {
 
     @Test
     fun `the fallback word has no link, others link to skarnik_app`() {
-        assertEquals("удзячны", WordOfTheDay.Fallback.word)
+        assertEquals("удзя́чнасць", WordOfTheDay.Fallback.word)
         assertNull(WordOfTheDay.Fallback.link)
         assertEquals("https://skarnik.app/r/belrus/27890", WordOfTheDay(27890, "бурштын", "янтарь").link)
     }
