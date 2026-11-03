@@ -34,7 +34,7 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - uses: gradle/actions/setup-gradle@v5
+      - uses: gradle/actions/setup-gradle@v6
 
       # Build the APKs before the emulator starts, so the emulator does not compete with Gradle for memory.
       - name: Build the app and the generator
