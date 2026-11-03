@@ -13,8 +13,7 @@ data class WordOfTheDay(val wordId: Long, val word: String, val translation: Str
          * Shown until the first refresh succeeds. Flutter showed «халэмус» («гибель, конец»); Aleh replaced it
          * with a word that reads well on a fresh home screen.
          */
-        val Fallback =
-            WordOfTheDay(wordId = -1, word = "удзя́чнасць", translation = "Пачуццё, якое ўзнікае ў адказ за зробленае дабро")
+        val Fallback = WordOfTheDay(-1, "удзя́чнасць", "Пачуццё, якое ўзнікае ў адказ за зробленае дабро")
     }
 }
 
