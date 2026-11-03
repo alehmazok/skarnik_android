@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  # The baseline-profile workflow starts CI for the profile commit it pushes (pushes by GITHUB_TOKEN start nothing).
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.ref }}
