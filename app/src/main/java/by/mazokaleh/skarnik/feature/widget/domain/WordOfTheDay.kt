@@ -14,11 +14,7 @@ data class WordOfTheDay(val wordId: Long, val word: String, val translation: Str
          * with a word that reads well on a fresh home screen.
          */
         val Fallback =
-            WordOfTheDay(
-                wordId = -1,
-                word = "удзя́чнасць",
-                translation = "Пачуццё, якое ўзнікае ў адказ за зробленае дабро"
-            )
+            WordOfTheDay(wordId = -1, word = "удзя́чнасць", translation = "Пачуццё, якое ўзнікае ў адказ за зробленае дабро")
     }
 }
 
