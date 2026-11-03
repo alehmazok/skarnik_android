@@ -17,7 +17,7 @@ data class WordOfTheDay(val wordId: Long, val word: String, val translation: Str
             WordOfTheDay(
                 wordId = -1,
                 word = "удзя́чнасць",
-                translation = "Пачуццё, якое ўзнікае ў адказ за зробленае дабро",
+                translation = "Пачуццё, якое ўзнікае ў адказ за зробленае дабро"
             )
     }
 }
