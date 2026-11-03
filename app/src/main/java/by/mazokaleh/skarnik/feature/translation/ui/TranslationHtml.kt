@@ -78,8 +78,9 @@ fun rememberTranslationColors(): TranslationColors {
 }
 
 /**
- * Converts a translation's HTML into styled text: colours, bold, italic, underline, sizes, line breaks and
- * links (reported to [onLink] with their `href`). Unknown tags keep their text and drop their styling.
+ * Converts a translation's HTML into styled text: colours, bold, italic, underline, line breaks and links
+ * (reported to [onLink] with their `href`). Unknown tags keep their text and drop their styling. `<font size>` is
+ * ignored, so headwords (`<font size="+2">`) match the body text, as in Flutter, which forced one size on every tag.
  * Stress table cells use it too.
  */
 fun translationHtmlToAnnotatedString(
@@ -149,7 +150,6 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         }
         classStyleOf(element, colors)?.let { style = (style ?: SpanStyle()).merge(it) }
         colorOf(element)?.let { style = (style ?: SpanStyle()).copy(color = it) }
-        fontScaleOf(element.attr("size"))?.let { style = (style ?: SpanStyle()).copy(fontSize = it.em) }
         return style
     }
 
@@ -159,14 +159,6 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         }
         if (raw.isBlank()) return null
         return colors.of(HtmlColorRole.of(raw) ?: HtmlColorRole.Plain)
-    }
-
-    /** `<font size>`: relative (`+2`) or absolute (1–7, where 3 is normal), scaled gently around body text. */
-    private fun fontScaleOf(size: String): Float? {
-        val trimmed = size.trim()
-        val number = trimmed.toIntOrNull() ?: return null
-        val step = if (trimmed.startsWith("+") || trimmed.startsWith("-")) number else number - NORMAL_FONT_SIZE
-        return FONT_SCALES[step.coerceIn(-2, 2) + 2].takeIf { it != 1f }
     }
 
     /** HTML whitespace: runs collapse to one space, and spaces at the start of a line are dropped. */
@@ -194,9 +186,7 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         // Only ASCII whitespace collapses; &nbsp; (U+00A0) is kept, as the source uses it for indents.
         private val WHITESPACE = Regex("[ \\t\\n\\r\\f]+")
         private val CSS_COLOR = Regex("""(?i)(?:^|;)\s*color\s*:\s*(#?[0-9a-f]{3,6})""")
-        private const val NORMAL_FONT_SIZE = 3
         private const val SMALL_SIZE = 0.75f
-        private val FONT_SCALES = floatArrayOf(0.85f, 0.92f, 1f, 1.12f, 1.25f)
     }
 }
 
