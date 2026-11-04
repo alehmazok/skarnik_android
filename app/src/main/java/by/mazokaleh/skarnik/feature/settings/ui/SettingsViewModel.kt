@@ -51,7 +51,7 @@ sealed interface SettingsEvent {
 /**
  * The «Афлайн доступ» section of Settings. Downloads run in WorkManager, so the rows follow the job, the
  * store and the resume cursor rather than anything this ViewModel holds: leaving the screen never stops a
- * download (Flutter kept an app-wide cubit for that). Opening the screen clears the promo badge.
+ * download (Flutter kept an app-wide cubit for that).
  */
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
@@ -72,13 +72,6 @@ class SettingsViewModel @Inject constructor(
             emit(OfflineSectionState.Error)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), OfflineSectionState.Loading)
-
-    init {
-        viewModelScope.launch {
-            suspendRunCatching { settings.markPromoSeen() }
-                .onFailure { logError(TAG, "Cannot save the promo flag", it) }
-        }
-    }
 
     private fun item(dictionary: Dictionary, store: OfflineDictionaryStore): Flow<OfflineDictionaryItem> = combine(
         downloads.observe(dictionary),
@@ -114,23 +107,6 @@ class SettingsViewModel @Inject constructor(
 
     private companion object {
         const val TAG = "SettingsViewModel"
-        const val STOP_TIMEOUT_MS = 5_000L
-    }
-}
-
-/** Whether the settings button shows the offline dictionaries badge: until Settings were opened once. */
-@HiltViewModel
-class SettingsBadgeViewModel @Inject constructor(settings: OfflineDictionarySettings) : ViewModel() {
-    val showBadge: StateFlow<Boolean> = settings.promoSeen
-        .map { !it }
-        .catch {
-            logError(TAG, "Cannot read the promo flag", it)
-            emit(false)
-        }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), false)
-
-    private companion object {
-        const val TAG = "SettingsBadgeViewModel"
         const val STOP_TIMEOUT_MS = 5_000L
     }
 }

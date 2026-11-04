@@ -16,9 +16,4 @@ interface OfflineDictionarySettings {
     suspend fun recentDownloadAttempts(): List<Long>
 
     suspend fun setRecentDownloadAttempts(attempts: List<Long>)
-
-    /** Whether Settings were opened since the offline dictionaries badge appeared. */
-    val promoSeen: Flow<Boolean>
-
-    suspend fun markPromoSeen()
 }

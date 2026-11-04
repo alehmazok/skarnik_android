@@ -148,15 +148,4 @@ class SettingsViewModelTest {
         assertEquals(0, store.count(Dictionary.Tsbm))
         assertEquals(null, settings.cursor(Dictionary.Tsbm).first())
     }
-
-    @Test
-    fun `opening Settings clears the badge`() = runTest {
-        val badge = SettingsBadgeViewModel(settings)
-        badge.showBadge.test {
-            // The initial false may or may not be seen before the stored value arrives.
-            if (!awaitItem()) assertEquals(true, awaitItem())
-            viewModel()
-            assertEquals(false, awaitItem())
-        }
-    }
 }
