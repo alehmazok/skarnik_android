@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-/** Flutter's download cursor, and rate limit repositories, with the same key names. */
+/** Flutter's download cursor and rate limit repositories, with the same key names. */
 class DataStoreOfflineDictionarySettings @Inject constructor(private val settings: DataStore<Preferences>) :
     OfflineDictionarySettings {
     override fun cursor(dictionary: Dictionary): Flow<Long?> = settings.data
