@@ -87,7 +87,8 @@ class TranslationHtmlTest {
                 """<span>&nbsp;</span> <i>жен.</i> ж.&nbsp;р."""
         )
 
-        assertEquals("благожелательность — добразычлівасць жен. ж.\u00a0р.", text.text)
+        // The span's lone &nbsp; is the gap (non-breaking); the space after it is dropped.
+        assertEquals("благожелательность — добразычлівасць\u00a0жен. ж.\u00a0р.", text.text)
     }
 
     @Test
