@@ -3,9 +3,6 @@ package by.mazokaleh.skarnik.feature.translation.ui
 import android.content.Context
 import android.content.Intent
 import android.util.Log
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -25,8 +22,6 @@ import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilledTonalButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -34,9 +29,7 @@ import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -55,10 +48,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.tooling.preview.PreviewParameter
+import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
@@ -247,81 +240,7 @@ private fun TranslationContent(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TranslationTopBar(
-    uiState: TranslationUiState,
-    showTitle: () -> Boolean,
-    scrollBehavior: TopAppBarScrollBehavior,
-    onBack: (() -> Unit)?,
-    onToggleBookmark: () -> Unit,
-    onShare: (Translation) -> Unit
-) {
-    TopAppBar(
-        title = {
-            val word = uiState.titleWord
-            AnimatedVisibility(visible = showTitle() && word != null, enter = fadeIn(), exit = fadeOut()) {
-                Text(text = word.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-        },
-        navigationIcon = {
-            if (onBack != null) {
-                IconButton(onClick = onBack) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_arrow_back),
-                        contentDescription = stringResource(R.string.action_back)
-                    )
-                }
-            }
-        },
-        actions = {
-            if (uiState is TranslationUiState.Loaded) {
-                TranslationActions(uiState, onToggleBookmark, onShare)
-            }
-        },
-        scrollBehavior = scrollBehavior
-    )
-}
-
-private val TranslationUiState.titleWord: String?
-    get() = when (this) {
-        is TranslationUiState.Loading -> word
-        is TranslationUiState.Error -> word
-        is TranslationUiState.Loaded -> translation.title
-    }
-
 private val MAX_TEXT_WIDTH = 640.dp
-
-@Composable
-private fun TranslationActions(
-    uiState: TranslationUiState.Loaded,
-    onToggleBookmark: () -> Unit,
-    onShare: (Translation) -> Unit
-) {
-    IconButton(onClick = onToggleBookmark, modifier = Modifier.testTag(TranslationTestTags.BOOKMARK)) {
-        if (uiState.bookmarked) {
-            Icon(
-                painter = painterResource(R.drawable.ic_bookmark),
-                contentDescription = stringResource(R.string.action_bookmark_remove),
-                tint = MaterialTheme.colorScheme.primary
-            )
-        } else {
-            Icon(
-                painter = painterResource(R.drawable.ic_bookmark_border),
-                contentDescription = stringResource(R.string.action_bookmark_add)
-            )
-        }
-    }
-    IconButton(
-        onClick = { onShare(uiState.translation) },
-        modifier = Modifier.testTag(TranslationTestTags.SHARE)
-    ) {
-        Icon(
-            painter = painterResource(R.drawable.ic_share),
-            contentDescription = stringResource(R.string.action_share)
-        )
-    }
-}
 
 @Composable
 private fun LoadingContent(word: String?, onTitlePlaced: (Int) -> Unit) {
@@ -423,22 +342,21 @@ private fun Context.shareTranslation(translation: Translation) {
 }
 
 /** Both palettes and both themes: the brand palette once fell back to the M3 baseline purple unnoticed. */
-@Preview(name = "Material You")
-@Composable
-private fun TranslationContentPreview() = TranslationPreview(useDynamicColor = true, dark = false)
+private class PaletteProvider : PreviewParameterProvider<Pair<Boolean, ThemeMode>> {
+    override val values = sequenceOf(
+        true to ThemeMode.Light,
+        false to ThemeMode.Light,
+        false to ThemeMode.Dark
+    )
+}
 
-@Preview(name = "Brand, light")
+@Preview
 @Composable
-private fun TranslationBrandLightPreview() = TranslationPreview(useDynamicColor = false, dark = false)
-
-@Preview(name = "Brand, dark")
-@Composable
-private fun TranslationBrandDarkPreview() = TranslationPreview(useDynamicColor = false, dark = true)
-
-@Composable
-private fun TranslationPreview(useDynamicColor: Boolean, dark: Boolean) {
+private fun TranslationContentPreview(
+    @PreviewParameter(PaletteProvider::class) palette: Pair<Boolean, ThemeMode>
+) {
     val word = Word(Dictionary.BelRus, 1, "бурштын", "б", "бурштын", null)
-    SkarnikTheme(themeMode = if (dark) ThemeMode.Dark else ThemeMode.Light, useDynamicColor = useDynamicColor) {
+    SkarnikTheme(themeMode = palette.second, useDynamicColor = palette.first) {
         TranslationContent(
             uiState = TranslationUiState.Loaded(
                 translation = Translation(
