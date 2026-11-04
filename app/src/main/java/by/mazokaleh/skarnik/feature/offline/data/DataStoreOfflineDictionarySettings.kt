@@ -3,7 +3,6 @@ package by.mazokaleh.skarnik.feature.offline.data
 import androidx.datastore.core.DataMigration
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
@@ -16,7 +15,7 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
-/** Flutter's download cursor, rate limit and promo repositories, with the same key names. */
+/** Flutter's download cursor and rate limit repositories, with the same key names. */
 class DataStoreOfflineDictionarySettings @Inject constructor(private val settings: DataStore<Preferences>) :
     OfflineDictionarySettings {
     override fun cursor(dictionary: Dictionary): Flow<Long?> = settings.data
@@ -38,12 +37,6 @@ class DataStoreOfflineDictionarySettings @Inject constructor(private val setting
         settings.edit { prefs -> prefs[RECENT_ATTEMPTS] = attempts.mapTo(mutableSetOf()) { it.toString() } }
     }
 
-    override val promoSeen: Flow<Boolean> = settings.data.map { it[PROMO_SEEN] == true }.distinctUntilChanged()
-
-    override suspend fun markPromoSeen() {
-        settings.edit { it[PROMO_SEEN] = true }
-    }
-
     companion object {
         fun cursorKey(dictionary: Dictionary) = longPreferencesKey("download_cursor_${dictionary.path}")
 
@@ -52,13 +45,13 @@ class DataStoreOfflineDictionarySettings @Inject constructor(private val setting
          * string list.
          */
         val RECENT_ATTEMPTS = stringSetPreferencesKey("download_recent_attempts_at_ms")
-        val PROMO_SEEN = booleanPreferencesKey("offline_dictionaries_promo_seen")
     }
 }
 
 /**
- * Copies Flutter's download cursors (so a half-finished download resumes) and the promo flag. Values are read
- * by name and checked by type, so a value Flutter stored with another type is skipped instead of crashing.
+ * Copies Flutter's download cursors, so a half-finished download resumes. Values are read by name and checked
+ * by type, so a value Flutter stored with another type is skipped instead of crashing. Flutter's promo flag
+ * (`offline_dictionaries_promo_seen`) is not copied: the settings badge it drove was dropped.
  */
 fun offlineDictionariesMigration(flutterPreferences: DataStore<Preferences>): DataMigration<Preferences> =
     FlutterPreferencesMigration(flutterPreferences, name = "offline_dictionaries") { from, to ->
@@ -70,6 +63,4 @@ fun offlineDictionariesMigration(flutterPreferences: DataStore<Preferences>): Da
                 is Int -> to[key] = cursor.toLong()
             }
         }
-        val promoSeen = DataStoreOfflineDictionarySettings.PROMO_SEEN
-        (values[promoSeen.name] as? Boolean)?.let { to[promoSeen] = it }
     }

@@ -10,7 +10,6 @@ class FakeOfflineDictionarySettings : OfflineDictionarySettings {
     val cursors = MutableStateFlow<Map<Dictionary, Long>>(emptyMap())
     val savedCursors = mutableListOf<Long>()
     var attempts: List<Long> = emptyList()
-    val seen = MutableStateFlow(false)
 
     override fun cursor(dictionary: Dictionary): Flow<Long?> = cursors.map { it[dictionary] }
 
@@ -27,12 +26,6 @@ class FakeOfflineDictionarySettings : OfflineDictionarySettings {
 
     override suspend fun setRecentDownloadAttempts(attempts: List<Long>) {
         this.attempts = attempts
-    }
-
-    override val promoSeen: Flow<Boolean> = seen
-
-    override suspend fun markPromoSeen() {
-        seen.value = true
     }
 }
 
