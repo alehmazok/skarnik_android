@@ -7,12 +7,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.LinkInteractionListener
+import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.text.style.TextIndent
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
@@ -93,6 +96,9 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
     private val builder = AnnotatedString.Builder()
     private var lastChar: Char? = null
 
+    /** True while the current line holds nothing or only non-breaking spaces (an indent). */
+    private var atLineStart = true
+
     fun build(html: String): AnnotatedString {
         Jsoup.parseBodyFragment(html).body().childNodes().forEach(::appendNode)
         val text = builder.toAnnotatedString()
@@ -161,12 +167,22 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         return colors.of(HtmlColorRole.of(raw) ?: HtmlColorRole.Plain)
     }
 
-    /** HTML whitespace: runs collapse to one space, and spaces at the start of a line are dropped. */
+    /**
+     * HTML whitespace. At the start of a line only `&nbsp;` is kept: the source indents with it. Inside a line any
+     * run of spaces and `&nbsp;` (also across tags) becomes one gap: a lone `&nbsp;` stays non-breaking, a longer
+     * run becomes one space, so «— &nbsp;слова» does not leave a wide hole.
+     */
     private fun appendText(text: String) {
-        val collapsed = WHITESPACE.replace(text, " ")
-        if (collapsed.isEmpty()) return
-        val dropLeadingSpace = lastChar == null || lastChar == '\n' || lastChar == ' '
-        append(if (dropLeadingSpace) collapsed.trimStart(' ') else collapsed)
+        TOKEN.findAll(text).forEach { match ->
+            val token = match.value
+            when {
+                token.first() !in SPACES -> append(token)
+                atLineStart -> append(token.filter { it == NBSP })
+                lastChar == ' ' || lastChar == NBSP -> Unit
+                token == NBSP.toString() -> append(token)
+                else -> append(" ")
+            }
+        }
     }
 
     private fun startLine() {
@@ -177,14 +193,24 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         if (text.isEmpty()) return
         builder.append(text)
         lastChar = text.last()
+        text.forEach { char ->
+            if (char == '\n') {
+                atLineStart = true
+            } else if (char != NBSP) {
+                atLineStart = false
+            }
+        }
     }
 
     companion object {
         private val SKIPPED_TAGS = setOf("script", "style", "head", "title")
         private val BLOCK_TAGS = setOf("p", "div", "li", "ul", "ol", "table", "tr", "h1", "h2", "h3", "h4")
 
-        // Only ASCII whitespace collapses; &nbsp; (U+00A0) is kept, as the source uses it for indents.
-        private val WHITESPACE = Regex("[ \\t\\n\\r\\f]+")
+        private const val NBSP = '\u00a0'
+        private const val SPACES = " \t\n\r\u000c\u00a0"
+
+        /** Runs of HTML whitespace (with `&nbsp;`) and runs of everything else. */
+        private val TOKEN = Regex("[ \\t\\n\\r\\f\u00a0]+|[^ \\t\\n\\r\\f\u00a0]+")
         private val CSS_COLOR = Regex("""(?i)(?:^|;)\s*color\s*:\s*(#?[0-9a-f]{3,6})""")
         private const val SMALL_SIZE = 0.75f
     }
@@ -203,3 +229,19 @@ private fun classStyleOf(element: Element, colors: TranslationColors): SpanStyle
 }
 
 private const val QUESTION_SIZE = 0.875f
+
+/**
+ * Indents the wrapped lines of every paragraph by [indent], so each entry («благожелательность — …») starts at the
+ * margin and its continuation lines sit under it, as in a printed dictionary.
+ */
+fun AnnotatedString.withHangingIndent(indent: TextUnit): AnnotatedString {
+    val builder = AnnotatedString.Builder(this)
+    var start = 0
+    while (start < length) {
+        val newline = text.indexOf('\n', start)
+        val end = if (newline == -1) length else newline
+        if (end > start) builder.addStyle(ParagraphStyle(textIndent = TextIndent(restLine = indent)), start, end)
+        start = end + 1
+    }
+    return builder.toAnnotatedString()
+}
