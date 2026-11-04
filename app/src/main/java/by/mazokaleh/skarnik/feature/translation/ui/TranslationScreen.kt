@@ -352,9 +352,7 @@ private class PaletteProvider : PreviewParameterProvider<Pair<Boolean, ThemeMode
 
 @Preview
 @Composable
-private fun TranslationContentPreview(
-    @PreviewParameter(PaletteProvider::class) palette: Pair<Boolean, ThemeMode>
-) {
+private fun TranslationContentPreview(@PreviewParameter(PaletteProvider::class) palette: Pair<Boolean, ThemeMode>) {
     val word = Word(Dictionary.BelRus, 1, "бурштын", "б", "бурштын", null)
     SkarnikTheme(themeMode = palette.second, useDynamicColor = palette.first) {
         TranslationContent(
