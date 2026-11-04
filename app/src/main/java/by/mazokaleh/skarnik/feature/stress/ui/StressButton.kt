@@ -18,6 +18,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import by.mazokaleh.skarnik.R
 
 object StressButtonTestTags {
@@ -26,25 +28,22 @@ object StressButtonTestTags {
 
 /**
  * Flutter's `ActionStress`: opens the stress table of the one candidate, or a menu of them when the entry has
- * several. M3: an assist chip under the headword instead of a text button in the top app bar.
+ * several. M3: an assist chip under the headword instead of a text button in the top app bar. No leading icon, as
+ * in Flutter: the usual candidates (a speaking head, a volume icon) promise audio, and the chip opens a table.
+ * TalkBack hears the label without the acute accent, which some voices read out as a separate sign.
  */
 @Composable
 fun StressButton(candidates: List<String>, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
     if (candidates.isEmpty()) return
     var expanded by rememberSaveable { mutableStateOf(false) }
+    val spokenLabel = stringResource(R.string.stress_title_spoken)
     Box(modifier) {
         AssistChip(
             onClick = { if (candidates.size == 1) onSelect(candidates.first()) else expanded = true },
             label = { Text(stringResource(R.string.stress_title)) },
-            modifier = Modifier.testTag(StressButtonTestTags.BUTTON),
-            leadingIcon = {
-                Icon(
-                    painter = painterResource(R.drawable.ic_stress),
-                    contentDescription = null,
-                    modifier = Modifier.size(AssistChipDefaults.IconSize),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-            },
+            modifier = Modifier
+                .testTag(StressButtonTestTags.BUTTON)
+                .semantics { contentDescription = spokenLabel },
             trailingIcon = if (candidates.size > 1) {
                 {
                     Icon(

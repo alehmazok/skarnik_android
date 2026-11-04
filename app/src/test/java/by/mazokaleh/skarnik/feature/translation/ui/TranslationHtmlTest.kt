@@ -5,7 +5,9 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
+import androidx.compose.ui.unit.sp
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -79,6 +81,34 @@ class TranslationHtmlTest {
     }
 
     @Test
+    fun `a run of spaces and non-breaking spaces inside a line becomes one gap`() {
+        val text = render(
+            """благожелательность — &nbsp;<font color="#831b03">добразычлівасць</font>""" +
+                """<span>&nbsp;</span> <i>жен.</i> ж.&nbsp;р."""
+        )
+
+        assertEquals("благожелательность — добразычлівасць жен. ж.\u00a0р.", text.text)
+    }
+
+    @Test
+    fun `keeps non-breaking indents after a line break`() {
+        val text = render("адзін<br>&nbsp;&nbsp; &nbsp;два")
+
+        assertEquals("адзін\n\u00a0\u00a0\u00a0два", text.text)
+    }
+
+    @Test
+    fun `hanging indent covers every non-empty paragraph`() {
+        val text = render("першы радок<br>другі<br><br>трэці").withHangingIndent(16.sp)
+
+        assertEquals("першы радок\nдругі\n\nтрэці", text.text)
+        val paragraphs = text.paragraphStyles.map { text.text.substring(it.start, it.end) }
+        assertEquals(listOf("першы радок", "другі", "трэці"), paragraphs)
+        val indents = text.paragraphStyles.map { it.item.textIndent }.distinct()
+        assertEquals(listOf(TextIndent(firstLine = 0.sp, restLine = 16.sp)), indents)
+    }
+
+    @Test
     fun `links report their href when clicked`() {
         val text = render("""<i>смотрите</i> <a href="http://www.skarnik.by/rusbel/47880">нерв</a>""")
 
@@ -105,7 +135,7 @@ class TranslationHtmlTest {
                 """<br><span class="skarot">мн.</span>&nbsp;<b> ру́кі </b>"""
         )
 
-        assertEquals("Назоўны\nхто? што?\nмн.\u00a0 ру́кі", text.text)
+        assertEquals("Назоўны\nхто? што?\nмн.\u00a0ру́кі", text.text)
         assertEquals(Color.Gray, text.colorOf("хто? што?"))
         assertEquals(Color.Blue, text.colorOf("мн."))
         fun styled(part: String) =

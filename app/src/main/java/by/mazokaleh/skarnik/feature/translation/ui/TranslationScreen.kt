@@ -3,6 +3,9 @@ package by.mazokaleh.skarnik.feature.translation.ui
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,8 +17,10 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,29 +35,39 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.layout.onPlaced
+import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.core.model.WordLink
+import by.mazokaleh.skarnik.core.settings.ThemeMode
 import by.mazokaleh.skarnik.feature.review.ui.ReviewPromptDialog
 import by.mazokaleh.skarnik.feature.review.ui.rememberReviewPromptState
 import by.mazokaleh.skarnik.feature.stress.ui.StressButton
@@ -190,25 +205,23 @@ private fun TranslationContent(
     onStress: (String) -> Unit,
     onLink: (String) -> Unit
 ) {
+    // M3: the bar takes the scrolled-under colour once content slides beneath it, and shows the word once the
+    // headline has scrolled out of view.
+    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+    val scrollState = rememberScrollState()
+    var titleBottom by remember { mutableIntStateOf(Int.MAX_VALUE) }
+    val showBarTitle by remember { derivedStateOf { scrollState.value > titleBottom } }
+    val onTitlePlaced: (Int) -> Unit = remember { { bottom: Int -> titleBottom = bottom } }
     Scaffold(
+        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
-                title = {},
-                navigationIcon = {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(
-                                painter = painterResource(R.drawable.ic_arrow_back),
-                                contentDescription = stringResource(R.string.action_back)
-                            )
-                        }
-                    }
-                },
-                actions = {
-                    if (uiState is TranslationUiState.Loaded) {
-                        TranslationActions(uiState, onToggleBookmark, onShare)
-                    }
-                }
+            TranslationTopBar(
+                uiState = uiState,
+                showTitle = { showBarTitle },
+                scrollBehavior = scrollBehavior,
+                onBack = onBack,
+                onToggleBookmark = onToggleBookmark,
+                onShare = onShare
             )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -217,19 +230,67 @@ private fun TranslationContent(
             Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .verticalScroll(rememberScrollState())
+                .verticalScroll(scrollState)
                 .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
                 .padding(horizontal = 16.dp)
                 .padding(bottom = 24.dp)
         ) {
-            when (uiState) {
-                is TranslationUiState.Loading -> LoadingContent(uiState.word)
-                is TranslationUiState.Error -> ErrorContent(uiState.word, onRetry)
-                is TranslationUiState.Loaded -> LoadedContent(uiState, onStress, onLink)
+            // A comfortable line length on tablets and unfolded foldables.
+            Column(Modifier.widthIn(max = MAX_TEXT_WIDTH)) {
+                when (uiState) {
+                    is TranslationUiState.Loading -> LoadingContent(uiState.word, onTitlePlaced)
+                    is TranslationUiState.Error -> ErrorContent(uiState.word, onTitlePlaced, onRetry)
+                    is TranslationUiState.Loaded -> LoadedContent(uiState, onTitlePlaced, onStress, onLink)
+                }
             }
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TranslationTopBar(
+    uiState: TranslationUiState,
+    showTitle: () -> Boolean,
+    scrollBehavior: TopAppBarScrollBehavior,
+    onBack: (() -> Unit)?,
+    onToggleBookmark: () -> Unit,
+    onShare: (Translation) -> Unit
+) {
+    TopAppBar(
+        title = {
+            val word = uiState.titleWord
+            AnimatedVisibility(visible = showTitle() && word != null, enter = fadeIn(), exit = fadeOut()) {
+                Text(text = word.orEmpty(), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        },
+        navigationIcon = {
+            if (onBack != null) {
+                IconButton(onClick = onBack) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_back),
+                        contentDescription = stringResource(R.string.action_back)
+                    )
+                }
+            }
+        },
+        actions = {
+            if (uiState is TranslationUiState.Loaded) {
+                TranslationActions(uiState, onToggleBookmark, onShare)
+            }
+        },
+        scrollBehavior = scrollBehavior
+    )
+}
+
+private val TranslationUiState.titleWord: String?
+    get() = when (this) {
+        is TranslationUiState.Loading -> word
+        is TranslationUiState.Error -> word
+        is TranslationUiState.Loaded -> translation.title
+    }
+
+private val MAX_TEXT_WIDTH = 640.dp
 
 @Composable
 private fun TranslationActions(
@@ -263,8 +324,8 @@ private fun TranslationActions(
 }
 
 @Composable
-private fun LoadingContent(word: String?) {
-    if (word != null) Title(word)
+private fun LoadingContent(word: String?, onTitlePlaced: (Int) -> Unit) {
+    if (word != null) Title(word, onTitlePlaced)
     LinearProgressIndicator(
         Modifier
             .fillMaxWidth()
@@ -274,8 +335,8 @@ private fun LoadingContent(word: String?) {
 }
 
 @Composable
-private fun ErrorContent(word: String?, onRetry: () -> Unit) {
-    if (word != null) Title(word)
+private fun ErrorContent(word: String?, onTitlePlaced: (Int) -> Unit, onRetry: () -> Unit) {
+    if (word != null) Title(word, onTitlePlaced)
     Column(
         Modifier.fillMaxWidth().padding(top = 24.dp),
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -292,42 +353,57 @@ private fun ErrorContent(word: String?, onRetry: () -> Unit) {
     }
 }
 
+/** The headword and the translation share one selection, so both can be selected and copied in one go. */
 @Composable
-private fun LoadedContent(uiState: TranslationUiState.Loaded, onStress: (String) -> Unit, onLink: (String) -> Unit) {
+private fun LoadedContent(
+    uiState: TranslationUiState.Loaded,
+    onTitlePlaced: (Int) -> Unit,
+    onStress: (String) -> Unit,
+    onLink: (String) -> Unit
+) {
     val translation = uiState.translation
-    Text(
-        text = stringResource(translation.word.dictionary.translationNameRes),
-        modifier = Modifier.testTag(TranslationTestTags.DICTIONARY),
-        style = MaterialTheme.typography.labelLarge,
-        color = MaterialTheme.colorScheme.primary
-    )
-    Spacer(Modifier.height(4.dp))
-    Title(translation.title)
-    StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
-    Spacer(Modifier.height(16.dp))
-    val colors = rememberTranslationColors()
-    val currentOnLink by rememberUpdatedState(onLink)
-    val text = remember(translation.html, colors) {
-        translationHtmlToAnnotatedString(translation.html, colors) { currentOnLink(it) }
-    }
     SelectionContainer {
-        Text(
-            text = text,
-            modifier = Modifier.testTag(TranslationTestTags.TEXT),
-            style = MaterialTheme.typography.bodyLarge
-        )
+        Column {
+            // Neutral, so red stays for the words of the translation.
+            Text(
+                text = stringResource(translation.word.dictionary.translationNameRes),
+                modifier = Modifier.testTag(TranslationTestTags.DICTIONARY),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(Modifier.height(4.dp))
+            Title(translation.title, onTitlePlaced)
+            DisableSelection {
+                StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
+            }
+            Spacer(Modifier.height(16.dp))
+            val colors = rememberTranslationColors()
+            val currentOnLink by rememberUpdatedState(onLink)
+            val text = remember(translation.html, colors) {
+                translationHtmlToAnnotatedString(translation.html, colors) { currentOnLink(it) }
+                    .withHangingIndent(HANGING_INDENT)
+            }
+            Text(
+                text = text,
+                modifier = Modifier.testTag(TranslationTestTags.TEXT),
+                style = MaterialTheme.typography.bodyLarge
+            )
+        }
     }
 }
 
+private val HANGING_INDENT = 16.sp
+
+/** Reports the bottom of the headline (in scroll content pixels), so the top app bar knows when to show the word. */
 @Composable
-private fun Title(word: String) {
-    SelectionContainer {
-        Text(
-            text = word,
-            modifier = Modifier.testTag(TranslationTestTags.WORD),
-            style = MaterialTheme.typography.headlineMedium
-        )
-    }
+private fun Title(word: String, onPlaced: (Int) -> Unit) {
+    Text(
+        text = word,
+        modifier = Modifier
+            .testTag(TranslationTestTags.WORD)
+            .onPlaced { onPlaced(it.positionInParent().y.toInt() + it.size.height) },
+        style = MaterialTheme.typography.headlineMedium
+    )
 }
 
 private val Dictionary.translationNameRes: Int
@@ -346,22 +422,36 @@ private fun Context.shareTranslation(translation: Translation) {
     startActivity(Intent.createChooser(send, null))
 }
 
-@Preview
+/** Both palettes and both themes: the brand palette once fell back to the M3 baseline purple unnoticed. */
+@Preview(name = "Material You")
 @Composable
-private fun TranslationContentPreview() {
+private fun TranslationContentPreview() = TranslationPreview(useDynamicColor = true, dark = false)
+
+@Preview(name = "Brand, light")
+@Composable
+private fun TranslationBrandLightPreview() = TranslationPreview(useDynamicColor = false, dark = false)
+
+@Preview(name = "Brand, dark")
+@Composable
+private fun TranslationBrandDarkPreview() = TranslationPreview(useDynamicColor = false, dark = true)
+
+@Composable
+private fun TranslationPreview(useDynamicColor: Boolean, dark: Boolean) {
     val word = Word(Dictionary.BelRus, 1, "бурштын", "б", "бурштын", null)
-    SkarnikTheme {
+    SkarnikTheme(themeMode = if (dark) ThemeMode.Dark else ThemeMode.Light, useDynamicColor = useDynamicColor) {
         TranslationContent(
             uiState = TranslationUiState.Loaded(
                 translation = Translation(
                     word = word,
                     stress = "буршты́н",
-                    html = "<font size=\"+2\" color=\"#831b03\">янтар</font>, " +
-                        "<i>-ру <font color=\"#008000\">муж.</font></i> <a href=\"/belrus/2\">гл.</a>",
+                    html = "янтарь — &nbsp;<font size=\"+2\" color=\"#831b03\">янтар</font>, " +
+                        "<i>-ру <font color=\"#008000\">муж.</font></i> <a href=\"/belrus/2\">гл.</a><br>" +
+                        "сукцинит — <font color=\"#831b03\">бурштын</font>, " +
+                        "<i>-ну <font color=\"#008000\">муж.</font></i>",
                     source = Translation.Source.Api
                 ),
                 bookmarked = true,
-                stressCandidates = listOf("янтар")
+                stressCandidates = listOf("янтар", "бурштын")
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onBack = {},
