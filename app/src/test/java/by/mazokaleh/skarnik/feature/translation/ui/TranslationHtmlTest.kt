@@ -99,14 +99,15 @@ class TranslationHtmlTest {
     }
 
     @Test
-    fun `hanging indent covers every non-empty paragraph`() {
+    fun `hanging indent is one paragraph style over the whole text`() {
         val text = render("першы радок<br>другі<br><br>трэці").withHangingIndent(16.sp)
 
         assertEquals("першы радок\nдругі\n\nтрэці", text.text)
-        val paragraphs = text.paragraphStyles.map { text.text.substring(it.start, it.end) }
-        assertEquals(listOf("першы радок", "другі", "трэці"), paragraphs)
-        val indents = text.paragraphStyles.map { it.item.textIndent }.distinct()
-        assertEquals(listOf(TextIndent(firstLine = 0.sp, restLine = 16.sp)), indents)
+        // One range: a style per line leaves the line breaks between styles, and Compose draws each as an empty line.
+        val style = text.paragraphStyles.single()
+        assertEquals(0, style.start)
+        assertEquals(text.length, style.end)
+        assertEquals(TextIndent(firstLine = 0.sp, restLine = 16.sp), style.item.textIndent)
     }
 
     @Test
