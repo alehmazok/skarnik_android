@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
@@ -260,11 +259,21 @@ private fun ExtraLetters(onLetter: (String) -> Unit) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .testTag(SearchTestTags.LETTERS),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        RUSSIAN_LETTERS.forEach { LetterButton(it, onLetter) }
-        Spacer(Modifier.weight(1f))
-        BELARUSIAN_LETTERS.forEach { LetterButton(it, onLetter) }
+        LetterGroup(RUSSIAN_LETTERS, onLetter)
+        LetterGroup(BELARUSIAN_LETTERS, onLetter)
+    }
+}
+
+/**
+ * Gaps live inside each group. With one `spacedBy` row around a weighted spacer the spacer got gaps too:
+ * six buttons needed 368 dp, more than a 360 dp phone has, so the last two buttons touched.
+ */
+@Composable
+private fun LetterGroup(letters: List<String>, onLetter: (String) -> Unit) {
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        letters.forEach { LetterButton(it, onLetter) }
     }
 }
 
