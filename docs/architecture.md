@@ -125,13 +125,14 @@ the start screen. `ObjectBoxSearchTest` runs the algorithm against the real bund
 ## Translation
 
 `feature/translation`, ported from Flutter's `TranslationCubit` and `GetTranslationUseCase`
-([ADR 0003](adr/0003-translation-network-and-html.md)):
+([ADR 0003](adr/0003-translation-network-and-html.md)). The source order is the same in every Skarnik app
+(Aleh, 2026-11-05): local store, Supabase, admin API. Flutter asked the API before Supabase:
 
 ```mermaid
 flowchart LR
     W["Search index<br/>(word by langId + wordId)"] --> L["Local store<br/>(offline dictionaries)"]
-    L -->|miss| A["Admin API<br/>/api/words/&lt;dict&gt;/&lt;id&gt;/"]
-    A -->|error or empty| S["Supabase main_word<br/>(PostgREST)"]
+    L -->|miss| S["Supabase main_word<br/>(PostgREST)"]
+    S -->|error, no row or empty| A["Admin API<br/>/api/words/&lt;dict&gt;/&lt;id&gt;/"]
 ```
 
 - `TranslationRoute(langId, wordId, word?, saveToHistory, redirectedFrom?)`; the ViewModel is assisted-injected

@@ -29,27 +29,39 @@ class GetTranslationUseCaseTest {
     }
 
     @Test
-    fun `the admin API answers when the word is not stored`() = runTest {
+    fun `Supabase answers when the word is not stored`() = runTest {
         var asked: Pair<Dictionary, Long>? = null
-        val result = useCase(api = { dictionary, id -> entry.also { asked = dictionary to id } })(word)
+        val result = useCase(
+            cloud = { dictionary, id -> entry.also { asked = dictionary to id } },
+            api = { _, _ -> error("not called") }
+        )(word)
 
         assertEquals(Dictionary.BelRus to 27890L, asked)
+        assertEquals(Translation.Source.Cloud, (result as TranslationResult.Found).translation.source)
+    }
+
+    @Test
+    fun `the admin API answers when Supabase fails`() = runTest {
+        val result = useCase(api = { _, _ -> entry })(word)
 
         assertEquals(Translation.Source.Api, (result as TranslationResult.Found).translation.source)
     }
 
     @Test
-    fun `Supabase answers when the API fails`() = runTest {
-        val result = useCase(cloud = { _, _ -> entry })(word)
+    fun `an empty Supabase entry falls through to the admin API`() = runTest {
+        val result = useCase(cloud = { _, _ -> entry.copy(html = "") }, api = { _, _ -> entry })(word)
 
-        assertEquals(Translation.Source.Cloud, (result as TranslationResult.Found).translation.source)
+        assertEquals(Translation.Source.Api, (result as TranslationResult.Found).translation.source)
     }
 
     @Test
-    fun `an empty API entry falls through to Supabase`() = runTest {
-        val result = useCase(api = { _, _ -> entry.copy(html = "") }, cloud = { _, _ -> entry })(word)
+    fun `a redirect from Supabase ends the chain`() = runTest {
+        val result = useCase(
+            cloud = { _, _ -> TranslationEntry(null, null, "/tsbm/3528") },
+            api = { _, _ -> error("not called") }
+        )(word)
 
-        assertEquals(Translation.Source.Cloud, (result as TranslationResult.Found).translation.source)
+        assertEquals(TranslationResult.Redirect(WordLink(Dictionary.Tsbm, 3528)), result)
     }
 
     @Test
@@ -66,7 +78,7 @@ class GetTranslationUseCaseTest {
 
     @Test
     fun `a blank redirect and blank stress are ignored`() = runTest {
-        val result = useCase(api = { _, _ -> TranslationEntry(" ", "<b>янтарь</b>", "") })(word)
+        val result = useCase(cloud = { _, _ -> TranslationEntry(" ", "<b>янтарь</b>", "") })(word)
 
         val translation = (result as TranslationResult.Found).translation
         assertEquals("бурштын", translation.title)
