@@ -44,7 +44,7 @@ Paths are relative to `skarnik-flutter/lib/features/`.
 
 | # | Behaviour | Flutter source | Status |
 |---|---|---|---|
-| 2.1 | Source chain: local store (offline dictionaries) → admin API → Supabase `main_word`. A malformed API entry also falls through to Supabase. The word is looked up in the search index first, as in Flutter | `translation/domain/use_case/get_translation.dart` | ✅ translation PR |
+| 2.1 | Source chain: local store (offline dictionaries) → Supabase `main_word` → admin API. A missing or malformed Supabase row also falls through to the API. Native deviation: Flutter asks the admin API before Supabase; Aleh set db → Supabase → API for every app (2026-11-05), same as iOS. The word is looked up in the search index first, as in Flutter | `translation/domain/use_case/get_translation.dart` | ✅ translation PR |
 | ~~2.2~~ | ~~skarnik.by page scrape as the last fallback~~ (dropped by Aleh, 2026-10-30) | `translation/data/repository/skarnik_translation_repository.dart` | ➖ |
 | 2.3 | Redirect words (`redirect_to`): open the target word with «Перанакіравана з «…»». M3: the target replaces the alias screen (back skips the empty alias) and the notice is a snackbar on the target; a word redirecting to itself shows the error instead of looping | `translation_page.dart`, `core/exceptions.dart` | ✅ translation PR |
 | 2.4 | HTTP cache for fetched translations, lifetime from Remote Config (8.8), 24 h by default. Native caches the Supabase fallback too. The translation store holds only offline downloads | `objectbox_translation_repository.dart`, `data/http/skarnik_dio.dart` | ✅ translation PR, lifetime in Remote Config PR |

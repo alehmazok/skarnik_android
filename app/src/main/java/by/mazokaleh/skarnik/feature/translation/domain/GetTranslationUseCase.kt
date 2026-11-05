@@ -23,9 +23,10 @@ sealed interface TranslationResult {
 }
 
 /**
- * Ported from Flutter's `GetTranslationUseCase`: the local store (offline dictionaries), then the admin API,
- * then Supabase. The skarnik.by page scrape that came last in Flutter is dropped (parity 2.2).
- * A source that answers with a redirect ends the chain. Throws when every source fails.
+ * The local store (offline dictionaries), then Supabase, then the admin API: the same order in every Skarnik
+ * app (Aleh, 2026-11-05; Flutter asked the admin API before Supabase). The skarnik.by page scrape that came
+ * last in Flutter is dropped (parity 2.2). A source that answers with a redirect ends the chain. Throws when
+ * every source fails.
  */
 class GetTranslationUseCase @Inject constructor(
     private val local: LocalTranslationSource,
@@ -35,11 +36,11 @@ class GetTranslationUseCase @Inject constructor(
     suspend operator fun invoke(word: Word): TranslationResult {
         val stored = local.find(word.dictionary, word.wordId)
         if (stored != null) return stored.toResult(word, Translation.Source.Local)
-        // A malformed API entry falls through to Supabase too, as in Flutter.
-        return suspendRunCatching { api.fetch(word.dictionary, word.wordId).toResult(word, Translation.Source.Api) }
+        // A missing or malformed Supabase row falls through to the admin API too.
+        return suspendRunCatching { cloud.fetch(word.dictionary, word.wordId).toResult(word, Translation.Source.Cloud) }
             .getOrElse { error ->
-                Log.w(TAG, "Admin API failed for ${word.dictionary.path}/${word.wordId}", error)
-                cloud.fetch(word.dictionary, word.wordId).toResult(word, Translation.Source.Cloud)
+                Log.w(TAG, "Supabase failed for ${word.dictionary.path}/${word.wordId}", error)
+                api.fetch(word.dictionary, word.wordId).toResult(word, Translation.Source.Api)
             }
     }
 
