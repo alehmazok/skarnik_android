@@ -233,15 +233,13 @@ private const val QUESTION_SIZE = 0.875f
 /**
  * Indents the wrapped lines of every paragraph by [indent], so each entry («благожелательность — …») starts at the
  * margin and its continuation lines sit under it, as in a printed dictionary.
+ *
+ * One style over the whole text: Android applies the indent per `\n`-paragraph inside it. A style per line would
+ * leave each `\n` outside every style, and Compose lays such a gap out as a paragraph of its own: an empty line.
  */
 fun AnnotatedString.withHangingIndent(indent: TextUnit): AnnotatedString {
-    val builder = AnnotatedString.Builder(this)
-    var start = 0
-    while (start < length) {
-        val newline = text.indexOf('\n', start)
-        val end = if (newline == -1) length else newline
-        if (end > start) builder.addStyle(ParagraphStyle(textIndent = TextIndent(restLine = indent)), start, end)
-        start = end + 1
-    }
-    return builder.toAnnotatedString()
+    if (isEmpty()) return this
+    return AnnotatedString.Builder(this).apply {
+        addStyle(ParagraphStyle(textIndent = TextIndent(restLine = indent)), 0, length)
+    }.toAnnotatedString()
 }
