@@ -37,6 +37,7 @@ object GeneralSettingsTestTags {
     const val CLEAR_HISTORY = "settings_clear_history"
     const val WRITE_TO_DEVELOPERS = "settings_write_to_developers"
     const val RATE_APP = "settings_rate_app"
+    const val WHATS_NEW = "settings_whats_new"
     const val ABOUT = "settings_about"
 }
 

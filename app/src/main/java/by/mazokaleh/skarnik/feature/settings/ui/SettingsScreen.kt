@@ -38,11 +38,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import by.mazokaleh.skarnik.BuildConfig
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.settings.ThemeMode
 import by.mazokaleh.skarnik.feature.offline.domain.DownloadProgress
 import by.mazokaleh.skarnik.feature.offline.domain.OfflineDictionaryStatus
+import by.mazokaleh.skarnik.feature.whatsnew.data.WhatsNewCatalog
+import by.mazokaleh.skarnik.feature.whatsnew.domain.history
+import by.mazokaleh.skarnik.feature.whatsnew.ui.WhatsNewHistorySheet
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 import by.mazokaleh.skarnik.ui.theme.isDynamicColorAvailable
 import kotlinx.coroutines.flow.merge
@@ -120,7 +124,7 @@ private val SettingsEvent.messageRes: Int
     }
 
 /** Which dialog or sheet is open; saved, so it survives rotation. */
-private enum class SettingsDialog { None, Theme, ClearHistory, About }
+private enum class SettingsDialog { None, Theme, ClearHistory, WhatsNew, About }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -176,6 +180,10 @@ private fun SettingsContent(
                 dialog = SettingsDialog.None
                 actions.onClearHistory()
             },
+            onDismiss = { dialog = SettingsDialog.None }
+        )
+        SettingsDialog.WhatsNew -> WhatsNewHistorySheet(
+            releases = remember { WhatsNewCatalog.releases.history(BuildConfig.VERSION_NAME) },
             onDismiss = { dialog = SettingsDialog.None }
         )
         SettingsDialog.About -> AboutSheet(actions.onWriteToDevelopers) { dialog = SettingsDialog.None }
@@ -237,6 +245,14 @@ private fun LazyListScope.otherSection(
             icon = R.drawable.ic_star_outline,
             tag = GeneralSettingsTestTags.RATE_APP,
             onClick = actions.onRateApp
+        )
+    }
+    item(key = "whats_new") {
+        SettingsRow(
+            title = R.string.settings_whats_new,
+            icon = R.drawable.ic_new_releases,
+            tag = GeneralSettingsTestTags.WHATS_NEW,
+            onClick = { onDialog(SettingsDialog.WhatsNew) }
         )
     }
     item(key = "about") {

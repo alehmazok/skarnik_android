@@ -101,6 +101,7 @@
     <string name="review_app_gallery_open">Адкрыць AppGallery</string>
     <string name="review_later">Пазней</string>
     <string name="settings_about">Пра Скарнік</string>
+    <string name="settings_whats_new">Што новага</string>
     <string name="settings_no_app">Няма праграмы, каб гэта адкрыць.</string>
     <string name="about_title">Пра Скарнік</string>
     <!-- HTML, read with AnnotatedString.fromHtml. -->
@@ -134,4 +135,17 @@
     <string name="analytics_consent_message">Дазвольце збіраць ананімную статыстыку выкарыстання праграмы, каб дапамагчы нам паляпшаць «Скарнік». Гэта не ўплывае на вашы асабістыя даныя і можа быць зменена ў любы момант у наладах.</string>
     <string name="analytics_consent_accept">Дазволіць</string>
     <string name="analytics_consent_decline">Не дазваляць</string>
+
+    <!-- What's new: the sheet after an update and the list in Settings. Item texts are per version. -->
+    <string name="whats_new_title">Што новага ў Скарніку</string>
+    <string name="whats_new_version">Версія %1$s</string>
+    <string name="whats_new_continue">Зразумела</string>
+    <string name="whats_new_4_0_0_native_title">Цалкам новая праграма</string>
+    <string name="whats_new_4_0_0_native_text">Скарнік перапісаны спецыяльна для Android: ён хутчэй запускаецца і лепей выглядае. Гісторыя, закладкі і спампаваныя слоўнікі засталіся з вамі.</string>
+    <string name="whats_new_4_0_0_dynamic_color_title">Колеры Material You</string>
+    <string name="whats_new_4_0_0_dynamic_color_text">Праграма бярэ колеры з вашых шпалер. Чырвоныя колеры Скарніка можна вярнуць у Наладах.</string>
+    <string name="whats_new_4_0_0_theme_title">Светлая і цёмная тэма</string>
+    <string name="whats_new_4_0_0_theme_text">Абярыце тэму ў Наладах або пакіньце такую, як у сістэме.</string>
+    <string name="whats_new_4_0_0_wide_title">Планшэты і складаныя тэлефоны</string>
+    <string name="whats_new_4_0_0_wide_text">На шырокім экране спіс слоў і пераклад паказваюцца побач.</string>
 </resources>
