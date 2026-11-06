@@ -53,7 +53,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
@@ -300,7 +299,6 @@ private fun LoadedContent(
             val currentOnLink by rememberUpdatedState(onLink)
             val text = remember(translation.html, colors) {
                 translationHtmlToAnnotatedString(translation.html, colors) { currentOnLink(it) }
-                    .withHangingIndent(HANGING_INDENT)
             }
             Text(
                 text = text,
@@ -310,8 +308,6 @@ private fun LoadedContent(
         }
     }
 }
-
-private val HANGING_INDENT = 16.sp
 
 /** Reports the bottom of the headline (in scroll content pixels), so the top app bar knows when to show the word. */
 @Composable
