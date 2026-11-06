@@ -20,6 +20,11 @@ object WhatsNewCatalog {
                     R.string.whats_new_4_0_0_native_text
                 ),
                 WhatsNewItem(
+                    R.drawable.ic_widgets,
+                    R.string.whats_new_4_0_0_widget_title,
+                    R.string.whats_new_4_0_0_widget_text
+                ),
+                WhatsNewItem(
                     R.drawable.ic_palette,
                     R.string.whats_new_4_0_0_dynamic_color_title,
                     R.string.whats_new_4_0_0_dynamic_color_text,
