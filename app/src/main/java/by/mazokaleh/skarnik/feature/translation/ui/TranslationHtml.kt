@@ -7,15 +7,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.LinkInteractionListener
-import androidx.compose.ui.text.ParagraphStyle
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextIndent
-import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.em
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
@@ -229,17 +226,3 @@ private fun classStyleOf(element: Element, colors: TranslationColors): SpanStyle
 }
 
 private const val QUESTION_SIZE = 0.875f
-
-/**
- * Indents the wrapped lines of every paragraph by [indent], so each entry («благожелательность — …») starts at the
- * margin and its continuation lines sit under it, as in a printed dictionary.
- *
- * One style over the whole text: Android applies the indent per `\n`-paragraph inside it. A style per line would
- * leave each `\n` outside every style, and Compose lays such a gap out as a paragraph of its own: an empty line.
- */
-fun AnnotatedString.withHangingIndent(indent: TextUnit): AnnotatedString {
-    if (isEmpty()) return this
-    return AnnotatedString.Builder(this).apply {
-        addStyle(ParagraphStyle(textIndent = TextIndent(restLine = indent)), 0, length)
-    }.toAnnotatedString()
-}

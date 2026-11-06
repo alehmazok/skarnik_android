@@ -5,9 +5,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextIndent
 import androidx.compose.ui.unit.TextUnit
-import androidx.compose.ui.unit.sp
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -96,18 +94,6 @@ class TranslationHtmlTest {
         val text = render("адзін<br>&nbsp;&nbsp; &nbsp;два")
 
         assertEquals("адзін\n\u00a0\u00a0\u00a0два", text.text)
-    }
-
-    @Test
-    fun `hanging indent is one paragraph style over the whole text`() {
-        val text = render("першы радок<br>другі<br><br>трэці").withHangingIndent(16.sp)
-
-        assertEquals("першы радок\nдругі\n\nтрэці", text.text)
-        // One range: a style per line leaves the line breaks between styles, and Compose draws each as an empty line.
-        val style = text.paragraphStyles.single()
-        assertEquals(0, style.start)
-        assertEquals(text.length, style.end)
-        assertEquals(TextIndent(firstLine = 0.sp, restLine = 16.sp), style.item.textIndent)
     }
 
     @Test
