@@ -27,6 +27,7 @@ import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
 import by.mazokaleh.skarnik.feature.consent.ui.AnalyticsConsentHost
+import by.mazokaleh.skarnik.feature.whatsnew.ui.WhatsNewHost
 import by.mazokaleh.skarnik.navigation.SkarnikNavHost
 import by.mazokaleh.skarnik.navigation.WordLinkIntents
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
@@ -92,6 +93,7 @@ class MainActivity : ComponentActivity() {
             Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
                 SkarnikNavHost(wordLinks = wordLinkFlow)
                 AnalyticsConsentHost()
+                WhatsNewHost()
             }
         }
     }

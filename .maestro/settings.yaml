@@ -1,4 +1,4 @@
-# Settings: switch the theme, clear search history (bookmarks stay) and open «Пра Скарнік».
+# Settings: switch the theme, clear search history (bookmarks stay), open «Што новага» and «Пра Скарнік».
 # Opening a word needs network, like the other flows.
 appId: by.mazokaleh.skarnik.debug
 name: Settings
@@ -60,6 +60,21 @@ tags:
 - assertVisible: "Ачысціць гісторыю пошуку?"
 - tapOn: "Ачысціць"
 - assertVisible: "Гісторыя паспяхова ачышчана."
+
+# What's new: the list of every release. A clean install never shows the sheet by itself. Sheets are separate
+# windows without test tags as ids, so their content is matched by text.
+- assertNotVisible: "Што новага ў Скарніку"
+- scrollUntilVisible:
+    element:
+      id: settings_whats_new
+- tapOn:
+    id: settings_whats_new
+- extendedWaitUntil:
+    visible: "Версія 4.0.0"
+    timeout: 10000
+- assertVisible: "Цалкам новая праграма"
+- takeScreenshot: settings-whats-new
+- back
 
 # About sheet. It opens fully expanded, so its links are on screen too.
 - scrollUntilVisible:
