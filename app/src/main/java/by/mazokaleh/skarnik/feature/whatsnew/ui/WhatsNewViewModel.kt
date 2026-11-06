@@ -20,10 +20,7 @@ import kotlinx.coroutines.launch
  * sheet never covers the consent dialog. The view model outlives rotation, so the sheet stays open across it.
  */
 @HiltViewModel
-class WhatsNewViewModel @Inject constructor(
-    getWhatsNew: GetWhatsNewUseCase,
-    consent: AnalyticsConsent
-) : ViewModel() {
+class WhatsNewViewModel @Inject constructor(getWhatsNew: GetWhatsNewUseCase, consent: AnalyticsConsent) : ViewModel() {
     private val _release = MutableStateFlow<WhatsNewRelease?>(null)
     val release: StateFlow<WhatsNewRelease?> = _release.asStateFlow()
 
