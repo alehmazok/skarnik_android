@@ -1,7 +1,17 @@
-# Скарнік — Android
+<div align="center">
+  <img src="docs/assets/logo.png" alt="Skarnik logo" width="120" />
 
-Native Android app for the Skarnik Belarusian dictionary (Kotlin, Jetpack Compose). Replaces the
-[Flutter app](https://github.com/alehmazok/skarnik-flutter) as an in-place update.
+  # Скарнік — Android
+
+  Belarusian dictionary app: Бел-Рус, Рус-Бел and Тлумачальны dictionaries in one place.
+  Native Android, written in Kotlin with Jetpack Compose.
+
+  [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+  <a href="https://play.google.com/store/apps/details?id=by.mazokaleh.skarnik">
+    <img src="docs/assets/google-play-badge.svg" alt="Get it on Google Play" width="200" />
+  </a>
+</div>
 
 See [CLAUDE.md](CLAUDE.md) for the project rules and [docs/](docs/) for architecture, decisions and the
 feature parity register.
@@ -69,10 +79,6 @@ adb shell am start -n by.mazokaleh.skarnik.debug/by.mazokaleh.skarnik.MainActivi
 The first launch unpacks the search index (about 60 MB), so the home screen can take a few seconds.
 App logs: `adb logcat --pid=$(adb shell pidof by.mazokaleh.skarnik.debug)`.
 
-If a Flutter debug build is on the device, the native build installs over it as an update and keeps its data.
-To go back to Flutter, uninstall first (`adb uninstall by.mazokaleh.skarnik.debug`): the native versionCode is
-higher, so Android refuses a downgrade.
-
 ### Checks and tests
 
 These are the same commands CI runs:
@@ -111,8 +117,8 @@ saved to `~/.maestro/tests/`. How to write flows: [.maestro/README.md](.maestro/
 ### Release build
 
 `./gradlew assembleRelease` builds a minified APK. It is signed with the Play upload key when `key.properties`
-exists in the repository root (gitignored, same format as skarnik-flutter's: `storePassword`, `keyPassword`,
-`keyAlias`, `storeFile` relative to `app/`); otherwise it is unsigned.
+exists in the repository root (gitignored; keys `storePassword`, `keyPassword`, `keyAlias`, `storeFile`
+relative to `app/`); otherwise it is unsigned.
 
 ### Tester builds (Firebase App Distribution)
 
@@ -123,7 +129,7 @@ Distribution → Run workflow. It needs these repository secrets (Settings → S
 
 | Secret | Value |
 |---|---|
-| `ANDROID_KEYSTORE_BASE64` | The upload keystore, `base64 -i upload.keystore` (same as in skarnik-flutter) |
+| `ANDROID_KEYSTORE_BASE64` | The upload keystore, `base64 -i upload.keystore` |
 | `ANDROID_STORE_PASSWORD` | Keystore password |
 | `ANDROID_KEY_ALIAS` | Key alias |
 | `ANDROID_KEY_PASSWORD` | Key password |
