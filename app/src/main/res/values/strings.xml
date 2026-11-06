@@ -142,6 +142,8 @@
     <string name="whats_new_continue">Зразумела</string>
     <string name="whats_new_4_0_0_native_title">Цалкам новая праграма</string>
     <string name="whats_new_4_0_0_native_text">Скарнік перапісаны спецыяльна для Android: ён хутчэй запускаецца і лепей выглядае. Гісторыя, закладкі і спампаваныя слоўнікі засталіся з вамі.</string>
+    <string name="whats_new_4_0_0_widget_title">Віджэт «Слова дня»</string>
+    <string name="whats_new_4_0_0_widget_text">Дадайце віджэт на галоўны экран: ён паказвае новае слова з перакладам, а націск на віджэт адкрывае слова ў праграме.</string>
     <string name="whats_new_4_0_0_dynamic_color_title">Колеры Material You</string>
     <string name="whats_new_4_0_0_dynamic_color_text">Праграма бярэ колеры з вашых шпалер. Чырвоныя колеры Скарніка можна вярнуць у Наладах.</string>
     <string name="whats_new_4_0_0_theme_title">Светлая і цёмная тэма</string>
