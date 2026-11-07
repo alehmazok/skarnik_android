@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 class FakeAnalytics : Analytics {
     val events = mutableListOf<AnalyticsEvent>()
     val collectionEnabled = mutableListOf<Boolean>()
+    val userProperties = mutableListOf<Pair<String, String>>()
 
     override fun log(event: AnalyticsEvent) {
         events += event
@@ -15,6 +16,14 @@ class FakeAnalytics : Analytics {
     override fun setCollectionEnabled(enabled: Boolean) {
         collectionEnabled += enabled
     }
+
+    override fun setUserProperty(name: String, value: String) {
+        userProperties += name to value
+    }
+}
+
+class FakeInstallSource(private val value: String = "google_play") : InstallSourceReader {
+    override suspend fun read(): String = value
 }
 
 class FakeAnalyticsConsent(initial: ConsentState = ConsentState(answered = false, granted = false)) :

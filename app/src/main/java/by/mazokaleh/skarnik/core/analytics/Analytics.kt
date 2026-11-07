@@ -21,6 +21,9 @@ interface Analytics {
     fun log(event: AnalyticsEvent)
 
     fun setCollectionEnabled(enabled: Boolean)
+
+    /** A user property, sent with every later event. Firebase only uploads a value that changed. */
+    fun setUserProperty(name: String, value: String)
 }
 
 /** Firebase Analytics. Debug builds have collection deactivated in the manifest and only log to Logcat. */
@@ -38,6 +41,12 @@ class FirebaseAnalyticsTracker @Inject constructor(@ApplicationContext private v
         if (BuildConfig.DEBUG) Log.d(TAG, "collection enabled: $enabled")
         runCatching { firebase.setAnalyticsCollectionEnabled(enabled) }
             .onFailure { Log.w(TAG, "Cannot change analytics collection", it) }
+    }
+
+    override fun setUserProperty(name: String, value: String) {
+        if (BuildConfig.DEBUG) Log.d(TAG, "user property $name = $value")
+        runCatching { firebase.setUserProperty(name, value) }
+            .onFailure { Log.w(TAG, "Cannot set user property $name", it) }
     }
 
     private fun Map<String, Any>.toBundle(): Bundle = Bundle().apply {

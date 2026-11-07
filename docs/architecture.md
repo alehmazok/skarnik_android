@@ -233,6 +233,9 @@ Collection is off in the manifest. `AnalyticsConsent` keeps the answer under Flu
 collection on or off when it changes, and re-applies it at every app start. `AnalyticsConsentHost` at the app
 root shows the non-dismissible dialog until there is an answer; the Settings switch writes the same answer.
 Debug builds have collection deactivated for good and print events to Logcat (tag `Analytics`).
+Whenever it switches collection on, `AnalyticsConsent` also sets the `install_source` user property from
+`InstallSourceReader` (the installing package mapped by `InstallSource.fromInstaller`), so GA4 can count users
+per store.
 
 Remote Config (8.8) is fetched at app start, without waiting, by `core/config/RemoteConfig`.
 
