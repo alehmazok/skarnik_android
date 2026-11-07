@@ -120,6 +120,12 @@ saved to `~/.maestro/tests/`. How to write flows: [.maestro/README.md](.maestro/
 exists in the repository root (gitignored; keys `storePassword`, `keyPassword`, `keyAlias`, `storeFile`
 relative to `app/`); otherwise it is unsigned.
 
+`./gradlew bundleRelease -Pskarnik.versionCode=<code>` builds the AAB for Google Play
+(`app/build/outputs/bundle/release/app-release.aab`); the version code must be higher than every build already on
+Play. In CI: Actions → Play release bundle → Run workflow
+([.github/workflows/play-bundle.yml](.github/workflows/play-bundle.yml)) builds the signed AAB with the secrets below,
+uploads its R8 mapping to Sentry and keeps the AAB and `mapping.txt` as the `skarnik-play-<code>` artifact for 90 days.
+
 ### Tester builds (Firebase App Distribution)
 
 Every merge to `main` builds a signed release APK and uploads it to the Firebase App Distribution group
