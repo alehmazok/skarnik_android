@@ -37,7 +37,8 @@ interface AnalyticsConsent {
 @Singleton
 class DataStoreAnalyticsConsent @Inject constructor(
     private val settings: DataStore<Preferences>,
-    private val analytics: Analytics
+    private val analytics: Analytics,
+    private val installSource: InstallSourceReader
 ) : AnalyticsConsent {
     override val state: Flow<ConsentState> = settings.data
         .map { ConsentState(answered = it[ANSWERED] == true, granted = it[GRANTED] == true) }
@@ -48,11 +49,20 @@ class DataStoreAnalyticsConsent @Inject constructor(
             it[ANSWERED] = true
             it[GRANTED] = granted
         }
-        analytics.setCollectionEnabled(granted)
+        apply(granted)
     }
 
     override suspend fun applyStored() {
-        analytics.setCollectionEnabled(state.first().granted)
+        apply(state.first().granted)
+    }
+
+    /**
+     * User properties are set only while collection is on: at every start with a stored "yes", and as soon as the
+     * user says yes, so a mid-session "yes" does not wait for the next start.
+     */
+    private suspend fun apply(granted: Boolean) {
+        analytics.setCollectionEnabled(granted)
+        if (granted) analytics.setUserProperty(InstallSource.USER_PROPERTY, installSource.read())
     }
 
     companion object {

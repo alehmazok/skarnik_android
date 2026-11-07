@@ -21,6 +21,7 @@ class DataStoreAnalyticsConsentTest {
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val analytics = FakeAnalytics()
+    private val installSource = FakeInstallSource("huawei_appgallery")
 
     @After
     fun tearDown() {
@@ -34,17 +35,18 @@ class DataStoreAnalyticsConsentTest {
 
     @Test
     fun `nothing is collected before an answer`() = runBlocking {
-        val consent = DataStoreAnalyticsConsent(dataStore("settings"), analytics)
+        val consent = DataStoreAnalyticsConsent(dataStore("settings"), analytics, installSource)
 
         assertEquals(ConsentState(answered = false, granted = false), consent.state.first())
         consent.applyStored()
         assertEquals(listOf(false), analytics.collectionEnabled)
+        assertEquals(emptyList(), analytics.userProperties)
     }
 
     @Test
     fun `an answer is saved under Flutter's keys and applied`() = runBlocking {
         val settings = dataStore("settings")
-        val consent = DataStoreAnalyticsConsent(settings, analytics)
+        val consent = DataStoreAnalyticsConsent(settings, analytics, installSource)
 
         consent.setGranted(true)
         assertEquals(ConsentState(answered = true, granted = true), consent.state.first())
@@ -53,16 +55,30 @@ class DataStoreAnalyticsConsentTest {
         assertEquals(ConsentState(answered = true, granted = false), consent.state.first())
         assertEquals(true, settings.data.first()[DataStoreAnalyticsConsent.ANSWERED])
         assertEquals(listOf(true, false), analytics.collectionEnabled)
+        // Set once, right after the "yes"; not again for the "no".
+        assertEquals(listOf("install_source" to "huawei_appgallery"), analytics.userProperties)
     }
 
     @Test
     fun `the stored answer is applied at start`() = runBlocking {
         val settings = dataStore("settings")
-        DataStoreAnalyticsConsent(settings, FakeAnalytics()).setGranted(true)
+        DataStoreAnalyticsConsent(settings, FakeAnalytics(), installSource).setGranted(true)
 
-        DataStoreAnalyticsConsent(settings, analytics).applyStored()
+        DataStoreAnalyticsConsent(settings, analytics, installSource).applyStored()
 
         assertEquals(listOf(true), analytics.collectionEnabled)
+        assertEquals(listOf("install_source" to "huawei_appgallery"), analytics.userProperties)
+    }
+
+    @Test
+    fun `a stored no sets no user property at start`() = runBlocking {
+        val settings = dataStore("settings")
+        DataStoreAnalyticsConsent(settings, FakeAnalytics(), installSource).setGranted(false)
+
+        DataStoreAnalyticsConsent(settings, analytics, installSource).applyStored()
+
+        assertEquals(listOf(false), analytics.collectionEnabled)
+        assertEquals(emptyList(), analytics.userProperties)
     }
 
     @Test
@@ -78,7 +94,7 @@ class DataStoreAnalyticsConsentTest {
             produceFile = { File(tmp.root, "datastore/migrated.preferences_pb") }
         )
 
-        val consent = DataStoreAnalyticsConsent(settings, analytics)
+        val consent = DataStoreAnalyticsConsent(settings, analytics, installSource)
 
         assertEquals(ConsentState(answered = true, granted = true), consent.state.first())
     }
