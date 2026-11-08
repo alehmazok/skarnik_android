@@ -43,7 +43,7 @@ val forbiddenPermissions =
     listOf(
         "com.google.android.gms.permission.AD_ID",
         "android.permission.ACCESS_ADSERVICES_AD_ID",
-        "android.permission.ACCESS_ADSERVICES_ATTRIBUTION",
+        "android.permission.ACCESS_ADSERVICES_ATTRIBUTION"
     )
 
 android {
