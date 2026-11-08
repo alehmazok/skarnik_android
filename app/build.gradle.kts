@@ -1,6 +1,8 @@
+import com.android.build.api.artifact.SingleArtifact
 import com.google.firebase.appdistribution.gradle.firebaseAppDistribution
 import io.gitlab.arturbosch.detekt.getSupportedKotlinVersion
 import java.util.Properties
+import javax.xml.parsers.DocumentBuilderFactory
 
 plugins {
     alias(libs.plugins.android.application)
@@ -34,6 +36,15 @@ val sentryDsn =
     providers.gradleProperty("skarnik.sentryDsn").orElse(providers.environmentVariable("SENTRY_DSN")).getOrElse("")
 val sentryEnvironment = providers.gradleProperty("skarnik.sentryEnvironment").getOrElse("production")
 val sentryProguardUuid = providers.gradleProperty("skarnik.sentryProguardUuid").getOrElse("")
+
+// The app shows no ads and promises anonymous statistics, so it must not declare access to any advertising id.
+// The manifest removes what Firebase Analytics merges in; this list is what CheckManifestPermissions guards.
+val forbiddenPermissions =
+    listOf(
+        "com.google.android.gms.permission.AD_ID",
+        "android.permission.ACCESS_ADSERVICES_AD_ID",
+        "android.permission.ACCESS_ADSERVICES_ATTRIBUTION",
+    )
 
 android {
     // Same id as the Flutter app, so the native build installs as an update and keeps user data.
@@ -167,6 +178,58 @@ androidComponents {
     }
     onVariants(selector().withBuildType("nonMinifiedRelease")) { variant ->
         variant.signingConfig.setConfig(android.signingConfigs.getByName("debug"))
+    }
+    // check<Variant>ManifestPermissions (docs/adr/0007): fails when a library merges an advertising-id permission
+    // back in, e.g. after a Firebase BoM bump. CI runs it on the release manifest.
+    onVariants { variant ->
+        val name = variant.name.replaceFirstChar { it.uppercase() }
+        tasks.register<CheckManifestPermissions>("check${name}ManifestPermissions") {
+            manifest.set(variant.artifacts.get(SingleArtifact.MERGED_MANIFEST))
+            forbidden.set(forbiddenPermissions)
+            required.set(listOf("android.permission.INTERNET"))
+            report.set(layout.buildDirectory.file("reports/manifest-permissions/${variant.name}.txt"))
+        }
+    }
+}
+
+abstract class CheckManifestPermissions : DefaultTask() {
+    @get:InputFile
+    @get:PathSensitive(PathSensitivity.NONE)
+    abstract val manifest: RegularFileProperty
+
+    @get:Input
+    abstract val forbidden: ListProperty<String>
+
+    // A permission that must be there, so a manifest this task cannot read never passes.
+    @get:Input
+    abstract val required: ListProperty<String>
+
+    @get:OutputFile
+    abstract val report: RegularFileProperty
+
+    @TaskAction
+    fun verify() {
+        val factory = DocumentBuilderFactory.newInstance().apply { isNamespaceAware = true }
+        val document = factory.newDocumentBuilder().parse(manifest.get().asFile)
+        val declared =
+            listOf("uses-permission", "uses-permission-sdk-23").flatMap { tag ->
+                val nodes = document.getElementsByTagName(tag)
+                (0 until nodes.length).map { index ->
+                    (nodes.item(index) as org.w3c.dom.Element).getAttributeNS(ANDROID_NS, "name")
+                }
+            }
+        val missing = required.get() - declared.toSet()
+        check(missing.isEmpty()) { "Merged manifest ${manifest.get().asFile} has no $missing; is it the right file?" }
+        val found = forbidden.get().filter { it in declared }
+        check(found.isEmpty()) {
+            "Merged manifest declares $found. Remove them in app/src/main/AndroidManifest.xml with " +
+                "tools:node=\"remove\" (docs/adr/0007)."
+        }
+        report.get().asFile.writeText(declared.sorted().joinToString("\n", postfix = "\n"))
+    }
+
+    private companion object {
+        const val ANDROID_NS = "http://schemas.android.com/apk/res/android"
     }
 }
 
