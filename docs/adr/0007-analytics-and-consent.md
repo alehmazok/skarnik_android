@@ -31,6 +31,14 @@ the SDK deactivated.
   with back or a tap outside; declining is as easy as allowing. The Settings switch is the same answer.
 - **Anonymous.** Advertising-id collection and automatic screen views are off in the manifest: the dialog
   promises anonymous statistics, and Flutter already turned screen views off.
+- **No advertising-id permission** (issue #47, the counterpart of skarnik_ios#65). Firebase Analytics merges
+  `com.google.android.gms.permission.AD_ID`, `ACCESS_ADSERVICES_AD_ID` and `ACCESS_ADSERVICES_ATTRIBUTION` into the
+  app; the manifest removes all three with `tools:node="remove"`, Google's documented way (Android has no
+  Firebase artifact without the ad id, unlike iOS). On Android 13+ the system hands an app without `AD_ID` a zeroed id anyway,
+  and collection is off. The `play-services-ads-identifier` library itself stays: the measurement code links
+  against it, and dropping it risks R8 "missing class" errors or a crash in release that only a store build
+  would show, for a few KB. `checkReleaseManifestPermissions` (in `app/build.gradle.kts`, run by CI) fails when
+  the merged release manifest declares any of them, so a Firebase BoM bump can't bring one back unnoticed.
 - **Debug builds** have `firebase_analytics_collection_deactivated=true` (a manifest placeholder): nothing they do
   reaches the production reports, whatever the consent. The tracker prints every event to Logcat in debug.
 
@@ -39,5 +47,7 @@ the SDK deactivated.
 - No Firebase secret in CI; a new Firebase app would mean editing `gradle.properties`.
 - Release builds from App Distribution report like store builds once a tester allows analytics, as Flutter's did.
 - Every Maestro flow that starts from a clean install declines the dialog first (`subflows/decline-analytics.yaml`).
+- Play Console: the Advertising ID declaration is answered "no"; Data safety still lists device or other ids
+  (the Firebase app instance id) for analytics, not shared, not for ads or tracking.
 - Remote Config (8.8) reuses the same Firebase configuration. Its fetch is not analytics and runs before consent,
   as in Flutter: it sends a Firebase installation id and no events.
