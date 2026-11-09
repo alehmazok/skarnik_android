@@ -23,4 +23,20 @@ class LetterIndexBarTest {
         assertNull(letterAt(y = 10f, height = 300, count = 0))
         assertNull(letterAt(y = 10f, height = 0, count = 30))
     }
+
+    @Test
+    fun `one TalkBack step moves one letter`() {
+        // Compose moves an adjustable node by range / (steps + 1): 29 / 29 = one letter.
+        assertEquals(28, letterSteps(count = 30))
+        assertEquals(0, letterSteps(count = 2))
+        assertEquals(0, letterSteps(count = 1))
+    }
+
+    @Test
+    fun `a TalkBack adjustment lands on the nearest letter within the bar`() {
+        assertEquals(3, letterForProgress(value = 3.4f, count = 30))
+        assertEquals(4, letterForProgress(value = 3.6f, count = 30))
+        assertEquals(0, letterForProgress(value = -1f, count = 30))
+        assertEquals(29, letterForProgress(value = 31f, count = 30))
+    }
 }

@@ -19,3 +19,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | [0009](0009-wide-screen-list-detail.md) | Wide screens: own list–detail layout with a nested NavHost per list | Accepted |
 | [0010](0010-baseline-profile.md) | Startup performance: committed Baseline Profile generated on CI's emulator, profileinstaller, startup macrobenchmark | Accepted |
 | [0011](0011-whats-new.md) | What's new: release notes bundled in the app, a sheet once after an update, detected by package install times | Accepted |
+| [0012](0012-edge-to-edge-play-warning.md) | Edge-to-edge: keep androidx `enableEdgeToEdge()` despite Play's deprecated-API warning | Accepted |
