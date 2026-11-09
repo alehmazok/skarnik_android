@@ -58,7 +58,7 @@ android {
         // Flutter 3.6.0 shipped versionCode 81; the native app must stay above it.
         // CI passes -Pskarnik.versionCode so every distributed build installs over the previous one.
         versionCode = providers.gradleProperty("skarnik.versionCode").orNull?.toInt() ?: 100
-        versionName = "4.0.0"
+        versionName = "4.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
