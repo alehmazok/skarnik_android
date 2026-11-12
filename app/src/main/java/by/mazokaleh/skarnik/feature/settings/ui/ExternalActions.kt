@@ -22,14 +22,14 @@ object ExternalActions {
 
     /**
      * Opens an email app with the developers' address and the app version in the subject (Flutter's
-     * `mailToDevs`); the body starts with the device and Android version under the cursor. Returns false when
-     * there is no email app.
+     * `mailToDevs`); below the cursor the body ends with [supportFooter] (as iOS's `SKSupportMail`). Returns
+     * false when there is no email app.
      */
     fun mailToDevelopers(context: Context): Boolean {
         val intent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).apply {
             putExtra(Intent.EXTRA_EMAIL, arrayOf(BuildConfig.DEV_EMAIL))
             putExtra(Intent.EXTRA_SUBJECT, "${appNameAndVersion(context)}, Android")
-            putExtra(Intent.EXTRA_TEXT, "\n\n—\n${deviceInfo()}")
+            putExtra(Intent.EXTRA_TEXT, "\n\n${currentFooter(context)}")
         }
         return context.tryStart(intent)
     }
@@ -41,8 +41,33 @@ object ExternalActions {
                 Intent(Intent.ACTION_VIEW, "https://play.google.com/store/apps/details?id=$STORE_PACKAGE".toUri())
             )
 
-    private fun deviceInfo(): String =
-        "${Build.MANUFACTURER} ${Build.MODEL}, Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})"
+    /**
+     * «—», then «Skarnik 4.0.2 (169)», then «Android 15 (API 35) · Samsung SM-S918B». Nothing personal: no
+     * account, locale or device id. The manufacturer is left out when the model already starts with it.
+     */
+    fun supportFooter(
+        appName: String,
+        versionName: String,
+        versionCode: Int,
+        androidRelease: String,
+        sdkInt: Int,
+        manufacturer: String,
+        model: String
+    ): String {
+        val maker = manufacturer.replaceFirstChar { it.titlecase() }
+        val device = if (model.startsWith(manufacturer, ignoreCase = true)) model else "$maker $model"
+        return "—\n$appName $versionName ($versionCode)\nAndroid $androidRelease (API $sdkInt) · ${device.trim()}"
+    }
+
+    private fun currentFooter(context: Context): String = supportFooter(
+        appName = context.getString(R.string.app_name),
+        versionName = BuildConfig.VERSION_NAME,
+        versionCode = BuildConfig.VERSION_CODE,
+        androidRelease = Build.VERSION.RELEASE,
+        sdkInt = Build.VERSION.SDK_INT,
+        manufacturer = Build.MANUFACTURER,
+        model = Build.MODEL
+    )
 
     private fun Context.tryStart(intent: Intent): Boolean = try {
         startActivity(intent)
