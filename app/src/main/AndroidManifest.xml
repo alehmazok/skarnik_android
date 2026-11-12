@@ -5,6 +5,19 @@
     <!-- Translations are fetched from the admin API and Supabase. -->
     <uses-permission android:name="android.permission.INTERNET" />
 
+    <!-- No advertising id (docs/adr/0007): the app shows no ads and the consent dialog promises anonymous
+         statistics. Firebase Analytics merges these in; google_analytics_adid_collection_enabled below already stops
+         it reading the id. checkReleaseManifestPermissions in CI fails if a library brings one of them back. -->
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_ADSERVICES_ATTRIBUTION"
+        tools:node="remove" />
+
     <!-- Lets the review prompt see whether AppGallery is installed (parity 8.7). -->
     <queries>
         <intent>
@@ -75,8 +88,8 @@
         </receiver>
 
         <!-- Analytics (docs/adr/0007): off until the user allows it in the consent dialog; AnalyticsConsent turns it
-             on. Debug builds are deactivated for good. No screen views (as Flutter) and no advertising id: the
-             consent text promises anonymous statistics. -->
+             on. Debug builds are deactivated for good. No screen views (as Flutter) and no advertising id (see the
+             removed permissions above): the consent text promises anonymous statistics. -->
         <meta-data
             android:name="firebase_analytics_collection_enabled"
             android:value="false" />

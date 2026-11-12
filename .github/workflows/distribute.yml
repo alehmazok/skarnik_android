@@ -131,6 +131,21 @@ jobs:
           name: skarnik-release
           path: release
 
+      # Without the upload key (Dependabot PRs get no repository secrets) the release APK is unsigned and
+      # adb refuses it. Sign it with a throwaway key: the smoke test only needs R8's output to start.
+      - name: Sign unsigned APK for install
+        run: |
+          APK=$(ls release/apk/release/*.apk | head -1)
+          case "$APK" in *-unsigned.apk) ;; *) exit 0 ;; esac
+          BUILD_TOOLS="$ANDROID_HOME/build-tools/$(ls "$ANDROID_HOME/build-tools" | sort -V | tail -1)"
+          keytool -genkeypair -keystore "$RUNNER_TEMP/smoke.jks" -storepass android -keypass android -alias smoke \
+            -keyalg RSA -keysize 2048 -validity 1 -dname "CN=Skarnik smoke test"
+          "$BUILD_TOOLS/zipalign" -P 16 -f 4 "$APK" "$RUNNER_TEMP/aligned.apk"
+          "$BUILD_TOOLS/apksigner" sign --ks "$RUNNER_TEMP/smoke.jks" --ks-pass pass:android \
+            --out "${APK%-unsigned.apk}-smoke.apk" "$RUNNER_TEMP/aligned.apk"
+          rm "$APK"
+          echo "::notice::No upload key: the smoke test runs the release APK signed with a throwaway key."
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
