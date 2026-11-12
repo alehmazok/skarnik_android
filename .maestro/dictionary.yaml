@@ -25,10 +25,11 @@ tags:
     text: "А"
 - takeScreenshot: dictionary-tsbm
 
-# Jump to «К» with the index; its header sticks to the top.
+# Jump to «К» with the index; its header sticks to the top. The letters are hidden from accessibility (TalkBack
+# adjusts the bar as a whole), so the flow taps the bar where «К» is: the 12th of 29 letters.
 - tapOn:
-    id: vocabulary_index_letter
-    text: "К"
+    id: vocabulary_index
+    point: "50%,40%"
 - assertVisible:
     id: vocabulary_header
     text: "К"
@@ -59,9 +60,10 @@ tags:
       id: vocabulary_header
       text: "А"
     timeout: 30000
+# «Щ» is the 27th of 30 letters.
 - tapOn:
-    id: vocabulary_index_letter
-    text: "Щ"
+    id: vocabulary_index
+    point: "50%,88%"
 - assertVisible:
     id: vocabulary_header
     text: "Щ"

@@ -36,6 +36,7 @@
     <string name="vocabulary_tab_tsbm">Тлумачальны</string>
     <string name="vocabulary_tab_bel_rus">Бел-Рус</string>
     <string name="vocabulary_tab_rus_bel">Рус-Бел</string>
+    <string name="vocabulary_letter_index">Алфавітны паказальнік</string>
     <string name="vocabulary_jump_to_letter">Перайсці да літары «%1$s»</string>
 
     <string name="search_placeholder">Пошук слоў</string>
@@ -46,7 +47,7 @@
 
     <string name="translation_into_russian">Пераклад на рускую мову</string>
     <string name="translation_into_belarusian">Пераклад на беларускую мову</string>
-    <string name="translation_select_word">Абярыце слова са спіса</string>
+    <string name="translation_select_word">Выберыце слова са спіса</string>
     <string name="translation_error">Прабачце, адбылася памылка перакладу слова.</string>
     <string name="translation_redirected_from">Перанакіравана з «%1$s»</string>
     <string name="translation_bookmark_added">Дададзена ў закладкі.</string>
@@ -115,7 +116,7 @@
     <string name="stress_title">На́ціск</string>
     <!-- The same word without the accent mark, for TalkBack. -->
     <string name="stress_title_spoken">Націск</string>
-    <string name="stress_choose_word">Абярыце слова:</string>
+    <string name="stress_choose_word">Выберыце слова:</string>
     <string name="stress_not_found">Інфармацыя аб націску для гэтага слова не знойдзена.</string>
     <string name="stress_error">Адбылася памылка падчас загрузцы інфармацыі аб націску.</string>
     <string name="stress_part_adjectives">Прыметнік</string>
@@ -147,7 +148,7 @@
     <string name="whats_new_4_0_0_dynamic_color_title">Колеры Material You</string>
     <string name="whats_new_4_0_0_dynamic_color_text">Праграма бярэ колеры з вашых шпалер. Чырвоныя колеры Скарніка можна вярнуць у Наладах.</string>
     <string name="whats_new_4_0_0_theme_title">Светлая і цёмная тэма</string>
-    <string name="whats_new_4_0_0_theme_text">Абярыце тэму ў Наладах або пакіньце такую, як у сістэме.</string>
+    <string name="whats_new_4_0_0_theme_text">Выберыце тэму ў Наладах альбо пакіньце такую, як у сістэме.</string>
     <string name="whats_new_4_0_0_wide_title">Планшэты і складаныя тэлефоны</string>
     <string name="whats_new_4_0_0_wide_text">На шырокім экране спіс слоў і пераклад паказваюцца побач.</string>
 </resources>

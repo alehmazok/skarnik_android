@@ -28,6 +28,10 @@ jobs:
       - name: Static checks
         run: ./gradlew ktlintCheck detekt lintDebug
 
+      # Release manifest (docs/adr/0007): no advertising-id permission may come back with a dependency update.
+      - name: Manifest permissions
+        run: ./gradlew checkReleaseManifestPermissions
+
       - name: Unit tests
         run: ./gradlew testDebugUnitTest
 
