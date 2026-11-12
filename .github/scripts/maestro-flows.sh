@@ -45,6 +45,28 @@ start_logcat() {
   fi
 }
 
+# A system "<app> isn't responding" dialog (seen for Pixel Launcher under load) sits over every app and fails each
+# later flow on its first assertion. Taps "Wait" on it (Back if the button is not found). Returns 0 if it found one.
+dismiss_system_dialogs() {
+  local found=1 ui bounds x1 y1 x2 y2
+  for _ in 1 2 3; do
+    adb shell uiautomator dump /sdcard/sys-ui.xml >/dev/null 2>&1 || break
+    ui=$(adb shell cat /sdcard/sys-ui.xml 2>/dev/null)
+    grep -q 'resource-id="android:id/aerr_' <<<"$ui" || break
+    found=0
+    echo "::warning::Dismissing a system dialog: $(grep -oE 'text="[^"]*(responding|stopped|keeps stopping)[^"]*"' <<<"$ui" | head -1)"
+    bounds=$(grep -oE 'resource-id="android:id/aerr_wait"[^>]*bounds="\[[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+\]"' <<<"$ui" \
+      | grep -oE '[0-9]+,[0-9]+\]\[[0-9]+,[0-9]+' | tr ',[]' '   ')
+    if read -r x1 y1 x2 y2 <<<"$bounds" && [ -n "$y2" ]; then
+      adb shell input tap $(((x1 + x2) / 2)) $(((y1 + y2) / 2))
+    else
+      adb shell input keyevent KEYCODE_BACK
+    fi
+    sleep 2
+  done
+  return $found
+}
+
 latest_maestro_log() {
   ls -td ~/.maestro/tests/*/ 2>/dev/null | head -1 | sed 's|$|maestro.log|'
 }
@@ -57,6 +79,9 @@ run_flow() {
   cat "maestro-$name.txt"
   [ $status -eq 0 ] && return 0
   if grep -qE "$INFRA_ERRORS" "maestro-$name.txt" "$(latest_maestro_log)" 2>/dev/null || [ "$(adb get-state 2>/dev/null)" != device ]; then
+    return 2
+  fi
+  if dismiss_system_dialogs; then
     return 2
   fi
   return 1
@@ -79,13 +104,14 @@ retried=()
 for flow in "${FLOWS[@]}"; do
   name=$(basename "$flow" .yaml)
   wait_for_device || exit 1
+  dismiss_system_dialogs
   start_logcat
   echo "::group::$name"
   run_flow "$flow" "$name"
   result=$?
   echo "::endgroup::"
   if [ $result -eq 2 ]; then
-    echo "::warning::$name: the emulator dropped off adb during the flow; running it once more"
+    echo "::warning::$name: the emulator dropped off adb or showed a system dialog during the flow; running it once more"
     adb devices
     retried+=("$name")
     wait_for_device || exit 1
@@ -105,7 +131,7 @@ done
 
 {
   echo "### Maestro: ${#FLOWS[@]} flows, ${#failed[@]} failed"
-  [ ${#retried[@]} -gt 0 ] && echo "Ran again after the emulator dropped off adb: ${retried[*]}"
+  [ ${#retried[@]} -gt 0 ] && echo "Ran again after an emulator problem (adb drop or system dialog): ${retried[*]}"
   [ ${#failed[@]} -gt 0 ] && echo "Failed: ${failed[*]}"
 } | tee -a "$SUMMARY"
 
