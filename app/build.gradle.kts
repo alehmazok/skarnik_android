@@ -68,7 +68,6 @@ android {
         buildConfigField("String", "SUPABASE_KEY", "\"${property("skarnik.supabaseKey")}\"")
         buildConfigField("String", "STARNIK_BASE_URL", "\"${property("skarnik.starnikBaseUrl")}\"")
         buildConfigField("String", "DEV_EMAIL", "\"${property("skarnik.devEmail")}\"")
-        buildConfigField("String", "DEV_EMAIL_BCC", "\"${property("skarnik.devEmailBcc")}\"")
 
         // Firebase without the google-services plugin (docs/adr/0007): FirebaseInitProvider reads these resources.
         // They are the public client config of the Firebase Android app Flutter registered for this id.

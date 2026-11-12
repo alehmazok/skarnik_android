@@ -28,7 +28,6 @@ object ExternalActions {
     fun mailToDevelopers(context: Context): Boolean {
         val intent = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).apply {
             putExtra(Intent.EXTRA_EMAIL, arrayOf(BuildConfig.DEV_EMAIL))
-            if (BuildConfig.DEV_EMAIL_BCC.isNotEmpty()) putExtra(Intent.EXTRA_BCC, arrayOf(BuildConfig.DEV_EMAIL_BCC))
             putExtra(Intent.EXTRA_SUBJECT, "${appNameAndVersion(context)}, Android")
             putExtra(Intent.EXTRA_TEXT, "\n\n—\n${deviceInfo()}")
         }
