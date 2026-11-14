@@ -1,0 +1,14 @@
+# Store screenshots (issue #58): switches «Колеры шпалер» (Material You, on by default) off, so the next passes
+# show the brand palette. Run through `scripts/store-screenshots.sh`; see README.md.
+appId: by.mazokaleh.skarnik.debug
+name: Store screenshots - brand palette
+---
+- launchApp
+- tapOn:
+    id: settings_button
+- tapOn:
+    id: settings_dynamic_color
+- tapOn:
+    id: settings_back
+- assertVisible:
+    id: home_search
