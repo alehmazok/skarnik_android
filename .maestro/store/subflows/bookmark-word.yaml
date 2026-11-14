@@ -1,0 +1,7 @@
+# Opens ${DICT}/${ID} and bookmarks it.
+appId: by.mazokaleh.skarnik.debug
+---
+- runFlow: open-word.yaml
+- tapOn:
+    id: translation_bookmark
+- assertVisible: "Дададзена ў закладкі."

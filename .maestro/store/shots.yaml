@@ -1,0 +1,196 @@
+# Store screenshots (issue #58), step 2: one set of screens, named ${PASS}-<n>-<screen>.png, in the theme and
+# palette the script set. Run after fill.yaml through `scripts/store-screenshots.sh`; see README.md.
+# Words are opened from History, which neither re-saves nor reorders them, so every pass shows the same lists.
+# Lists are swiped by their own id: on a wide screen the middle of the screen is the empty word pane.
+# `back` leaves a word on a phone and empties the pane beside the list on a wide screen, so the flow fits both.
+# Needs network for the stress table (starnik.by); translations come from the HTTP cache.
+appId: by.mazokaleh.skarnik.debug
+name: Store screenshots - take screens
+---
+- launchApp
+- extendedWaitUntil:
+    visible:
+      id: home_search
+    timeout: 30000
+
+# 1. History, newest first, scrolled to the top.
+- tapOn:
+    id: home_tab_history
+- repeat:
+    while:
+      notVisible: спакваля
+    times: 10
+    commands:
+      - swipe:
+          from:
+            id: history_list
+          direction: DOWN
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-1-history
+
+# 2. Search «мов» with the keyboard and the extra letter row up.
+- tapOn:
+    id: home_search
+- inputText: мов
+- extendedWaitUntil:
+    visible:
+      text: мова
+      childOf:
+        id: search_result
+    timeout: 10000
+- assertVisible:
+    id: search_letters
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-2-search
+- hideKeyboard
+- back
+- extendedWaitUntil:
+    visible:
+      id: home_search
+    timeout: 10000
+
+# 3. The colour article «удзячнасць» (Тлумачальны), at the bottom of History.
+- repeat:
+    while:
+      notVisible: удзячнасць
+    times: 10
+    commands:
+      - swipe:
+          from:
+            id: history_list
+          direction: UP
+- tapOn:
+    text: удзячнасць
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-3-translation
+- back
+
+# 4. «пара» (Тлумачальны): «па́ра | пара́» and the «На́ціск» button.
+- repeat:
+    while:
+      notVisible: пара
+    times: 10
+    commands:
+      - swipe:
+          from:
+            id: history_list
+          direction: UP
+- tapOn:
+    text: пара
+- extendedWaitUntil:
+    visible:
+      id: translation_stress
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-4-translation-stress-button
+- back
+
+# 5. Stress table of «стракаты» (Тлумачальны): a ТСБМ headword, so «На́ціск» opens its table.
+# It is the 9th row, on screen once History is back at the top.
+- repeat:
+    while:
+      notVisible: спакваля
+    times: 10
+    commands:
+      - swipe:
+          from:
+            id: history_list
+          direction: DOWN
+- tapOn:
+    id: history_item
+    containsDescendants:
+      - text: стракаты
+      - text: Тлумачэнне слова
+- extendedWaitUntil:
+    visible:
+      id: translation_stress
+    timeout: 30000
+- tapOn:
+    id: translation_stress
+- extendedWaitUntil:
+    notVisible:
+      id: stress_loading
+    timeout: 30000
+- runFlow:
+    when:
+      visible:
+        id: stress_choice
+    commands:
+      - tapOn:
+          id: stress_choice
+          index: 0
+      - extendedWaitUntil:
+          notVisible:
+            id: stress_loading
+          timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: stress_cell
+    timeout: 30000
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-5-stress
+- back
+- runFlow:
+    when:
+      visible:
+        id: stress_choice
+    commands:
+      - back
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 10000
+- back
+
+# 6. Bookmarks, newest first.
+- tapOn:
+    id: home_tab_bookmarks
+- extendedWaitUntil:
+    visible:
+      text: прочувствовать
+      childOf:
+        id: bookmarks_item
+    timeout: 10000
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-6-bookmarks
+
+# 7. Dictionary (Тлумачальны) in «К», jumped to with the letter index: «К» is the 12th of 29 letters.
+- tapOn:
+    id: home_tab_dictionary
+- extendedWaitUntil:
+    visible:
+      id: vocabulary_item
+    timeout: 30000
+- tapOn:
+    id: vocabulary_index
+    point: "50%,40%"
+- assertVisible:
+    id: vocabulary_header
+    text: "К"
+# One screen further: the letter starts with one-letter entries («к», «ка»). The «К» header stays on top.
+- swipe:
+    from:
+      id: vocabulary_list
+    direction: UP
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-7-dictionary
+
+# 8. Settings: theme and «Колеры шпалер».
+- tapOn:
+    id: home_tab_history
+- tapOn:
+    id: settings_button
+- extendedWaitUntil:
+    visible:
+      id: settings_theme
+    timeout: 10000
+- waitForAnimationToEnd
+- takeScreenshot: ${PASS}-8-settings
+- tapOn:
+    id: settings_back
+- assertVisible:
+    id: home_search

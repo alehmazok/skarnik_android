@@ -1,0 +1,44 @@
+# Makes Gboard's Belarusian layout the only keyboard language, so the search shot shows «і ў '» keys and no
+# language-switch key. Gboard adds languages only from its own settings, which have no test tags: steps match its
+# English UI texts. scripts/store-screenshots.sh opens the system keyboard settings first (Maestro cannot start
+# an intent). Safe to rerun: each step runs only when needed.
+appId: com.android.settings
+name: Belarusian Gboard keyboard
+tags:
+  - store
+---
+- extendedWaitUntil:
+    visible: "Gboard"
+    timeout: 10000
+# The row's title, not its switch, which carries the same label.
+- tapOn:
+    id: "android:id/title"
+    text: "Gboard"
+- extendedWaitUntil:
+    visible: "Languages"
+    timeout: 10000
+- tapOn: "Languages"
+- runFlow:
+    when:
+      notVisible: "Беларуская"
+    commands:
+      - tapOn: "Add keyboard"
+      - tapOn: "Search language"
+      - inputText: "Belarus"
+      - tapOn: "Беларуская"
+      # The layout screen preselects the plain Belarusian layout.
+      - tapOn: "Done"
+- extendedWaitUntil:
+    visible: "Беларуская"
+    timeout: 10000
+- runFlow:
+    when:
+      visible: "English \\(US\\)"
+    commands:
+      - tapOn: "Edit"
+      - tapOn: "English \\(US\\)"
+      - tapOn: "Remove"
+- assertNotVisible: "English \\(US\\)"
+- back
+- back
+- back

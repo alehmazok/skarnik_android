@@ -1,0 +1,11 @@
+# Opens ${DICT}/${ID} the way the widget does (an explicit intent with the `word_link` extra), so it works on the
+# debug build, whose link hosts are not verified. The word is saved to history once its translation loads.
+appId: by.mazokaleh.skarnik.debug
+---
+- launchApp:
+    arguments:
+      word_link: "https://skarnik.app/r/${DICT}/${ID}"
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 60000

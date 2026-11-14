@@ -1,0 +1,59 @@
+# Store screenshots (issue #58), step 1: a clean install with History and Bookmarks holding the words of the App
+# Store shots (skarnik_ios `AppStoreScreenshotsUITests.swift`). Run through `scripts/store-screenshots.sh`; see
+# README.md. Needs network: translations come from Supabase (or the admin API).
+appId: by.mazokaleh.skarnik.debug
+name: Store screenshots - fill History and Bookmarks
+tags:
+  - store
+---
+- launchApp:
+    clearState: true
+- runFlow: ../subflows/decline-analytics.yaml
+# An emulator that had an older build shows «Што новага» after the update; close it.
+- runFlow:
+    when:
+      visible: "Зразумела"
+    commands:
+      - tapOn: "Зразумела"
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+
+# Words are opened oldest first, so the lists show them in the order below, top first.
+# The two articles go first: they sit at the bottom of History, where the shots open them without reordering it.
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: tsbm, ID: "55519" } }      # пара
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: tsbm, ID: "85601" } }      # удзячнасць
+
+# Bookmarks, top first: прочувствовать … брызги.
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: rusbel, ID: "6590" } }  # брызги
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: belrus, ID: "11538" } } # атаясамлівацца
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: rusbel, ID: "97011" } } # угрюмый
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: belrus, ID: "53886" } } # наўмысля
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: tsbm, ID: "77490" } }   # скогат
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: belrus, ID: "41317" } } # колер
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: belrus, ID: "17566" } } # верагодны
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: tsbm, ID: "72707" } }   # руплівы
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: rusbel, ID: "41628" } } # мохнатый
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: belrus, ID: "92132" } } # стракаты
+- runFlow: { file: subflows/bookmark-word.yaml, env: { DICT: rusbel, ID: "76252" } } # прочувствовать
+
+# History, newest first: спакваля … однозначно. Opened after the bookmarks, so these ten are on top.
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: rusbel, ID: "52260" } }    # однозначно
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: tsbm, ID: "80183" } }      # стракаты
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: belrus, ID: "92132" } }    # стракаты
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: belrus, ID: "104403" } }   # цурацца
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: rusbel, ID: "103614" } }   # чуждый
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: rusbel, ID: "76252" } }    # прочувствовать
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: rusbel, ID: "92035" } }    # сугроб
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: rusbel, ID: "88828" } }    # сознательный
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: tsbm, ID: "75847" } }      # свядомасць
+- runFlow: { file: subflows/open-word.yaml, env: { DICT: belrus, ID: "90585" } }    # спакваля
+
+# Back to the start screen, as a user would be.
+- back
+- extendedWaitUntil:
+    visible:
+      id: home_search
+    timeout: 10000
+
