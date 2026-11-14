@@ -57,8 +57,8 @@ android {
         targetSdk = 37
         // Flutter 3.6.0 shipped versionCode 81; the native app must stay above it.
         // CI passes -Pskarnik.versionCode so every distributed build installs over the previous one.
-        versionCode = providers.gradleProperty("skarnik.versionCode").orNull?.toInt() ?: 169
-        versionName = "4.0.2"
+        versionCode = providers.gradleProperty("skarnik.versionCode").orNull?.toInt() ?: 170
+        versionName = "4.0.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 

@@ -141,6 +141,10 @@
     <string name="whats_new_title">Што новага ў Скарніку</string>
     <string name="whats_new_version">Версія %1$s</string>
     <string name="whats_new_continue">Зразумела</string>
+    <string name="whats_new_4_0_3_talkback_title">Зручней з TalkBack</string>
+    <string name="whats_new_4_0_3_talkback_text">Змяняць літару ў слоўніках цяпер можна жэстамі ўверх і ўніз.</string>
+    <string name="whats_new_4_0_3_fixes_title">Выпраўленні</string>
+    <string name="whats_new_4_0_3_fixes_text">Выпраўлена рэдкая памылка пры адкрыцці слоўнікаў.</string>
     <string name="whats_new_4_0_0_native_title">Цалкам новая праграма</string>
     <string name="whats_new_4_0_0_native_text">Скарнік перапісаны спецыяльна для Android: ён хутчэй запускаецца і лепей выглядае. Гісторыя, закладкі і спампаваныя слоўнікі засталіся з вамі.</string>
     <string name="whats_new_4_0_0_widget_title">Віджэт «Слова дня»</string>
