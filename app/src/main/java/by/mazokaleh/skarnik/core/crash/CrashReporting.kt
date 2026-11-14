@@ -1,6 +1,7 @@
 package by.mazokaleh.skarnik.core.crash
 
 import android.content.Context
+import android.provider.Settings
 import android.util.Log
 import by.mazokaleh.skarnik.BuildConfig
 import io.sentry.Sentry
@@ -15,7 +16,10 @@ import java.io.IOException
  */
 object CrashReporting {
     /** Starts Sentry before anything else in the app runs. Does nothing without a DSN (debug and local builds). */
-    fun start(context: Context, config: CrashReportingConfig = CrashReportingConfig.fromBuildConfig()) {
+    fun start(
+        context: Context,
+        config: CrashReportingConfig = CrashReportingConfig.fromBuildConfig(isTestLab = isTestLab(context))
+    ) {
         if (!config.isEnabled) return
         SentryAndroid.init(context) { options: SentryAndroidOptions ->
             configure(options, config)
@@ -41,17 +45,32 @@ object CrashReporting {
      * (offline, a server down) and would bury real bugs, so they stay in Logcat only.
      */
     fun isReportable(error: Throwable): Boolean = error !is IOException
+
+    /**
+     * Whether the app runs on a Firebase Test Lab device, which includes Google Play's pre-launch report. Its
+     * crawler starts activities directly, also ones nobody else can start (e.g. Glance's trampolines without
+     * their extras, SKARNIK_ANDROID-1), and installs incomplete split APKs, so its crashes are not users' crashes.
+     * Test Lab devices set the `firebase.test.lab` system setting to "true".
+     */
+    private fun isTestLab(context: Context): Boolean =
+        Settings.System.getString(context.contentResolver, "firebase.test.lab") == "true"
 }
 
 data class CrashReportingConfig(val dsn: String, val environment: String, val proguardUuid: String = "") {
     val isEnabled: Boolean get() = dsn.isNotBlank()
 
     companion object {
-        fun fromBuildConfig() = CrashReportingConfig(
+        /** Sentry environment for Test Lab and Play pre-launch runs, kept apart from real users' crashes. */
+        const val TEST_LAB_ENVIRONMENT = "test-lab"
+
+        fun fromBuildConfig(isTestLab: Boolean) = CrashReportingConfig(
             dsn = BuildConfig.SENTRY_DSN,
-            environment = BuildConfig.SENTRY_ENVIRONMENT,
+            environment = environment(BuildConfig.SENTRY_ENVIRONMENT, isTestLab),
             proguardUuid = BuildConfig.SENTRY_PROGUARD_UUID
         )
+
+        internal fun environment(buildEnvironment: String, isTestLab: Boolean): String =
+            if (isTestLab) TEST_LAB_ENVIRONMENT else buildEnvironment
     }
 }
 

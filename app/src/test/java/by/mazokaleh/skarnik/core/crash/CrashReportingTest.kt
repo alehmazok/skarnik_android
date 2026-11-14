@@ -32,6 +32,13 @@ class CrashReportingTest {
     }
 
     @Test
+    fun `Test Lab and pre-launch runs report to their own environment`() {
+        assertEquals("production", CrashReportingConfig.environment("production", isTestLab = false))
+        assertEquals("test-lab", CrashReportingConfig.environment("production", isTestLab = true))
+        assertEquals("test-lab", CrashReportingConfig.environment("internal", isTestLab = true))
+    }
+
+    @Test
     fun `a build without a mapping id leaves it unset`() {
         val options = SentryOptions()
 
