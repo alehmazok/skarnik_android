@@ -15,15 +15,36 @@ import java.util.zip.GZIPInputStream
  *
  * Blocking: call off the main thread.
  */
-class ObjectBoxStoreOpener(private val documentsDir: File, private val openSeed: () -> InputStream) {
+class ObjectBoxStoreOpener(
+    private val documentsDir: File,
+    private val openStore: (File) -> BoxStore = { dir -> MyObjectBox.builder().directory(dir).build() },
+    private val openSeed: () -> InputStream
+) {
+    /**
+     * Opens all three stores or none: if one fails, the ones already opened are closed before the error is
+     * rethrown. A leaked store would otherwise block the next attempt on the same directory: ObjectBox then
+     * forces finalization while holding its open-files lock, the leaked store's `finalize()` waits for that
+     * lock, and Android kills the app after 60 s (Sentry SKARNIK_ANDROID-4).
+     */
     fun open(): ObjectBoxStores {
         val searchDir = File(documentsDir, SEARCH_DIR)
         installSeedIfMissing(File(searchDir, DATA_FILE))
-        return ObjectBoxStores(
-            search = openStore(searchDir),
-            history = openStore(File(documentsDir, HISTORY_DIR)),
-            translation = openStore(File(documentsDir, TRANSLATION_DIR))
-        )
+        val search = openStore(searchDir)
+        return search.closeIfThrows {
+            val history = openStore(File(documentsDir, HISTORY_DIR))
+            history.closeIfThrows {
+                ObjectBoxStores(search, history, translation = openStore(File(documentsDir, TRANSLATION_DIR)))
+            }
+        }
+    }
+
+    private inline fun <T> BoxStore.closeIfThrows(block: () -> T): T {
+        var succeeded = false
+        try {
+            return block().also { succeeded = true }
+        } finally {
+            if (!succeeded) close()
+        }
     }
 
     /**
@@ -39,8 +60,6 @@ class ObjectBoxStoreOpener(private val documentsDir: File, private val openSeed:
         }
         check(tmp.renameTo(target)) { "Cannot move seed database to $target" }
     }
-
-    private fun openStore(dir: File): BoxStore = MyObjectBox.builder().directory(dir).build()
 
     companion object {
         const val SEARCH_DIR = "objectbox_search"

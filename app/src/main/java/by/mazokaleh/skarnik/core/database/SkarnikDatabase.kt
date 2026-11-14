@@ -2,6 +2,8 @@ package by.mazokaleh.skarnik.core.database
 
 import android.content.Context
 import by.mazokaleh.skarnik.core.common.IoDispatcher
+import by.mazokaleh.skarnik.core.common.suspendRunCatching
+import by.mazokaleh.skarnik.core.crash.logError
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,14 +29,21 @@ class ObjectBoxSkarnikDatabase @Inject constructor(
 
     override suspend fun stores(): ObjectBoxStores = stores ?: mutex.withLock {
         stores ?: withContext(ioDispatcher) {
-            ObjectBoxStoreOpener(
-                documentsDir = context.getDir(FLUTTER_DOCUMENTS_DIR, Context.MODE_PRIVATE),
-                openSeed = { context.assets.open(ObjectBoxStoreOpener.SEED_ASSET) }
-            ).open()
+            suspendRunCatching {
+                ObjectBoxStoreOpener(
+                    documentsDir = context.getDir(FLUTTER_DOCUMENTS_DIR, Context.MODE_PRIVATE),
+                    openSeed = { context.assets.open(ObjectBoxStoreOpener.SEED_ASSET) }
+                ).open()
+            }
+                // Callers may turn it into an error state without logging; report the root cause here.
+                .onFailure { logError(TAG, "Cannot open ObjectBox stores", it) }
+                .getOrThrow()
         }.also { stores = it }
     }
 
     private companion object {
+        const val TAG = "SkarnikDatabase"
+
         /** Becomes `app_flutter`: where Flutter's path_provider put the documents directory. */
         const val FLUTTER_DOCUMENTS_DIR = "flutter"
     }
