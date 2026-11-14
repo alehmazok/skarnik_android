@@ -12,6 +12,21 @@ import by.mazokaleh.skarnik.feature.whatsnew.domain.WhatsNewRelease
 object WhatsNewCatalog {
     val releases: List<WhatsNewRelease> = listOf(
         WhatsNewRelease(
+            version = "4.0.3",
+            items = listOf(
+                WhatsNewItem(
+                    R.drawable.ic_accessibility_new,
+                    R.string.whats_new_4_0_3_talkback_title,
+                    R.string.whats_new_4_0_3_talkback_text
+                ),
+                WhatsNewItem(
+                    R.drawable.ic_build,
+                    R.string.whats_new_4_0_3_fixes_title,
+                    R.string.whats_new_4_0_3_fixes_text
+                )
+            )
+        ),
+        WhatsNewRelease(
             version = "4.0.0",
             items = listOf(
                 WhatsNewItem(
