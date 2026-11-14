@@ -1,12 +1,16 @@
 package by.mazokaleh.skarnik.core.database
 
+import by.mazokaleh.skarnik.core.database.entity.MyObjectBox
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxFavoriteWord
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxHistoryWord
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxSearchWord_
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxTranslationWord
+import io.objectbox.BoxStore
+import io.objectbox.exception.DbException
 import io.objectbox.query.QueryBuilder.StringOrder
 import java.io.File
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import org.junit.After
@@ -92,6 +96,30 @@ class ObjectBoxStoreOpenerTest {
         assertEquals("прывітанне", reopened.historyBox.all.single().word)
         assertEquals(7L, reopened.favoritesBox.all.single().wordId)
         assertEquals("second", reopened.translationBox.all.single().translation)
+    }
+
+    @Test
+    fun `closes the stores already opened when the history store fails`() {
+        assertClosesOpenedStoresWhenFailing(ObjectBoxStoreOpener.HISTORY_DIR, expectedOpened = 1)
+    }
+
+    @Test
+    fun `closes the stores already opened when the translation store fails`() {
+        assertClosesOpenedStoresWhenFailing(ObjectBoxStoreOpener.TRANSLATION_DIR, expectedOpened = 2)
+    }
+
+    private fun assertClosesOpenedStoresWhenFailing(failingDir: String, expectedOpened: Int) {
+        val opened = mutableListOf<BoxStore>()
+        val opener = ObjectBoxStoreOpener(documentsDir, openStore = { dir ->
+            if (dir.name == failingDir) throw DbException("disk error")
+            MyObjectBox.builder().directory(dir).build().also(opened::add)
+        }) { SEED_ASSET.inputStream() }
+
+        val error = assertFailsWith<DbException> { opener.open() }
+
+        assertEquals("disk error", error.message)
+        assertEquals(expectedOpened, opened.size)
+        assertTrue(opened.all { it.isClosed })
     }
 
     private fun translation(text: String) = ObjectboxTranslationWord(
