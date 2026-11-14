@@ -50,7 +50,6 @@ class AppLinkFiltersTest {
     fun `every claimed host and path opens a word`() {
         assertTrue(filters.isNotEmpty())
         filters.forEach { filter ->
-            assertTrue(filter.autoVerify, "autoVerify on $filter")
             assertEquals(setOf("http", "https"), filter.schemes.toSet())
             val links = filter.sampleLinks()
             assertEquals(filter.schemes.size * filter.hosts.size * Dictionary.entries.size, links.size, "$filter")
@@ -69,6 +68,13 @@ class AppLinkFiltersTest {
         assertTrue("www.skarnik.app/r/" in claimed)
     }
 
+    @Test
+    fun `only hosts that serve assetlinks json are verified`() {
+        // Android 11 and lower verify every autoVerify host or none: one failing host would break skarnik.app too.
+        val verified = filters.filter { it.autoVerify }.flatMap { it.hosts }.toSet()
+        assertEquals(VERIFIED_HOSTS, verified)
+    }
+
     private fun Element.children(tag: String): List<Element> {
         val nodes = getElementsByTagName(tag)
         return (0 until nodes.length).map { nodes.item(it) as Element }
@@ -78,5 +84,8 @@ class AppLinkFiltersTest {
 
     private companion object {
         const val ANDROID_NS = "http://schemas.android.com/apk/res/android"
+
+        /** Hosts whose `/.well-known/assetlinks.json` answers 200 with the app's signing key, without a redirect. */
+        val VERIFIED_HOSTS = setOf("skarnik.app")
     }
 }
