@@ -118,30 +118,10 @@ private class HtmlTextBuilder(
 
     fun build(html: String): AnnotatedString {
         Jsoup.parseBodyFragment(html).body().childNodes().forEach(::appendNode)
-        if (onAbbreviation != null) addAbbreviations(onAbbreviation)
+        if (onAbbreviation != null) builder.addAbbreviations(plain, labelRanges, colors, onAbbreviation)
         val text = builder.toAnnotatedString()
         val end = text.text.indexOfLast { !it.isWhitespace() } + 1
         return if (end == text.length) text else text.subSequence(0, end)
-    }
-
-    private fun addAbbreviations(onAbbreviation: (AbbreviationSpan) -> Unit) {
-        labelRanges.forEach { label ->
-            Abbreviations.findIn(plain.substring(label.first, label.last + 1)).forEach { match ->
-                val span = AbbreviationSpan(
-                    start = label.first + match.range.first,
-                    end = label.first + match.range.last + 1,
-                    abbreviation = match.abbreviation,
-                    expansion = match.expansion
-                )
-                builder.addStringAnnotation(ABBREVIATION_ANNOTATION, span.expansion, span.start, span.end)
-                val link = LinkAnnotation.Clickable(
-                    tag = ABBREVIATION_ANNOTATION,
-                    styles = TextLinkStyles(pressedStyle = SpanStyle(background = colors.label.copy(alpha = 0.16f))),
-                    linkInteractionListener = LinkInteractionListener { onAbbreviation(span) }
-                )
-                builder.addLink(link, span.start, span.end)
-            }
-        }
     }
 
     private fun appendNode(node: Node) {
@@ -203,10 +183,6 @@ private class HtmlTextBuilder(
         return style
     }
 
-    private fun rawColorOf(element: Element): String = element.attr("color").ifBlank {
-        CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
-    }
-
     private fun colorOf(element: Element): Color? {
         val raw = rawColorOf(element)
         if (raw.isBlank()) return null
@@ -258,7 +234,6 @@ private class HtmlTextBuilder(
 
         /** Runs of HTML whitespace (with `&nbsp;`) and runs of everything else. */
         private val TOKEN = Regex("[ \\t\\n\\r\\f\u00a0]+|[^ \\t\\n\\r\\f\u00a0]+")
-        private val CSS_COLOR = Regex("""(?i)(?:^|;)\s*color\s*:\s*(#?[0-9a-f]{3,6})""")
         private const val SMALL_SIZE = 0.75f
     }
 }
@@ -276,3 +251,36 @@ private fun classStyleOf(element: Element, colors: TranslationColors): SpanStyle
 }
 
 private const val QUESTION_SIZE = 0.875f
+
+private fun rawColorOf(element: Element): String = element.attr("color").ifBlank {
+    CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
+}
+
+/** Marks [Abbreviations] inside the [labels] spans of [plain] (the builder's text) as clickable. */
+private fun AnnotatedString.Builder.addAbbreviations(
+    plain: CharSequence,
+    labels: List<IntRange>,
+    colors: TranslationColors,
+    onAbbreviation: (AbbreviationSpan) -> Unit
+) {
+    labels.forEach { label ->
+        Abbreviations.findIn(plain.substring(label.first, label.last + 1)).forEach { match ->
+            val span = AbbreviationSpan(
+                start = label.first + match.range.first,
+                end = label.first + match.range.last + 1,
+                abbreviation = match.abbreviation,
+                expansion = match.expansion
+            )
+            addStringAnnotation(ABBREVIATION_ANNOTATION, span.expansion, span.start, span.end)
+            val link = LinkAnnotation.Clickable(
+                tag = ABBREVIATION_ANNOTATION,
+                styles = TextLinkStyles(pressedStyle = SpanStyle(background = colors.label.copy(alpha = PRESSED_ALPHA))),
+                linkInteractionListener = LinkInteractionListener { onAbbreviation(span) }
+            )
+            addLink(link, span.start, span.end)
+        }
+    }
+}
+
+private const val PRESSED_ALPHA = 0.16f
+private val CSS_COLOR = Regex("""(?i)(?:^|;)\s*color\s*:\s*(#?[0-9a-f]{3,6})""")

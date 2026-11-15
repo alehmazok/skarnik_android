@@ -58,7 +58,7 @@ object Abbreviations {
     private val SPACES = Regex("[ \\u00a0]+")
 
     /** `abbreviation[, other form] | expansion`, one per line. */
-    private val LIST = """
+    private const val LIST = """
         ав. | авиация
         авт. | автомобильное дело
         анат. | анатомия
