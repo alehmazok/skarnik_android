@@ -6,9 +6,10 @@ on:
   workflow_dispatch:
     inputs:
       version_code:
-        description: Version code (must be higher than every build already uploaded to Play; Flutter's last was 81)
-        required: true
-        type: number
+        description: Version code. Leave empty to use the latest Firebase App Distribution build + 1.
+        required: false
+        # A string, not a number: GitHub passes number inputs as floats ("199.0"), which Gradle can't read.
+        type: string
 
 concurrency:
   group: play-bundle
@@ -20,11 +21,12 @@ jobs:
     timeout-minutes: 30
     env:
       VERSION_CODE: ${{ inputs.version_code }}
+      HAS_FIREBASE_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON != '' }}
       HAS_SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v7
 
-      - name: Check inputs and secrets
+      - name: Check signing secrets
         env:
           HAS_SIGNING_KEY: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
         run: |
@@ -32,6 +34,39 @@ jobs:
             echo "::error::Play needs a signed bundle: add the ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_ALIAS and ANDROID_KEY_PASSWORD secrets (README)."
             exit 1
           fi
+
+      # Every push to main uploads a tester build to Firebase (distribute.yml, code = 100 + run number), so the newest
+      # Firebase release holds the highest code so far; the Play build goes one above it.
+      - name: Version code from Firebase App Distribution
+        if: env.VERSION_CODE == ''
+        env:
+          FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          API: https://firebaseappdistribution.googleapis.com/v1/projects/690309283484
+          APP_ID: 1:690309283484:android:3c2521a8af9d651ad03759
+        run: |
+          if [ "$HAS_FIREBASE_CREDENTIALS" != "true" ]; then
+            echo "::error::Enter a version code, or add the FIREBASE_SERVICE_ACCOUNT_JSON secret so it can be read from Firebase."
+            exit 1
+          fi
+          echo "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$RUNNER_TEMP/firebase-sa.json"
+          gcloud auth activate-service-account --key-file="$RUNNER_TEMP/firebase-sa.json" --quiet
+          rm "$RUNNER_TEMP/firebase-sa.json"
+          # Releases come newest first. Keep only the build numbers: the list carries signed download links.
+          curl -sS --fail-with-body -o "$RUNNER_TEMP/releases.json" \
+            -H "Authorization: Bearer $(gcloud auth print-access-token)" \
+            "$API/apps/$APP_ID/releases?pageSize=20" || { cat "$RUNNER_TEMP/releases.json"; exit 1; }
+          LATEST=$(jq -r '[.releases[]?.buildVersion | select(test("^[0-9]+$")) | tonumber] | max // empty' \
+            "$RUNNER_TEMP/releases.json")
+          rm "$RUNNER_TEMP/releases.json"
+          if [ -z "$LATEST" ]; then
+            echo "::error::No Firebase App Distribution release found; enter a version code by hand."
+            exit 1
+          fi
+          echo "Latest Firebase build: $LATEST"
+          echo "VERSION_CODE=$((LATEST + 1))" >> "$GITHUB_ENV"
+
+      - name: Check version code
+        run: |
           if ! [[ "$VERSION_CODE" =~ ^[0-9]+$ ]] || [ "$VERSION_CODE" -le 81 ]; then
             echo "::error::version_code must be a whole number above 81 (Flutter's last Play build)."
             exit 1
@@ -98,14 +133,14 @@ jobs:
           {
             echo "### Play release bundle"
             echo
-            echo "Version code **$VERSION_CODE**, commit \`${GITHUB_SHA::7}\`."
+            echo "Version code **$VERSION_CODE**${{ inputs.version_code == '' && ' (latest Firebase build + 1)' || '' }}, commit \`${GITHUB_SHA::7}\`."
             echo "Download the \`skarnik-play-$VERSION_CODE\` artifact, then upload \`app-release.aab\` in Play Console"
             echo "and \`mapping.txt\` under the release's App bundle explorer → Downloads → ReTrace mapping file."
           } >> "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/upload-artifact@v7
         with:
-          name: skarnik-play-${{ inputs.version_code }}
+          name: skarnik-play-${{ env.VERSION_CODE }}
           path: |
             app/build/outputs/bundle/release/app-release.aab
             app/build/outputs/mapping/release/mapping.txt
