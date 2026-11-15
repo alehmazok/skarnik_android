@@ -63,6 +63,7 @@ import by.mazokaleh.skarnik.core.settings.ThemeMode
 import by.mazokaleh.skarnik.feature.review.ui.ReviewPromptDialog
 import by.mazokaleh.skarnik.feature.review.ui.rememberReviewPromptState
 import by.mazokaleh.skarnik.feature.stress.ui.StressButton
+import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 import kotlinx.coroutines.launch
@@ -295,15 +296,10 @@ private fun LoadedContent(
                 StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
             }
             Spacer(Modifier.height(16.dp))
-            val colors = rememberTranslationColors()
-            val currentOnLink by rememberUpdatedState(onLink)
-            val text = remember(translation.html, colors) {
-                translationHtmlToAnnotatedString(translation.html, colors) { currentOnLink(it) }
-            }
-            Text(
-                text = text,
-                modifier = Modifier.testTag(TranslationTestTags.TEXT),
-                style = MaterialTheme.typography.bodyLarge
+            TranslationText(
+                html = translation.html,
+                abbreviations = Abbreviations.of(translation.word.dictionary),
+                onLink = onLink
             )
         }
     }

@@ -6,6 +6,8 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
+import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
+import by.mazokaleh.skarnik.feature.translation.domain.TsbmAbbreviations
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -130,5 +132,49 @@ class TranslationHtmlTest {
             text.spanStyles.filter { text.text.substring(it.start, it.end) == part }.map { it.item }
         assertTrue(styled("хто? што?").any { it.fontStyle == FontStyle.Italic })
         assertTrue(styled("мн.").any { it.fontStyle == FontStyle.Italic && it.fontWeight == FontWeight.Normal })
+    }
+
+    private fun renderWithAbbreviations(html: String) =
+        translationHtmlToAnnotatedString(html, colors, Abbreviations.russianScheme) { clicked += it }
+
+    @Test
+    fun `marks abbreviations in label spans only`() {
+        val text = renderWithAbbreviations(
+            """<font size="+2" color="#831b03">прывітанне</font>, <i>-ння <font color="#008000">ср.</font></i>, """ +
+                """<font color="#008000"><i>перен. разг.</i></font> ср. дом"""
+        )
+
+        val spans = text.abbreviationSpans()
+        assertEquals(listOf("ср.", "перен.", "разг."), spans.map { it.abbreviation })
+        assertEquals(
+            listOf("средний род", "переносное значение", "разговорное слово, выражение"),
+            spans.map { it.expansion }
+        )
+        val start = text.text.indexOf("перен.")
+        assertEquals(AbbreviationSpan(start, start + 6, "перен.", "переносное значение"), spans[1])
+        assertTrue(text.getLinkAnnotations(0, text.length).isEmpty())
+    }
+
+    @Test
+    fun `leaves abbreviations alone in links and by default`() {
+        val html = """<a href="/rusbel/1"><font color="#008000">муж.</font></a> <font color="#008000">жен.</font>"""
+
+        assertEquals(listOf("жен."), renderWithAbbreviations(html).abbreviationSpans().map { it.abbreviation })
+        assertTrue(render(html).abbreviationSpans().isEmpty())
+    }
+
+    @Test
+    fun `marks Tsbm sources, signs and abbreviations outside headwords and examples`() {
+        val html = """<strong><font color="#0000A0">разм.,</font></strong><font color="#A52A2A"> прыназоўнік """ +
+            """з Т.</font><br /> Тое, што і павыцягваць (у 1 знач.). <font color="#CC33FF"><strong>//</strong>""" +
+            """</font> Дробны. <font color="#5f5f5f">Разм. жарт. ▪ Карані .. павыпіналіся. Чаму?..</font> """ +
+            """<i><font color="#151B54">Колас.</font></i> [Ад грэч. palaios.]"""
+
+        val spans = translationHtmlToAnnotatedString(html, colors, TsbmAbbreviations) {}.abbreviationSpans()
+
+        assertEquals(listOf("Т", "знач.", "//", "▪", "..", "Колас", "грэч."), spans.map { it.abbreviation })
+        assertEquals("творны склон", spans[0].expansion)
+        assertEquals("адценне значэння", spans[2].expansion)
+        assertTrue(spans[5].expansion.startsWith("Якуб Колас:"), spans[5].expansion)
     }
 }
