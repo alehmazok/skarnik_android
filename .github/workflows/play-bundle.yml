@@ -8,7 +8,8 @@ on:
       version_code:
         description: Version code (must be higher than every build already uploaded to Play; Flutter's last was 81)
         required: true
-        type: number
+        # A string, not a number: GitHub passes number inputs as floats ("199.0"), which Gradle can't read.
+        type: string
 
 concurrency:
   group: play-bundle
@@ -105,7 +106,7 @@ jobs:
 
       - uses: actions/upload-artifact@v7
         with:
-          name: skarnik-play-${{ inputs.version_code }}
+          name: skarnik-play-${{ env.VERSION_CODE }}
           path: |
             app/build/outputs/bundle/release/app-release.aab
             app/build/outputs/mapping/release/mapping.txt
