@@ -295,16 +295,7 @@ private fun LoadedContent(
                 StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
             }
             Spacer(Modifier.height(16.dp))
-            val colors = rememberTranslationColors()
-            val currentOnLink by rememberUpdatedState(onLink)
-            val text = remember(translation.html, colors) {
-                translationHtmlToAnnotatedString(translation.html, colors) { currentOnLink(it) }
-            }
-            Text(
-                text = text,
-                modifier = Modifier.testTag(TranslationTestTags.TEXT),
-                style = MaterialTheme.typography.bodyLarge
-            )
+            TranslationText(translation.html, onLink)
         }
     }
 }

@@ -1,0 +1,43 @@
+# Abbreviation tooltip: tap «ср.» in a Бел-Рус translation and read its full text, then close it with a tap outside.
+# Needs network: the translation comes from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: Show the full text of an abbreviation
+tags:
+  - translation
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/decline-analytics.yaml
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- tapOn:
+    id: home_search
+- inputText: прывитанне
+- extendedWaitUntil:
+    visible: прывітанне
+    timeout: 10000
+- tapOn:
+    id: search_result
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- tapOn:
+    text: "ср\\."
+    index: 0
+- extendedWaitUntil:
+    visible:
+      id: abbreviation_tooltip_text
+      text: средний род
+    timeout: 5000
+- assertVisible:
+    id: abbreviation_tooltip_title
+    text: "ср\\."
+- takeScreenshot: abbreviation-tooltip
+- tapOn:
+    id: translation_dictionary
+- assertNotVisible:
+    id: abbreviation_tooltip

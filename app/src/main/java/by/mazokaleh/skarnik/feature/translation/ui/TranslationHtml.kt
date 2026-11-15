@@ -14,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.em
+import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -77,30 +78,70 @@ fun rememberTranslationColors(): TranslationColors {
     }
 }
 
+/** An abbreviation in the rendered text, from [start] to [end] (exclusive), with its full text. */
+data class AbbreviationSpan(val start: Int, val end: Int, val abbreviation: String, val expansion: String)
+
+/** String annotation on every abbreviation; its item is the expansion. */
+const val ABBREVIATION_ANNOTATION = "abbreviation"
+
 /**
  * Converts a translation's HTML into styled text: colours, bold, italic, underline, line breaks and links
  * (reported to [onLink] with their `href`). Unknown tags keep their text and drop their styling. `<font size>` is
  * ignored, so headwords (`<font size="+2">`) match the body text, as in Flutter, which forced one size on every tag.
  * Stress table cells use it too.
+ *
+ * With [onAbbreviation], [Abbreviations] inside grammar label spans (outside links) become clickable and carry an
+ * [ABBREVIATION_ANNOTATION]; a tap reports their [AbbreviationSpan].
  */
 fun translationHtmlToAnnotatedString(
     html: String,
     colors: TranslationColors,
+    onAbbreviation: ((AbbreviationSpan) -> Unit)? = null,
     onLink: (String) -> Unit
-): AnnotatedString = HtmlTextBuilder(colors, onLink).build(html)
+): AnnotatedString = HtmlTextBuilder(colors, onAbbreviation, onLink).build(html)
 
-private class HtmlTextBuilder(private val colors: TranslationColors, private val onLink: (String) -> Unit) {
+private class HtmlTextBuilder(
+    private val colors: TranslationColors,
+    private val onAbbreviation: ((AbbreviationSpan) -> Unit)?,
+    private val onLink: (String) -> Unit
+) {
     private val builder = AnnotatedString.Builder()
+    private val plain = StringBuilder()
     private var lastChar: Char? = null
+
+    /** Label spans (start to end in [plain]) to look for abbreviations in; nested labels and links are skipped. */
+    private val labelRanges = mutableListOf<IntRange>()
+    private var labelOrLinkDepth = 0
 
     /** True while the current line holds nothing or only non-breaking spaces (an indent). */
     private var atLineStart = true
 
     fun build(html: String): AnnotatedString {
         Jsoup.parseBodyFragment(html).body().childNodes().forEach(::appendNode)
+        if (onAbbreviation != null) addAbbreviations(onAbbreviation)
         val text = builder.toAnnotatedString()
         val end = text.text.indexOfLast { !it.isWhitespace() } + 1
         return if (end == text.length) text else text.subSequence(0, end)
+    }
+
+    private fun addAbbreviations(onAbbreviation: (AbbreviationSpan) -> Unit) {
+        labelRanges.forEach { label ->
+            Abbreviations.findIn(plain.substring(label.first, label.last + 1)).forEach { match ->
+                val span = AbbreviationSpan(
+                    start = label.first + match.range.first,
+                    end = label.first + match.range.last + 1,
+                    abbreviation = match.abbreviation,
+                    expansion = match.expansion
+                )
+                builder.addStringAnnotation(ABBREVIATION_ANNOTATION, span.expansion, span.start, span.end)
+                val link = LinkAnnotation.Clickable(
+                    tag = ABBREVIATION_ANNOTATION,
+                    styles = TextLinkStyles(pressedStyle = SpanStyle(background = colors.label.copy(alpha = 0.16f))),
+                    linkInteractionListener = LinkInteractionListener { onAbbreviation(span) }
+                )
+                builder.addLink(link, span.start, span.end)
+            }
+        }
     }
 
     private fun appendNode(node: Node) {
@@ -128,6 +169,10 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
     private fun appendStyled(element: Element) {
         val href = element.takeIf { it.normalName() == "a" }?.attr("href")?.takeIf { it.isNotBlank() }
         val style = spanStyleOf(element)
+        val isLabel = href == null && HtmlColorRole.of(rawColorOf(element)) == HtmlColorRole.Label
+        val tracked = href != null || isLabel
+        val labelStart = plain.length
+        if (tracked) labelOrLinkDepth++
         if (href != null) {
             val link = LinkAnnotation.Clickable(
                 tag = href,
@@ -140,6 +185,8 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         element.childNodes().forEach(::appendNode)
         if (style != null) builder.pop()
         if (href != null) builder.pop()
+        if (tracked) labelOrLinkDepth--
+        if (isLabel && labelOrLinkDepth == 0 && plain.length > labelStart) labelRanges += labelStart until plain.length
     }
 
     private fun spanStyleOf(element: Element): SpanStyle? {
@@ -156,10 +203,12 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
         return style
     }
 
+    private fun rawColorOf(element: Element): String = element.attr("color").ifBlank {
+        CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
+    }
+
     private fun colorOf(element: Element): Color? {
-        val raw = element.attr("color").ifBlank {
-            CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
-        }
+        val raw = rawColorOf(element)
         if (raw.isBlank()) return null
         return colors.of(HtmlColorRole.of(raw) ?: HtmlColorRole.Plain)
     }
@@ -189,6 +238,7 @@ private class HtmlTextBuilder(private val colors: TranslationColors, private val
     private fun append(text: String) {
         if (text.isEmpty()) return
         builder.append(text)
+        plain.append(text)
         lastChar = text.last()
         text.forEach { char ->
             if (char == '\n') {
