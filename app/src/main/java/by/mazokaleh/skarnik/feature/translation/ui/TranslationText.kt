@@ -47,12 +47,7 @@ object AbbreviationTestTags {
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TranslationText(
-    html: String,
-    markAbbreviations: Boolean,
-    onLink: (String) -> Unit,
-    modifier: Modifier = Modifier
-) {
+fun TranslationText(html: String, markAbbreviations: Boolean, onLink: (String) -> Unit, modifier: Modifier = Modifier) {
     val colors = rememberTranslationColors()
     val currentOnLink by rememberUpdatedState(onLink)
     var tapped by remember(html) { mutableStateOf<AbbreviationSpan?>(null) }
