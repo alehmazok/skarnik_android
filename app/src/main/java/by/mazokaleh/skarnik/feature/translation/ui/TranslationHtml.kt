@@ -90,19 +90,19 @@ const val ABBREVIATION_ANNOTATION = "abbreviation"
  * ignored, so headwords (`<font size="+2">`) match the body text, as in Flutter, which forced one size on every tag.
  * Stress table cells use it too.
  *
- * With [onAbbreviation], [Abbreviations] inside grammar label spans (outside links) become clickable and carry an
- * [ABBREVIATION_ANNOTATION]; a tap reports their [AbbreviationSpan].
+ * With [markAbbreviations], [Abbreviations] inside grammar label spans (outside links) carry an
+ * [ABBREVIATION_ANNOTATION] with their full text (see [abbreviationSpans]).
  */
 fun translationHtmlToAnnotatedString(
     html: String,
     colors: TranslationColors,
-    onAbbreviation: ((AbbreviationSpan) -> Unit)? = null,
+    markAbbreviations: Boolean = false,
     onLink: (String) -> Unit
-): AnnotatedString = HtmlTextBuilder(colors, onAbbreviation, onLink).build(html)
+): AnnotatedString = HtmlTextBuilder(colors, markAbbreviations, onLink).build(html)
 
 private class HtmlTextBuilder(
     private val colors: TranslationColors,
-    private val onAbbreviation: ((AbbreviationSpan) -> Unit)?,
+    private val markAbbreviations: Boolean,
     private val onLink: (String) -> Unit
 ) {
     private val builder = AnnotatedString.Builder()
@@ -118,7 +118,7 @@ private class HtmlTextBuilder(
 
     fun build(html: String): AnnotatedString {
         Jsoup.parseBodyFragment(html).body().childNodes().forEach(::appendNode)
-        if (onAbbreviation != null) builder.addAbbreviations(plain, labelRanges, colors, onAbbreviation)
+        if (markAbbreviations) builder.addAbbreviations(plain, labelRanges)
         val text = builder.toAnnotatedString()
         val end = text.text.indexOfLast { !it.isWhitespace() } + 1
         return if (end == text.length) text else text.subSequence(0, end)
@@ -256,32 +256,20 @@ private fun rawColorOf(element: Element): String = element.attr("color").ifBlank
     CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
 }
 
-/** Marks [Abbreviations] inside the [labels] spans of [plain] (the builder's text) as clickable. */
-private fun AnnotatedString.Builder.addAbbreviations(
-    plain: CharSequence,
-    labels: List<IntRange>,
-    colors: TranslationColors,
-    onAbbreviation: (AbbreviationSpan) -> Unit
-) {
+/** Annotates [Abbreviations] inside the [labels] spans of [plain] (the builder's text) with their full text. */
+private fun AnnotatedString.Builder.addAbbreviations(plain: CharSequence, labels: List<IntRange>) {
     labels.forEach { label ->
         Abbreviations.findIn(plain.substring(label.first, label.last + 1)).forEach { match ->
-            val span = AbbreviationSpan(
-                start = label.first + match.range.first,
-                end = label.first + match.range.last + 1,
-                abbreviation = match.abbreviation,
-                expansion = match.expansion
-            )
-            addStringAnnotation(ABBREVIATION_ANNOTATION, span.expansion, span.start, span.end)
-            val pressed = SpanStyle(background = colors.label.copy(alpha = PRESSED_ALPHA))
-            val link = LinkAnnotation.Clickable(
-                tag = ABBREVIATION_ANNOTATION,
-                styles = TextLinkStyles(pressedStyle = pressed),
-                linkInteractionListener = LinkInteractionListener { onAbbreviation(span) }
-            )
-            addLink(link, span.start, span.end)
+            val start = label.first + match.range.first
+            addStringAnnotation(ABBREVIATION_ANNOTATION, match.expansion, start, label.first + match.range.last + 1)
         }
     }
 }
 
-private const val PRESSED_ALPHA = 0.16f
+/** The abbreviations marked by [translationHtmlToAnnotatedString], in text order. */
+fun AnnotatedString.abbreviationSpans(): List<AbbreviationSpan> =
+    getStringAnnotations(ABBREVIATION_ANNOTATION, 0, length).map {
+        AbbreviationSpan(it.start, it.end, text.substring(it.start, it.end), it.item)
+    }
+
 private val CSS_COLOR = Regex("""(?i)(?:^|;)\s*color\s*:\s*(#?[0-9a-f]{3,6})""")

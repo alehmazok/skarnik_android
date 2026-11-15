@@ -132,45 +132,32 @@ class TranslationHtmlTest {
         assertTrue(styled("мн.").any { it.fontStyle == FontStyle.Italic && it.fontWeight == FontWeight.Normal })
     }
 
-    private val abbreviations = mutableListOf<AbbreviationSpan>()
-
     private fun renderWithAbbreviations(html: String) =
-        translationHtmlToAnnotatedString(html, colors, onAbbreviation = { abbreviations += it }) { clicked += it }
+        translationHtmlToAnnotatedString(html, colors, markAbbreviations = true) { clicked += it }
 
     @Test
-    fun `marks abbreviations in label spans and reports a tap`() {
+    fun `marks abbreviations in label spans only`() {
         val text = renderWithAbbreviations(
             """<font size="+2" color="#831b03">прывітанне</font>, <i>-ння <font color="#008000">ср.</font></i>, """ +
                 """<font color="#008000"><i>перен. разг.</i></font> ср. дом"""
         )
 
-        val marked = text.getStringAnnotations(ABBREVIATION_ANNOTATION, 0, text.length)
-        assertEquals(listOf("ср.", "перен.", "разг."), marked.map { text.text.substring(it.start, it.end) })
+        val spans = text.abbreviationSpans()
+        assertEquals(listOf("ср.", "перен.", "разг."), spans.map { it.abbreviation })
         assertEquals(
             listOf("средний род", "переносное значение", "разговорное слово, выражение"),
-            marked.map { it.item }
+            spans.map { it.expansion }
         )
-
-        val links = text.getLinkAnnotations(0, text.length)
-        assertEquals(marked.map { it.start to it.end }, links.map { it.start to it.end })
-        val clickable = links[1].item as LinkAnnotation.Clickable
-        clickable.linkInteractionListener!!.onClick(clickable)
         val start = text.text.indexOf("перен.")
-        assertEquals(listOf(AbbreviationSpan(start, start + 6, "перен.", "переносное значение")), abbreviations)
-        assertEquals(emptyList(), clicked)
+        assertEquals(AbbreviationSpan(start, start + 6, "перен.", "переносное значение"), spans[1])
+        assertTrue(text.getLinkAnnotations(0, text.length).isEmpty())
     }
 
     @Test
-    fun `leaves abbreviations alone in links and without a tap handler`() {
+    fun `leaves abbreviations alone in links and by default`() {
         val html = """<a href="/rusbel/1"><font color="#008000">муж.</font></a> <font color="#008000">жен.</font>"""
 
-        val withHandler = renderWithAbbreviations(html)
-        assertEquals(
-            listOf("жен."),
-            withHandler.getStringAnnotations(ABBREVIATION_ANNOTATION, 0, withHandler.length)
-                .map { withHandler.text.substring(it.start, it.end) }
-        )
-        val plain = render(html)
-        assertTrue(plain.getStringAnnotations(ABBREVIATION_ANNOTATION, 0, plain.length).isEmpty())
+        assertEquals(listOf("жен."), renderWithAbbreviations(html).abbreviationSpans().map { it.abbreviation })
+        assertTrue(render(html).abbreviationSpans().isEmpty())
     }
 }

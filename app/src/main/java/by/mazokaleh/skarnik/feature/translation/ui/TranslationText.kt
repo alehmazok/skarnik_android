@@ -1,5 +1,6 @@
 package by.mazokaleh.skarnik.feature.translation.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.offset
@@ -14,6 +15,7 @@ import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
 import androidx.compose.material3.rememberTooltipState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,14 +30,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalViewConfiguration
+import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlin.math.roundToInt
 
 object AbbreviationTestTags {
+    const val ABBREVIATION = "translation_abbreviation"
     const val TOOLTIP = "abbreviation_tooltip"
     const val TOOLTIP_TITLE = "abbreviation_tooltip_title"
     const val TOOLTIP_TEXT = "abbreviation_tooltip_text"
@@ -52,8 +60,7 @@ fun TranslationText(html: String, markAbbreviations: Boolean, onLink: (String) -
     val currentOnLink by rememberUpdatedState(onLink)
     var tapped by remember(html) { mutableStateOf<AbbreviationSpan?>(null) }
     val text = remember(html, colors, markAbbreviations) {
-        val onAbbreviation: ((AbbreviationSpan) -> Unit)? = if (markAbbreviations) ({ tapped = it }) else null
-        translationHtmlToAnnotatedString(html, colors, onAbbreviation) { currentOnLink(it) }
+        translationHtmlToAnnotatedString(html, colors, markAbbreviations) { currentOnLink(it) }
     }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
@@ -66,8 +73,11 @@ fun TranslationText(html: String, markAbbreviations: Boolean, onLink: (String) -
             style = MaterialTheme.typography.bodyLarge,
             onTextLayout = { layout = it }
         )
-        val span = tapped
         val currentLayout = layout
+        if (currentLayout != null) {
+            AbbreviationTargets(text, currentLayout) { tapped = it }
+        }
+        val span = tapped
         if (span != null && currentLayout != null && span.end <= currentLayout.layoutInput.text.length) {
             val anchor = remember(span, currentLayout) { currentLayout.firstLineBounds(span.start, span.end) }
             val state = rememberTooltipState(isPersistent = true)
@@ -100,6 +110,37 @@ fun TranslationText(html: String, markAbbreviations: Boolean, onLink: (String) -
                     if (tapped == span) tapped = null
                 }
             }
+        }
+    }
+}
+
+/**
+ * A tap target over each abbreviation, so a tap anywhere on it opens the tooltip, and TalkBack and Maestro see it as
+ * its own element («ср.: средний род»). Without the 48 dp minimum, which would shift neighbouring targets.
+ */
+@Composable
+private fun AbbreviationTargets(text: AnnotatedString, layout: TextLayoutResult, onTap: (AbbreviationSpan) -> Unit) {
+    val spans = remember(text, layout) {
+        text.abbreviationSpans().filter { it.end <= layout.layoutInput.text.length }
+            .map { it to layout.firstLineBounds(it.start, it.end) }
+    }
+    val density = LocalDensity.current
+    val base = LocalViewConfiguration.current
+    val noMinimumTarget = remember(base) {
+        object : ViewConfiguration by base {
+            override val minimumTouchTargetSize: DpSize = DpSize.Zero
+        }
+    }
+    CompositionLocalProvider(LocalViewConfiguration provides noMinimumTarget) {
+        spans.forEach { (span, bounds) ->
+            Box(
+                Modifier
+                    .offset { IntOffset(bounds.left.roundToInt(), bounds.top.roundToInt()) }
+                    .size(with(density) { bounds.width.toDp() }, with(density) { bounds.height.toDp() })
+                    .testTag(AbbreviationTestTags.ABBREVIATION)
+                    .semantics { contentDescription = "${span.abbreviation}: ${span.expansion}" }
+                    .clickable { onTap(span) }
+            )
         }
     }
 }

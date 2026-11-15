@@ -25,8 +25,10 @@ tags:
     visible:
       id: translation_text
     timeout: 30000
+# Each abbreviation has its own tap target («ср.: средний род»); the first one in «прывітанне» is «ср.».
 - tapOn:
-    text: "ср\\."
+    id: translation_abbreviation
+    text: "ср\\.: средний род"
     index: 0
 - extendedWaitUntil:
     visible:
