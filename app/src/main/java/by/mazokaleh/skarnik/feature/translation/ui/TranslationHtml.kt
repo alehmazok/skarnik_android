@@ -272,9 +272,10 @@ private fun AnnotatedString.Builder.addAbbreviations(
                 expansion = match.expansion
             )
             addStringAnnotation(ABBREVIATION_ANNOTATION, span.expansion, span.start, span.end)
+            val pressed = SpanStyle(background = colors.label.copy(alpha = PRESSED_ALPHA))
             val link = LinkAnnotation.Clickable(
                 tag = ABBREVIATION_ANNOTATION,
-                styles = TextLinkStyles(pressedStyle = SpanStyle(background = colors.label.copy(alpha = PRESSED_ALPHA))),
+                styles = TextLinkStyles(pressedStyle = pressed),
                 linkInteractionListener = LinkInteractionListener { onAbbreviation(span) }
             )
             addLink(link, span.start, span.end)
