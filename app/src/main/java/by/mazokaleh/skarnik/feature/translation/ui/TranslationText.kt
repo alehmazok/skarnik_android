@@ -89,26 +89,31 @@ fun TranslationText(
             val anchor = remember(span, currentLayout) { currentLayout.firstLineBounds(span.start, span.end) }
             val state = rememberTooltipState(isPersistent = true)
             val density = LocalDensity.current
-            TooltipBox(
-                positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-                tooltip = {
-                    DisableSelection {
-                        RichTooltip(
-                            modifier = Modifier.testTag(AbbreviationTestTags.TOOLTIP),
-                            title = { Text(span.abbreviation, Modifier.testTag(AbbreviationTestTags.TOOLTIP_TITLE)) },
-                            caretShape = TooltipDefaults.caretShape()
-                        ) {
-                            Text(span.expansion, Modifier.testTag(AbbreviationTestTags.TOOLTIP_TEXT))
+            // The offset goes on a box around the TooltipBox: its popup is anchored to its own outer box, which
+            // ignores the modifier passed to TooltipBox, so with the offset there it always opened at the top.
+            Box(Modifier.offset { IntOffset(anchor.left.roundToInt(), anchor.top.roundToInt()) }) {
+                TooltipBox(
+                    positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
+                    tooltip = {
+                        DisableSelection {
+                            RichTooltip(
+                                modifier = Modifier.testTag(AbbreviationTestTags.TOOLTIP),
+                                title = {
+                                    Text(span.abbreviation, Modifier.testTag(AbbreviationTestTags.TOOLTIP_TITLE))
+                                },
+                                caretShape = TooltipDefaults.caretShape()
+                            ) {
+                                Text(span.expansion, Modifier.testTag(AbbreviationTestTags.TOOLTIP_TEXT))
+                            }
                         }
-                    }
-                },
-                state = state,
-                // Focusable, so TalkBack moves to the tooltip and a tap outside only closes it.
-                focusable = true,
-                enableUserInput = false,
-                modifier = Modifier.offset { IntOffset(anchor.left.roundToInt(), anchor.top.roundToInt()) }
-            ) {
-                with(density) { Spacer(Modifier.size(anchor.width.toDp(), anchor.height.toDp())) }
+                    },
+                    state = state,
+                    // Focusable, so TalkBack moves to the tooltip and a tap outside only closes it.
+                    focusable = true,
+                    enableUserInput = false
+                ) {
+                    with(density) { Spacer(Modifier.size(anchor.width.toDp(), anchor.height.toDp())) }
+                }
             }
             LaunchedEffect(span) {
                 try {
