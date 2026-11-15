@@ -156,7 +156,7 @@ private class HtmlTextBuilder(
         val change = if (href != null) PlaceChange.To(null) else placeChangeOf(rawColorOf(element))
         val start = plain.length
         // Inside a link or a headword nothing is looked at, whatever the colours inside it.
-        if (change is PlaceChange.To) places.addLast(change.place.takeIf { currentPlace() != null })
+        if (change is PlaceChange.To) places.addLast(change.place.takeIf { currentPlace != null })
         if (href != null) {
             val link = LinkAnnotation.Clickable(
                 tag = href,
@@ -171,14 +171,15 @@ private class HtmlTextBuilder(
         if (href != null) builder.pop()
         if (change is PlaceChange.To) {
             places.removeLast()
-            if (change.place == TextPlace.Source && currentPlace() != null && plain.length > start) {
+            if (change.place == TextPlace.Source && currentPlace != null && plain.length > start) {
                 runs += (start until plain.length) to TextPlace.Source
             }
         }
     }
 
     /** [TextPlace.Plain] outside any coloured element; null inside a link, headword or hidden text. */
-    private fun currentPlace(): TextPlace? = if (places.isEmpty()) TextPlace.Plain else places.last()
+    private val currentPlace: TextPlace?
+        get() = if (places.isEmpty()) TextPlace.Plain else places.last()
 
     private fun spanStyleOf(element: Element): SpanStyle? {
         var style = when (element.normalName()) {
@@ -220,7 +221,7 @@ private class HtmlTextBuilder(
 
     /** Extends the last run when it has the same place and ends where [range] starts. */
     private fun addRun(range: IntRange) {
-        val place = currentPlace()?.takeIf { abbreviations != null && it != TextPlace.Source } ?: return
+        val place = currentPlace?.takeIf { abbreviations != null && it != TextPlace.Source } ?: return
         val last = runs.lastOrNull()
         if (last != null && last.second == place && last.first.last + 1 == range.first) {
             runs[runs.lastIndex] = (last.first.first..range.last) to place
