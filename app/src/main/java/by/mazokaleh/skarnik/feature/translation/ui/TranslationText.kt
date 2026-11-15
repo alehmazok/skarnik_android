@@ -42,17 +42,23 @@ object AbbreviationTestTags {
 }
 
 /**
- * The translation text. Abbreviations in grammar labels («разг.», «муж.») get a dotted underline; tapping one shows
- * its full text in an M3 rich tooltip above it, until a tap outside.
+ * The translation text. With [markAbbreviations], abbreviations in grammar labels («разг.», «муж.») get a dotted
+ * underline; tapping one shows its full text in an M3 rich tooltip above it, until a tap outside.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TranslationText(html: String, onLink: (String) -> Unit, modifier: Modifier = Modifier) {
+fun TranslationText(
+    html: String,
+    markAbbreviations: Boolean,
+    onLink: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val colors = rememberTranslationColors()
     val currentOnLink by rememberUpdatedState(onLink)
     var tapped by remember(html) { mutableStateOf<AbbreviationSpan?>(null) }
-    val text = remember(html, colors) {
-        translationHtmlToAnnotatedString(html, colors, onAbbreviation = { tapped = it }) { currentOnLink(it) }
+    val text = remember(html, colors, markAbbreviations) {
+        val onAbbreviation: ((AbbreviationSpan) -> Unit)? = if (markAbbreviations) ({ tapped = it }) else null
+        translationHtmlToAnnotatedString(html, colors, onAbbreviation) { currentOnLink(it) }
     }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
 

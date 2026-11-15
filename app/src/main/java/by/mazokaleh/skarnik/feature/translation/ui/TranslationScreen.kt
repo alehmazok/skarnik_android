@@ -295,7 +295,12 @@ private fun LoadedContent(
                 StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
             }
             Spacer(Modifier.height(16.dp))
-            TranslationText(translation.html, onLink)
+            // The abbreviation list is Russian, for Рус-Бел and Бел-Рус; ТСБМ uses Belarusian abbreviations.
+            TranslationText(
+                html = translation.html,
+                markAbbreviations = translation.word.dictionary != Dictionary.Tsbm,
+                onLink = onLink
+            )
         }
     }
 }
