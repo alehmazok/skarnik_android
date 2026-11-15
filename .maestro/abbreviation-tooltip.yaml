@@ -1,4 +1,4 @@
-# Abbreviation tooltip: tap «ср.» in a Бел-Рус translation and read its full text, then close it with a tap outside.
+# Abbreviation tooltip: tap «ср.» in a Бел-Рус translation and read its full text, then close it.
 # Needs network: the translation comes from the admin API (or Supabase).
 appId: by.mazokaleh.skarnik.debug
 name: Show the full text of an abbreviation
@@ -36,6 +36,8 @@ tags:
     timeout: 5000
 - assertVisible: "ср\\."
 - takeScreenshot: abbreviation-tooltip
-- tapOn:
-    id: translation_dictionary
+# The tooltip is focusable (for TalkBack), so only it is in the hierarchy while it shows; back closes it.
+- back
 - assertNotVisible: средний род
+- assertVisible:
+    id: translation_text
