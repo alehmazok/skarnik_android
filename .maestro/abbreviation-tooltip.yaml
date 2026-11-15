@@ -30,16 +30,12 @@ tags:
     id: translation_abbreviation
     text: "ср\\.: средний род"
     index: 0
+# The tooltip is a popup window: its test tags are not resource ids there, so match its texts.
 - extendedWaitUntil:
-    visible:
-      id: abbreviation_tooltip_text
-      text: средний род
+    visible: средний род
     timeout: 5000
-- assertVisible:
-    id: abbreviation_tooltip_title
-    text: "ср\\."
+- assertVisible: "ср\\."
 - takeScreenshot: abbreviation-tooltip
 - tapOn:
     id: translation_dictionary
-- assertNotVisible:
-    id: abbreviation_tooltip
+- assertNotVisible: средний род
