@@ -28,6 +28,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -40,6 +41,7 @@ import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import by.mazokaleh.skarnik.feature.translation.domain.AbbreviationScheme
 import kotlin.math.roundToInt
 
 object AbbreviationTestTags {
@@ -50,17 +52,22 @@ object AbbreviationTestTags {
 }
 
 /**
- * The translation text. With [markAbbreviations], abbreviations in grammar labels («разг.», «муж.») get a dotted
- * underline; tapping one shows its full text in an M3 rich tooltip above it, until a tap outside.
+ * The translation text. The [abbreviations] it finds («разг.», «Колас») get a dotted underline; tapping one shows
+ * its full text in an M3 rich tooltip above it, until a tap outside.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TranslationText(html: String, markAbbreviations: Boolean, onLink: (String) -> Unit, modifier: Modifier = Modifier) {
+fun TranslationText(
+    html: String,
+    abbreviations: AbbreviationScheme?,
+    onLink: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     val colors = rememberTranslationColors()
     val currentOnLink by rememberUpdatedState(onLink)
     var tapped by remember(html) { mutableStateOf<AbbreviationSpan?>(null) }
-    val text = remember(html, colors, markAbbreviations) {
-        translationHtmlToAnnotatedString(html, colors, markAbbreviations) { currentOnLink(it) }
+    val text = remember(html, colors, abbreviations) {
+        translationHtmlToAnnotatedString(html, colors, abbreviations) { currentOnLink(it) }
     }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
@@ -69,7 +76,7 @@ fun TranslationText(html: String, markAbbreviations: Boolean, onLink: (String) -
             text = text,
             modifier = Modifier
                 .testTag(TranslationTestTags.TEXT)
-                .drawBehind { layout?.let { drawAbbreviationUnderlines(it, text, colors.label) } },
+                .drawBehind { layout?.let { drawAbbreviationUnderlines(it, text, colors.plain) } },
             style = MaterialTheme.typography.bodyLarge,
             onTextLayout = { layout = it }
         )
@@ -154,11 +161,16 @@ private fun TextLayoutResult.firstLineBounds(start: Int, end: Int): Rect {
     return Rect(minOf(left, right), getLineTop(line), maxOf(left, right), getLineBottom(line))
 }
 
-private fun DrawScope.drawAbbreviationUnderlines(layout: TextLayoutResult, text: AnnotatedString, color: Color) {
+/** Dotted underlines in the colour of each abbreviation's text, else [default]. */
+private fun DrawScope.drawAbbreviationUnderlines(layout: TextLayoutResult, text: AnnotatedString, default: Color) {
     val length = layout.layoutInput.text.length
     val stroke = 1.dp.toPx()
     val dash = PathEffect.dashPathEffect(floatArrayOf(2.dp.toPx(), 2.dp.toPx()))
     text.getStringAnnotations(ABBREVIATION_ANNOTATION, 0, text.length).filter { it.end <= length }.forEach { range ->
+        // The innermost style with a colour: styles are listed in the order they were opened.
+        val color = text.spanStyles.lastOrNull {
+            it.start <= range.start && it.end >= range.end && it.item.color.isSpecified
+        }?.item?.color ?: default
         for (line in layout.getLineForOffset(range.start)..layout.getLineForOffset(range.end - 1)) {
             val start = maxOf(range.start, layout.getLineStart(line))
             val end = minOf(range.end, layout.getLineEnd(line, visibleEnd = true))

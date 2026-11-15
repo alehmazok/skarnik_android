@@ -1,39 +1,126 @@
 package by.mazokaleh.skarnik.feature.translation.domain
 
+import by.mazokaleh.skarnik.core.model.Dictionary
+
 /** An abbreviation found in a text: its [range] there, the [abbreviation] as written and its [expansion]. */
 data class AbbreviationMatch(val range: IntRange, val abbreviation: String, val expansion: String)
 
-/**
- * Grammar and subject labels of the Рус-Бел and Бел-Рус dictionaries («разг.», «в разн. знач.») with their full
- * text in Russian (list from Aleh, 2026-11-15, plus the forms Бел-Рус actually uses: «жен.», «муж.», «совер.»,
- * «несовер.»). In the data only Бел-Рус abbreviates them, inside its green label spans; Рус-Бел spells them out.
- *
- * A space after a dot is optional when matching («и т.п.» = «и т. п.»), and an abbreviation never starts or ends
- * inside a word («ж.» is not found in «муж.»). Longer abbreviations win («в знач. прил.» over «прил.»).
- */
+/** What a run of translation text is, which decides the abbreviations looked for in it. */
+enum class TextPlace {
+    /** Grammar labels («жен.», «закончанае трыванне», «//»). */
+    Label,
+
+    /** Uncoloured text: definitions and word origins («(у 1 знач.)», «[Ад грэч. ...]»). */
+    Plain,
+
+    /** Usage examples and citations. */
+    Quote,
+
+    /** The source of a citation («Колас.»): always one whole span. */
+    Source
+}
+
+/** The abbreviations one dictionary's translations use, and where. */
+fun interface AbbreviationScheme {
+    fun findIn(text: String, place: TextPlace): List<AbbreviationMatch>
+}
+
 object Abbreviations {
-    fun expansionOf(abbreviation: String): String? = byKey[normalize(abbreviation)]
+    /**
+     * Grammar and subject labels of the Рус-Бел and Бел-Рус dictionaries («разг.», «в разн. знач.») with their
+     * full text in Russian (list from Aleh, 2026-11-15, plus the forms Бел-Рус actually uses: «жен.», «муж.»,
+     * «совер.», «несовер.»). In the data only Бел-Рус abbreviates them, inside its green label spans; Рус-Бел
+     * spells them out.
+     */
+    val russian = AbbreviationList(RUSSIAN)
 
-    fun findIn(text: String): List<AbbreviationMatch> = pattern.findAll(text).mapNotNull { match ->
-        byKey[normalize(match.value)]?.let { AbbreviationMatch(match.range, match.value, it) }
-    }.toList()
-
-    private val byKey: Map<String, String> by lazy {
-        LIST.lineSequence()
-            .map(String::trim)
-            .filter(String::isNotEmpty)
-            .flatMap { line ->
-                val (keys, expansion) = line.split(" | ", limit = 2)
-                keys.split(", ").map { normalize(it) to expansion.trim() }
-            }
-            .toMap()
+    /** Рус-Бел and Бел-Рус: [russian] labels, only in label spans. */
+    val russianScheme = AbbreviationScheme { text, place ->
+        if (place == TextPlace.Label) russian.findIn(text) else emptyList()
     }
+
+    fun of(dictionary: Dictionary): AbbreviationScheme = when (dictionary) {
+        Dictionary.BelRus, Dictionary.RusBel -> russianScheme
+        Dictionary.Tsbm -> TsbmAbbreviations
+    }
+}
+
+/**
+ * The Тлумачальны слоўнік (list from Aleh, 2026-11-15). Its grammar labels are mostly spelled out; it abbreviates
+ * the sources of citations («Колас.», one per span), the languages words come from («[Ад грэч. ...]»), references
+ * such as «(у 1 знач.)», and marks its layout with signs («//», «▪», «..» for a cut in a citation).
+ */
+object TsbmAbbreviations : AbbreviationScheme {
+    private val sources by lazy { AbbreviationList(TSBM_SOURCES_1 + TSBM_SOURCES_2) }
+    private val grammar by lazy { AbbreviationList(TSBM_GRAMMAR) }
+    private val label by lazy { AbbreviationList(TSBM_GRAMMAR + TSBM_CASES + TSBM_SIGNS) }
+    private val plain by lazy { AbbreviationList(TSBM_GRAMMAR + TSBM_SIGNS, without = LABEL_SIGNS + CUT) }
+    private val quote by lazy { AbbreviationList(TSBM_SIGNS, without = LABEL_SIGNS) }
+
+    override fun findIn(text: String, place: TextPlace): List<AbbreviationMatch> = when (place) {
+        TextPlace.Label -> label.findIn(text)
+        TextPlace.Plain -> plain.findIn(text)
+        TextPlace.Quote -> quote.findIn(text)
+        TextPlace.Source -> listOfNotNull(sourceIn(text))
+    }
+
+    /**
+     * The whole source span: «Колас.» without its closing dot, a source spelled with the dot («Ядвігін Ш.»), or a
+     * grammar abbreviation written with a capital («З нар.»).
+     */
+    private fun sourceIn(text: String): AbbreviationMatch? {
+        val start = text.indexOfFirst { !it.isWhitespace() }.takeIf { it >= 0 } ?: return null
+        val name = text.substring(start).trimEnd()
+        val withoutDot = name.removeSuffix(".")
+        val lowercase = name.replaceFirstChar { it.lowercase() }
+        return sequenceOf(name to sources, withoutDot to sources, lowercase to grammar)
+            .firstNotNullOfOrNull { (written, list) ->
+                list.expansionOf(written)?.let {
+                    AbbreviationMatch(start until start + written.length, name.take(written.length), it)
+                }
+            }
+    }
+
+    /** Only between label colours: «/» is also a plain slash. */
+    private val LABEL_SIGNS = setOf("//", "/")
+
+    /** Only in citations: elsewhere «..» is punctuation. */
+    private val CUT = setOf("..")
+}
+
+/**
+ * Abbreviations from a `abbreviation[, other form] | expansion` list. A space after a dot is optional when matching
+ * («и т.п.» = «и т. п.»), and an abbreviation never starts or ends inside a word («ж.» is not found in «муж.»).
+ * Longer abbreviations win («в знач. прил.» over «прил.»). Signs («//», «..») are not found inside a longer run of
+ * the same sign or right after `?`, `!` or `…` («?..» is punctuation).
+ */
+class AbbreviationList(list: String, without: Set<String> = emptySet()) {
+    private val byKey: Map<String, String> = list.lineSequence()
+        .map(String::trim)
+        .filter(String::isNotEmpty)
+        .flatMap { line ->
+            val (keys, expansion) = line.split(" | ", limit = 2)
+            keys.split(", ").map { normalize(it) to expansion.trim() }
+        }
+        .filterNot { (key, _) -> key in without }
+        .toMap()
 
     private val pattern: Regex by lazy {
         Regex(byKey.keys.sortedByDescending { it.length }.joinToString("|", transform = ::patternOf))
     }
 
-    private fun patternOf(key: String): String = buildString {
+    fun expansionOf(abbreviation: String): String? = byKey[normalize(abbreviation)]
+
+    fun findIn(text: String): List<AbbreviationMatch> = pattern.findAll(text).mapNotNull { match ->
+        byKey[normalize(match.value)]?.let { AbbreviationMatch(match.range, match.value, it) }
+    }.toList()
+}
+
+private fun patternOf(key: String): String = if (key.none(Char::isLetter)) {
+    // A backslash before a sign that is not a letter always means the sign itself.
+    "(?:(?<![\\${key.first()}?!…])${key.map { "\\$it" }.joinToString("")}(?!\\${key.last()}))"
+} else {
+    buildString {
         append("(?:")
         if (key.first().isLetter()) append("(?<![\\p{L}-])")
         key.forEachIndexed { index, char ->
@@ -49,16 +136,17 @@ object Abbreviations {
         }
         append("(?!\\p{L}))")
     }
+}
 
-    /** No space after a dot, other spaces (also `&nbsp;`) as one space. */
-    private fun normalize(text: String): String = text.trim().replace(SPACE_AFTER_DOT, ".").replace(SPACES, " ")
+/** No space after a dot, other spaces (also `&nbsp;`) as one space. */
+private fun normalize(text: String): String = text.trim().replace(SPACE_AFTER_DOT, ".").replace(SPACES, " ")
 
-    private const val SPACE = "[ \\u00a0]"
-    private val SPACE_AFTER_DOT = Regex("\\.[ \\u00a0]+")
-    private val SPACES = Regex("[ \\u00a0]+")
+private const val SPACE = "[ \\u00a0]"
+private val SPACE_AFTER_DOT = Regex("\\.[ \\u00a0]+")
+private val SPACES = Regex("[ \\u00a0]+")
 
-    /** `abbreviation[, other form] | expansion`, one per line. */
-    private const val LIST = """
+/** `abbreviation[, other form] | expansion`, one per line. */
+private const val RUSSIAN = """
         ав. | авиация
         авт. | автомобильное дело
         анат. | анатомия
@@ -254,5 +342,4 @@ object Abbreviations {
         т. е. | то есть
         неопр. | неопределённая форма
         уменьш.-уничиж. | уменьшительно-уничижительная форма
-    """
-}
+"""

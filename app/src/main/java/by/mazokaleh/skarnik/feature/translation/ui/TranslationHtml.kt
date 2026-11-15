@@ -14,7 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.em
-import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
+import by.mazokaleh.skarnik.feature.translation.domain.AbbreviationScheme
+import by.mazokaleh.skarnik.feature.translation.domain.TextPlace
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -90,35 +91,38 @@ const val ABBREVIATION_ANNOTATION = "abbreviation"
  * ignored, so headwords (`<font size="+2">`) match the body text, as in Flutter, which forced one size on every tag.
  * Stress table cells use it too.
  *
- * With [markAbbreviations], [Abbreviations] inside grammar label spans (outside links) carry an
- * [ABBREVIATION_ANNOTATION] with their full text (see [abbreviationSpans]).
+ * With [abbreviations], the abbreviations it finds in each kind of text ([TextPlace]: labels, plain text,
+ * citations and their sources; never in headwords or links) carry an [ABBREVIATION_ANNOTATION] with their full
+ * text (see [abbreviationSpans]).
  */
 fun translationHtmlToAnnotatedString(
     html: String,
     colors: TranslationColors,
-    markAbbreviations: Boolean = false,
+    abbreviations: AbbreviationScheme? = null,
     onLink: (String) -> Unit
-): AnnotatedString = HtmlTextBuilder(colors, markAbbreviations, onLink).build(html)
+): AnnotatedString = HtmlTextBuilder(colors, abbreviations, onLink).build(html)
 
 private class HtmlTextBuilder(
     private val colors: TranslationColors,
-    private val markAbbreviations: Boolean,
+    private val abbreviations: AbbreviationScheme?,
     private val onLink: (String) -> Unit
 ) {
     private val builder = AnnotatedString.Builder()
     private val plain = StringBuilder()
     private var lastChar: Char? = null
 
-    /** Label spans (start to end in [plain]) to look for abbreviations in; nested labels and links are skipped. */
-    private val labelRanges = mutableListOf<IntRange>()
-    private var labelOrLinkDepth = 0
+    /** Runs of [plain] to look for abbreviations in, with their place; a source span is always a run of its own. */
+    private val runs = mutableListOf<Pair<IntRange, TextPlace>>()
+
+    /** The place of the innermost coloured element, or null inside a link, a headword or hidden text. */
+    private val places = ArrayDeque<TextPlace?>()
 
     /** True while the current line holds nothing or only non-breaking spaces (an indent). */
     private var atLineStart = true
 
     fun build(html: String): AnnotatedString {
         Jsoup.parseBodyFragment(html).body().childNodes().forEach(::appendNode)
-        if (markAbbreviations) builder.addAbbreviations(plain, labelRanges)
+        abbreviations?.let { builder.addAbbreviations(plain, runs, it) }
         val text = builder.toAnnotatedString()
         val end = text.text.indexOfLast { !it.isWhitespace() } + 1
         return if (end == text.length) text else text.subSequence(0, end)
@@ -149,10 +153,10 @@ private class HtmlTextBuilder(
     private fun appendStyled(element: Element) {
         val href = element.takeIf { it.normalName() == "a" }?.attr("href")?.takeIf { it.isNotBlank() }
         val style = spanStyleOf(element)
-        val isLabel = href == null && HtmlColorRole.of(rawColorOf(element)) == HtmlColorRole.Label
-        val tracked = href != null || isLabel
-        val labelStart = plain.length
-        if (tracked) labelOrLinkDepth++
+        val change = if (href != null) PlaceChange.To(null) else placeChangeOf(rawColorOf(element))
+        val start = plain.length
+        // Inside a link or a headword nothing is looked at, whatever the colours inside it.
+        if (change is PlaceChange.To) places.addLast(change.place.takeIf { currentPlace() != null })
         if (href != null) {
             val link = LinkAnnotation.Clickable(
                 tag = href,
@@ -165,9 +169,16 @@ private class HtmlTextBuilder(
         element.childNodes().forEach(::appendNode)
         if (style != null) builder.pop()
         if (href != null) builder.pop()
-        if (tracked) labelOrLinkDepth--
-        if (isLabel && labelOrLinkDepth == 0 && plain.length > labelStart) labelRanges += labelStart until plain.length
+        if (change is PlaceChange.To) {
+            places.removeLast()
+            if (change.place == TextPlace.Source && currentPlace() != null && plain.length > start) {
+                runs += (start until plain.length) to TextPlace.Source
+            }
+        }
     }
+
+    /** [TextPlace.Plain] outside any coloured element; null inside a link, headword or hidden text. */
+    private fun currentPlace(): TextPlace? = if (places.isEmpty()) TextPlace.Plain else places.last()
 
     private fun spanStyleOf(element: Element): SpanStyle? {
         var style = when (element.normalName()) {
@@ -207,12 +218,24 @@ private class HtmlTextBuilder(
         }
     }
 
+    /** Extends the last run when it has the same place and ends where [range] starts. */
+    private fun addRun(range: IntRange) {
+        val place = currentPlace()?.takeIf { abbreviations != null && it != TextPlace.Source } ?: return
+        val last = runs.lastOrNull()
+        if (last != null && last.second == place && last.first.last + 1 == range.first) {
+            runs[runs.lastIndex] = (last.first.first..range.last) to place
+        } else {
+            runs += range to place
+        }
+    }
+
     private fun startLine() {
         if (lastChar != null && lastChar != '\n') append("\n")
     }
 
     private fun append(text: String) {
         if (text.isEmpty()) return
+        addRun(plain.length until plain.length + text.length)
         builder.append(text)
         plain.append(text)
         lastChar = text.last()
@@ -256,12 +279,38 @@ private fun rawColorOf(element: Element): String = element.attr("color").ifBlank
     CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
 }
 
-/** Annotates [Abbreviations] inside the [labels] spans of [plain] (the builder's text) with their full text. */
-private fun AnnotatedString.Builder.addAbbreviations(plain: CharSequence, labels: List<IntRange>) {
-    labels.forEach { label ->
-        Abbreviations.findIn(plain.substring(label.first, label.last + 1)).forEach { match ->
-            val start = label.first + match.range.first
-            addStringAnnotation(ABBREVIATION_ANNOTATION, match.expansion, start, label.first + match.range.last + 1)
+/** How an element changes the [TextPlace] of its text: not at all (no colour), or to a place (null: none). */
+private sealed interface PlaceChange {
+    data object Keep : PlaceChange
+
+    data class To(val place: TextPlace?) : PlaceChange
+}
+
+private fun placeChangeOf(rawColor: String): PlaceChange = when (rawColor.trim().removePrefix("#").lowercase()) {
+    "" -> PlaceChange.Keep
+    SOURCE_COLOR -> PlaceChange.To(TextPlace.Source)
+    QUOTE_COLOR -> PlaceChange.To(TextPlace.Quote)
+    else -> when (HtmlColorRole.of(rawColor)) {
+        HtmlColorRole.Label -> PlaceChange.To(TextPlace.Label)
+        HtmlColorRole.Plain, null -> PlaceChange.To(TextPlace.Plain)
+        HtmlColorRole.Accent, HtmlColorRole.Hidden, HtmlColorRole.Muted -> PlaceChange.To(null)
+    }
+}
+
+/** The Тлумачальны слоўнік's citation sources («Колас.») and usage examples and citations. */
+private const val SOURCE_COLOR = "151b54"
+private const val QUOTE_COLOR = "5f5f5f"
+
+/** Annotates the abbreviations [scheme] finds in the [runs] of [plain] (the builder's text) with their full text. */
+private fun AnnotatedString.Builder.addAbbreviations(
+    plain: CharSequence,
+    runs: List<Pair<IntRange, TextPlace>>,
+    scheme: AbbreviationScheme
+) {
+    runs.forEach { (run, place) ->
+        scheme.findIn(plain.substring(run.first, run.last + 1), place).forEach { match ->
+            val start = run.first + match.range.first
+            addStringAnnotation(ABBREVIATION_ANNOTATION, match.expansion, start, run.first + match.range.last + 1)
         }
     }
 }

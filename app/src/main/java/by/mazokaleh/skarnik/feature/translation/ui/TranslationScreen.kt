@@ -63,6 +63,7 @@ import by.mazokaleh.skarnik.core.settings.ThemeMode
 import by.mazokaleh.skarnik.feature.review.ui.ReviewPromptDialog
 import by.mazokaleh.skarnik.feature.review.ui.rememberReviewPromptState
 import by.mazokaleh.skarnik.feature.stress.ui.StressButton
+import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 import kotlinx.coroutines.launch
@@ -295,10 +296,9 @@ private fun LoadedContent(
                 StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
             }
             Spacer(Modifier.height(16.dp))
-            // The abbreviation list is Russian, for Рус-Бел and Бел-Рус; ТСБМ uses Belarusian abbreviations.
             TranslationText(
                 html = translation.html,
-                markAbbreviations = translation.word.dictionary != Dictionary.Tsbm,
+                abbreviations = Abbreviations.of(translation.word.dictionary),
                 onLink = onLink
             )
         }

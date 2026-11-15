@@ -6,6 +6,8 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
+import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
+import by.mazokaleh.skarnik.feature.translation.domain.TsbmAbbreviations
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import org.junit.Test
@@ -133,7 +135,7 @@ class TranslationHtmlTest {
     }
 
     private fun renderWithAbbreviations(html: String) =
-        translationHtmlToAnnotatedString(html, colors, markAbbreviations = true) { clicked += it }
+        translationHtmlToAnnotatedString(html, colors, Abbreviations.russianScheme) { clicked += it }
 
     @Test
     fun `marks abbreviations in label spans only`() {
@@ -159,5 +161,20 @@ class TranslationHtmlTest {
 
         assertEquals(listOf("жен."), renderWithAbbreviations(html).abbreviationSpans().map { it.abbreviation })
         assertTrue(render(html).abbreviationSpans().isEmpty())
+    }
+
+    @Test
+    fun `marks Tsbm sources, signs and abbreviations outside headwords and examples`() {
+        val html = """<strong><font color="#0000A0">разм.,</font></strong><font color="#A52A2A"> прыназоўнік """ +
+            """з Т.</font><br /> Тое, што і павыцягваць (у 1 знач.). <font color="#CC33FF"><strong>//</strong>""" +
+            """</font> Дробны. <font color="#5f5f5f">Разм. жарт. ▪ Карані .. павыпіналіся. Чаму?..</font> """ +
+            """<i><font color="#151B54">Колас.</font></i> [Ад грэч. palaios.]"""
+
+        val spans = translationHtmlToAnnotatedString(html, colors, TsbmAbbreviations) {}.abbreviationSpans()
+
+        assertEquals(listOf("Т", "знач.", "//", "▪", "..", "Колас", "грэч."), spans.map { it.abbreviation })
+        assertEquals("творны склон", spans[0].expansion)
+        assertEquals("адценне значэння", spans[2].expansion)
+        assertTrue(spans[5].expansion.startsWith("Якуб Колас:"), spans[5].expansion)
     }
 }
