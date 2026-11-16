@@ -35,9 +35,10 @@ data class DictionaryLink(val target: WordLink, val placement: DictionaryLinkPla
  */
 class FindDictionaryLinkUseCase(private val index: SameWordIndex, private val remoteConfig: RemoteConfig) {
     suspend operator fun invoke(word: Word): DictionaryLink? {
-        val dictionary = word.dictionary.linkedDictionary ?: return null
-        val placement = remoteConfig.dictionaryLinkPlacement
-        if (placement == DictionaryLinkPlacement.None) return null
+        val dictionary = word.dictionary.linkedDictionary
+        // The control group skips the lookup as well.
+        val placement = remoteConfig.dictionaryLinkPlacement.takeUnless { it == DictionaryLinkPlacement.None }
+        if (dictionary == null || placement == null) return null
         val target = suspendRunCatching { index.sameWord(word.lword, dictionary) }
             .getOrElse {
                 logError(TAG, "Cannot look up ${word.lword} in ${dictionary.path}", it)
