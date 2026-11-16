@@ -256,14 +256,8 @@ private class HtmlTextBuilder(
             else -> null
         }
         classStyleOf(element, colors)?.let { style = (style ?: SpanStyle()).merge(it) }
-        colorOf(element)?.let { style = (style ?: SpanStyle()).copy(color = it) }
+        colorOf(element, colors)?.let { style = (style ?: SpanStyle()).copy(color = it) }
         return style
-    }
-
-    private fun colorOf(element: Element): Color? {
-        val raw = rawColorOf(element)
-        if (raw.isBlank()) return null
-        return colors.of(HtmlColorRole.of(raw) ?: HtmlColorRole.Plain)
     }
 
     /**
@@ -340,6 +334,12 @@ private fun classStyleOf(element: Element, colors: TranslationColors): SpanStyle
 }
 
 private const val QUESTION_SIZE = 0.875f
+
+private fun colorOf(element: Element, colors: TranslationColors): Color? {
+    val raw = rawColorOf(element)
+    if (raw.isBlank()) return null
+    return colors.of(HtmlColorRole.of(raw) ?: HtmlColorRole.Plain)
+}
 
 private fun rawColorOf(element: Element): String = element.attr("color").ifBlank {
     CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
