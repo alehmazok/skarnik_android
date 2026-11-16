@@ -17,6 +17,7 @@ import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.RemoteTranslationSource
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.feature.translation.domain.TranslationEntry
+import by.mazokaleh.skarnik.feature.translation.domain.WordRepository
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -56,7 +57,12 @@ class TranslationViewModelTest {
 
     private fun viewModel(route: TranslationRoute = this.route) = TranslationViewModel(
         route = route,
-        words = { dictionary, id -> word.takeIf { it.dictionary == dictionary && it.wordId == id } },
+        words = object : WordRepository {
+            override suspend fun find(dictionary: Dictionary, wordId: Long) =
+                word.takeIf { it.dictionary == dictionary && it.wordId == wordId }
+
+            override suspend fun knownWords(lwords: Set<String>) = lwords
+        },
         getTranslation = GetTranslationUseCase(
             local = { _, _ -> null },
             api = { dictionary, id -> api.fetch(dictionary, id) },

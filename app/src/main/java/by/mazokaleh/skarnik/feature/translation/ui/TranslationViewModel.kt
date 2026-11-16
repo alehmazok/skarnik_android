@@ -11,7 +11,7 @@ import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
 import by.mazokaleh.skarnik.feature.review.domain.ShouldAskForReviewUseCase
-import by.mazokaleh.skarnik.feature.stress.domain.stressCandidates
+import by.mazokaleh.skarnik.feature.stress.domain.GetStressCandidatesUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.feature.translation.domain.TranslationResult
@@ -68,6 +68,7 @@ class TranslationViewModel @AssistedInject constructor(
     private val analytics: Analytics,
     private val shouldAskForReview: ShouldAskForReviewUseCase
 ) : ViewModel() {
+    private val stressCandidates = GetStressCandidatesUseCase(words)
     private val _uiState = MutableStateFlow<TranslationUiState>(TranslationUiState.Loading(route.word))
     val uiState: StateFlow<TranslationUiState> = _uiState.asStateFlow()
 
