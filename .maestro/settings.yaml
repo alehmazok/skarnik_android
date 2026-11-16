@@ -70,8 +70,12 @@ tags:
 - tapOn:
     id: settings_whats_new
 - extendedWaitUntil:
-    visible: "Версія 4.0.0"
+    visible: "Што новага ў Скарніку"
     timeout: 10000
+# The oldest release is at the bottom: scroll to it, since newer notes push it below the fold.
+- scrollUntilVisible:
+    element: "Версія 4.0.0"
+    timeout: 20000
 - assertVisible: "Цалкам новая праграма"
 - takeScreenshot: settings-whats-new
 - back
