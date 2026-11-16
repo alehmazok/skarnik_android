@@ -102,7 +102,5 @@ class AnalyticsEventTest {
             ),
             event.params
         )
-        assertEquals("word_link_hint_shown", AnalyticsEvent.WordLinkHintShown.name)
-        assertEquals(mapOf("by_tap" to 1L), AnalyticsEvent.WordLinkHintDismissed(byTap = true).params)
     }
 }

@@ -51,8 +51,6 @@
     <string name="translation_error">Прабачце, адбылася памылка перакладу слова.</string>
     <string name="translation_redirected_from">Перанакіравана з «%1$s»</string>
     <string name="translation_word_link_action">адкрыць пераклад</string>
-    <string name="translation_word_link_hint">Націсніце на беларускае слова, каб адкрыць яго пераклад</string>
-    <string name="translation_word_link_hint_done">Зразумела</string>
     <string name="translation_bookmark_added">Дададзена ў закладкі.</string>
     <string name="translation_bookmark_removed">Выдалена з закладак.</string>
     <string name="action_retry">Паўтарыць</string>

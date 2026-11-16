@@ -25,7 +25,6 @@ tags:
     visible:
       id: translation_text
     timeout: 30000
-- runFlow: subflows/dismiss-word-link-hint.yaml
 # Each abbreviation has its own tap target («ср.: средний род»); the first one in «прывітанне» is «ср.».
 - tapOn:
     id: translation_abbreviation

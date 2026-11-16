@@ -10,7 +10,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RichTooltip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TooltipAnchorPosition
 import androidx.compose.material3.TooltipBox
 import androidx.compose.material3.TooltipDefaults
@@ -21,7 +20,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -49,12 +47,9 @@ import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.translation.domain.AbbreviationScheme
 import kotlin.math.roundToInt
-import kotlinx.coroutines.launch
 
 object WordLinkTestTags {
     const val WORD_LINK = "translation_word_link"
-    const val HINT = "word_link_hint"
-    const val HINT_DONE = "word_link_hint_done"
 }
 
 object AbbreviationTestTags {
@@ -68,9 +63,8 @@ object AbbreviationTestTags {
  * The translation text. The [abbreviations] it finds («разг.», «Колас») get a dotted underline; tapping one shows
  * its full text in an M3 rich tooltip above it, until a tap outside.
  *
- * The Belarusian words in [wordLinks] open their entry through [onWordLink]; they look as before (Aleh,
- * 2026-11-16), except while [hintVisible]: then they are underlined and a tooltip on the first one explains them,
- * until [onHintDone] (true when a word was tapped). [onWordLinksShown] reports that the text has such words.
+ * The Belarusian words in [wordLinks] keep their colour, get a thin solid underline (Aleh, 2026-11-16) and open
+ * their entry through [onWordLink].
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -80,10 +74,7 @@ fun TranslationText(
     onLink: (String) -> Unit,
     modifier: Modifier = Modifier,
     wordLinks: Map<String, WordLink> = emptyMap(),
-    onWordLink: (WordLinkSpan) -> Unit = {},
-    hintVisible: Boolean = false,
-    onWordLinksShown: () -> Unit = {},
-    onHintDone: (byTap: Boolean) -> Unit = {}
+    onWordLink: (WordLinkSpan) -> Unit = {}
 ) {
     val colors = rememberTranslationColors()
     val currentOnLink by rememberUpdatedState(onLink)
@@ -91,9 +82,6 @@ fun TranslationText(
     val text = remember(html, colors, abbreviations, wordLinks) {
         translationHtmlToAnnotatedString(html, colors, abbreviations, wordLinks) { currentOnLink(it) }
     }
-    val hasWordLinks = remember(text) { text.wordLinkSpans().isNotEmpty() }
-    val currentOnWordLinksShown by rememberUpdatedState(onWordLinksShown)
-    LaunchedEffect(hasWordLinks) { if (hasWordLinks) currentOnWordLinksShown() }
     var layout by remember { mutableStateOf<TextLayoutResult?>(null) }
 
     Box(modifier) {
@@ -104,7 +92,7 @@ fun TranslationText(
                 .drawBehind {
                     layout?.let {
                         drawAbbreviationUnderlines(it, text, colors.plain)
-                        if (hintVisible) drawWordLinkUnderlines(it, text, colors.accent)
+                        drawWordLinkUnderlines(it, text, colors.accent)
                     }
                 },
             style = MaterialTheme.typography.bodyLarge,
@@ -113,11 +101,7 @@ fun TranslationText(
         val currentLayout = layout
         if (currentLayout != null) {
             AbbreviationTargets(text, currentLayout) { tapped = it }
-            WordLinkTargets(text, currentLayout) {
-                if (hintVisible) onHintDone(true)
-                onWordLink(it)
-            }
-            if (hintVisible) WordLinkHint(text, currentLayout, onDone = { onHintDone(false) })
+            WordLinkTargets(text, currentLayout) { onWordLink(it) }
         }
         val span = tapped
         if (span != null && currentLayout != null && span.end <= currentLayout.layoutInput.text.length) {
@@ -229,56 +213,6 @@ private fun WordLinkTargets(text: AnnotatedString, layout: TextLayoutResult, onT
     }
 }
 
-/**
- * The one-time hint: a rich tooltip above the first linked word, closed by its button. Not focusable, so the rest
- * of the screen stays usable while it shows.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun WordLinkHint(text: AnnotatedString, layout: TextLayoutResult, onDone: () -> Unit) {
-    val first = remember(text, layout) {
-        text.wordLinkSpans().firstOrNull { it.end <= layout.layoutInput.text.length }
-    } ?: return
-    val anchor = remember(first, layout) { layout.firstLineBounds(first.start, first.end) }
-    val state = rememberTooltipState(isPersistent = true)
-    val scope = rememberCoroutineScope()
-    val density = LocalDensity.current
-    val currentOnDone by rememberUpdatedState(onDone)
-    Box(Modifier.offset { IntOffset(anchor.left.roundToInt(), anchor.top.roundToInt()) }) {
-        TooltipBox(
-            positionProvider = TooltipDefaults.rememberTooltipPositionProvider(TooltipAnchorPosition.Above),
-            tooltip = {
-                DisableSelection {
-                    RichTooltip(
-                        modifier = Modifier.testTag(WordLinkTestTags.HINT),
-                        caretShape = TooltipDefaults.caretShape(),
-                        action = {
-                            TextButton(
-                                onClick = { scope.launch { state.dismiss() } },
-                                modifier = Modifier.testTag(WordLinkTestTags.HINT_DONE)
-                            ) { Text(stringResource(R.string.translation_word_link_hint_done)) }
-                        }
-                    ) {
-                        Text(stringResource(R.string.translation_word_link_hint))
-                    }
-                }
-            },
-            state = state,
-            focusable = false,
-            enableUserInput = false
-        ) {
-            with(density) { Spacer(Modifier.size(anchor.width.toDp(), anchor.height.toDp())) }
-        }
-    }
-    LaunchedEffect(Unit) {
-        try {
-            state.show()
-        } finally {
-            currentOnDone()
-        }
-    }
-}
-
 /** Bounds of [start] until [end] on the line of [start]. */
 private fun TextLayoutResult.firstLineBounds(start: Int, end: Int): Rect {
     val line = getLineForOffset(start)
@@ -312,11 +246,14 @@ private fun DrawScope.drawAbbreviationUnderlines(layout: TextLayoutResult, text:
     }
 }
 
-/** Solid underlines under the linked words, in [color], while the hint shows. */
-private fun DrawScope.drawWordLinkUnderlines(layout: TextLayoutResult, text: AnnotatedString, color: Color) {
+/** Thin solid underlines under the linked words, in the colour of each word's text, else [default]. */
+private fun DrawScope.drawWordLinkUnderlines(layout: TextLayoutResult, text: AnnotatedString, default: Color) {
     val length = layout.layoutInput.text.length
     val stroke = 1.dp.toPx()
     text.wordLinkSpans().filter { it.end <= length }.forEach { span ->
+        val color = text.spanStyles.lastOrNull {
+            it.start <= span.start && it.end >= span.end && it.item.color.isSpecified
+        }?.item?.color ?: default
         for (line in layout.getLineForOffset(span.start)..layout.getLineForOffset(span.end - 1)) {
             val start = maxOf(span.start, layout.getLineStart(line))
             val end = minOf(span.end, layout.getLineEnd(line, visibleEnd = true))

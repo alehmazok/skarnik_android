@@ -90,16 +90,6 @@ sealed class AnalyticsEvent(val name: String) {
             "target_word_id" to target.wordId
         )
     }
-
-    /** The one-time hint about tappable words showed (new, not in Flutter). */
-    data object WordLinkHintShown : AnalyticsEvent("word_link_hint_shown") {
-        override val params: Map<String, Any> = emptyMap()
-    }
-
-    /** The hint closed: [byTap] when a word was tapped, else dismissed (new, not in Flutter). */
-    data class WordLinkHintDismissed(val byTap: Boolean) : AnalyticsEvent("word_link_hint_dismissed") {
-        override val params: Map<String, Any> = mapOf("by_tap" to byTap.toLong())
-    }
 }
 
 /** Flutter's `Dictionary` enum names, which the existing reports group by. */

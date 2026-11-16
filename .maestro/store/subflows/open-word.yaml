@@ -9,4 +9,3 @@ appId: by.mazokaleh.skarnik.debug
     visible:
       id: translation_text
     timeout: 60000
-- runFlow: ../../subflows/dismiss-word-link-hint.yaml

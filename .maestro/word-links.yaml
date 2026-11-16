@@ -1,5 +1,5 @@
-# Word links: a Рус-Бел translation shows the one-time hint, a tap on a Belarusian word opens its Бел-Рус entry,
-# and the hint does not come back. Needs network: the translation comes from the admin API (or Supabase).
+# Word links: a tap on a Belarusian word of a Рус-Бел translation opens its Бел-Рус entry. Needs network: the
+# translation comes from the admin API (or Supabase).
 appId: by.mazokaleh.skarnik.debug
 name: Open a Belarusian word from a translation
 tags:
@@ -20,21 +20,15 @@ tags:
     visible:
       id: translation_text
     timeout: 60000
-# The hint is a popup window: its test tags are not resource ids there, so match its texts.
-- extendedWaitUntil:
-    visible: "Націсніце на беларускае слова, каб адкрыць яго пераклад"
-    timeout: 10000
-- takeScreenshot: word-link-hint
+- takeScreenshot: word-links
 - tapOn:
     id: translation_word_link
     text: "пытанне"
 - extendedWaitUntil:
     visible: "Пераклад на рускую мову"
     timeout: 30000
-- assertNotVisible: "Націсніце на беларускае слова, каб адкрыць яго пераклад"
 - takeScreenshot: word-link-opened
 - back
 - extendedWaitUntil:
     visible: "Пераклад на беларускую мову"
     timeout: 10000
-- assertNotVisible: "Націсніце на беларускае слова, каб адкрыць яго пераклад"
