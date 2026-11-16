@@ -51,6 +51,13 @@
     <string name="translation_error">Прабачце, адбылася памылка перакладу слова.</string>
     <string name="translation_redirected_from">Перанакіравана з «%1$s»</string>
     <string name="translation_word_link_action">адкрыць пераклад</string>
+    <!-- The link to the same word in the other dictionary: Бел-Рус → ТСБМ (tsbm) and ТСБМ → Бел-Рус (bel_rus). -->
+    <string name="dictionary_link_tsbm_chip">Тлумачэнне</string>
+    <string name="dictionary_link_bel_rus_chip">Пераклад</string>
+    <string name="dictionary_link_tsbm_title">Тлумачэнне слова</string>
+    <string name="dictionary_link_bel_rus_title">Пераклад на рускую мову</string>
+    <string name="dictionary_link_tsbm_text">Гэта слова ў Тлумачальным слоўніку</string>
+    <string name="dictionary_link_bel_rus_text">Гэта слова ў Беларуска-рускім слоўніку</string>
     <string name="translation_bookmark_added">Дададзена ў закладкі.</string>
     <string name="translation_bookmark_removed">Выдалена з закладак.</string>
     <string name="action_retry">Паўтарыць</string>

@@ -5,6 +5,8 @@ import android.content.Intent
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
@@ -56,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
+import by.mazokaleh.skarnik.core.config.DictionaryLinkPlacement
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.core.model.WordLink
@@ -64,6 +67,7 @@ import by.mazokaleh.skarnik.feature.review.ui.ReviewPromptDialog
 import by.mazokaleh.skarnik.feature.review.ui.rememberReviewPromptState
 import by.mazokaleh.skarnik.feature.stress.ui.StressButton
 import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
+import by.mazokaleh.skarnik.feature.translation.domain.DictionaryLink
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 import kotlinx.coroutines.launch
@@ -124,6 +128,10 @@ fun TranslationScreen(
         },
         onRetry = viewModel::retry,
         onStress = onStress,
+        onDictionaryLink = { link ->
+            viewModel.onDictionaryLinkClicked()
+            onOpenWord(link.target)
+        },
         onWordLink = { span ->
             viewModel.onWordLinkClicked(span.word, span.link)
             onOpenWord(span.link)
@@ -201,7 +209,8 @@ private fun TranslationContent(
     onRetry: () -> Unit,
     onStress: (String) -> Unit,
     onLink: (String) -> Unit,
-    onWordLink: (WordLinkSpan) -> Unit = {}
+    onWordLink: (WordLinkSpan) -> Unit = {},
+    onDictionaryLink: (DictionaryLink) -> Unit = {}
 ) {
     // M3: the bar takes the scrolled-under colour once content slides beneath it, and shows the word once the
     // headline has scrolled out of view.
@@ -243,7 +252,8 @@ private fun TranslationContent(
                         onTitlePlaced = onTitlePlaced,
                         onStress = onStress,
                         onLink = onLink,
-                        onWordLink = onWordLink
+                        onWordLink = onWordLink,
+                        onDictionaryLink = onDictionaryLink
                     )
                 }
             }
@@ -290,9 +300,11 @@ private fun LoadedContent(
     onTitlePlaced: (Int) -> Unit,
     onStress: (String) -> Unit,
     onLink: (String) -> Unit,
-    onWordLink: (WordLinkSpan) -> Unit
+    onWordLink: (WordLinkSpan) -> Unit,
+    onDictionaryLink: (DictionaryLink) -> Unit
 ) {
     val translation = uiState.translation
+    val link = uiState.dictionaryLink
     SelectionContainer {
         Column {
             // Neutral, so red stays for the words of the translation.
@@ -305,7 +317,7 @@ private fun LoadedContent(
             Spacer(Modifier.height(4.dp))
             Title(translation.title, onTitlePlaced)
             DisableSelection {
-                StressButton(uiState.stressCandidates, onStress, Modifier.padding(top = 8.dp))
+                HeaderActions(uiState.stressCandidates, link, onStress, onDictionaryLink)
             }
             Spacer(Modifier.height(16.dp))
             TranslationText(
@@ -315,6 +327,34 @@ private fun LoadedContent(
                 wordLinks = uiState.wordLinks,
                 onWordLink = onWordLink
             )
+            if (link?.placement == DictionaryLinkPlacement.Footer) {
+                DisableSelection {
+                    DictionaryLinkRow(
+                        target = link.target.dictionary,
+                        onClick = { onDictionaryLink(link) },
+                        modifier = Modifier.fillMaxWidth().padding(top = 24.dp)
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** The chips under the headword: «На́ціск» and, in the `header` variant, the link to the other dictionary. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun HeaderActions(
+    stressCandidates: List<String>,
+    link: DictionaryLink?,
+    onStress: (String) -> Unit,
+    onDictionaryLink: (DictionaryLink) -> Unit
+) {
+    val headerLink = link?.takeIf { it.placement == DictionaryLinkPlacement.Header }
+    if (stressCandidates.isEmpty() && headerLink == null) return
+    FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        StressButton(stressCandidates, onStress)
+        if (headerLink != null) {
+            DictionaryLinkChip(headerLink.target.dictionary, onClick = { onDictionaryLink(headerLink) })
         }
     }
 }
@@ -373,7 +413,8 @@ private fun TranslationContentPreview(@PreviewParameter(PaletteProvider::class) 
                     source = Translation.Source.Api
                 ),
                 bookmarked = true,
-                stressCandidates = listOf("янтар", "бурштын")
+                stressCandidates = listOf("янтар", "бурштын"),
+                dictionaryLink = DictionaryLink(WordLink(Dictionary.Tsbm, 10976), DictionaryLinkPlacement.Header)
             ),
             snackbarHostState = remember { SnackbarHostState() },
             onBack = {},

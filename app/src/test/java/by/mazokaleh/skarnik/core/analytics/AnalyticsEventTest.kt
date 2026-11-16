@@ -103,4 +103,22 @@ class AnalyticsEventTest {
             event.params
         )
     }
+
+    @Test
+    fun `dictionary link event`() {
+        val event = AnalyticsEvent.DictionaryLinkClicked(word, WordLink(Dictionary.Tsbm, 10976), "footer")
+
+        assertEquals("dictionary_link_clicked", event.name)
+        assertEquals(
+            mapOf(
+                "word" to word.word,
+                "dict_name" to word.dictionary.analyticsName,
+                "dict_path" to word.dictionary.path,
+                "target_dict_path" to "tsbm",
+                "target_word_id" to 10976L,
+                "placement" to "footer"
+            ),
+            event.params
+        )
+    }
 }

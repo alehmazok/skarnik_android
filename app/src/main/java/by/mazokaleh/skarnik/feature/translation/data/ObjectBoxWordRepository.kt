@@ -57,6 +57,18 @@ class ObjectBoxWordRepository @Inject constructor(
             .toMap()
     }
 
+    override suspend fun sameWord(lword: String, dictionary: Dictionary): WordLink? = withContext(ioDispatcher) {
+        database.stores().searchBox
+            .query(
+                ObjectboxSearchWord_.lword.equal(lword, StringOrder.CASE_SENSITIVE)
+                    .and(ObjectboxSearchWord_.langId.equal(dictionary.langId))
+            )
+            .order(ObjectboxSearchWord_.wordId)
+            .build()
+            .use { it.findFirst() }
+            ?.let { WordLink(dictionary, it.wordId) }
+    }
+
     private companion object {
         val BELARUSIAN_LANG_IDS = longArrayOf(Dictionary.BelRus.langId, Dictionary.Tsbm.langId)
     }

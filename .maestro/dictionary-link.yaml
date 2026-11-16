@@ -1,0 +1,38 @@
+# Dictionary link: a Бел-Рус entry links to the same word in ТСБМ, and the ТСБМ entry links back. Without a
+# `dictionary_link_placement` experiment the link is the chip under the headword. Needs network: the translations
+# come from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: Open the same word in the other dictionary
+tags:
+  - translation
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/decline-analytics.yaml
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+# «прывітанне» is belrus/76967 and tsbm/65172.
+- launchApp:
+    arguments:
+      word_link: "https://skarnik.app/r/belrus/76967"
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 60000
+- takeScreenshot: dictionary-link
+- tapOn:
+    id: translation_dictionary_link_chip
+    text: "Тлумачэнне"
+- extendedWaitUntil:
+    visible: "Тлумачэнне слова"
+    timeout: 30000
+- assertVisible:
+    id: translation_dictionary_link_chip
+    text: "Пераклад"
+- takeScreenshot: dictionary-link-opened
+- back
+- extendedWaitUntil:
+    visible: "Пераклад на рускую мову"
+    timeout: 10000
