@@ -10,7 +10,7 @@ import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 
-/** The Бел-Рус and ТСБМ headwords of the bundled index: the words a translation links to and stress tables exist for. */
+/** The Бел-Рус and ТСБМ headwords of the bundled index: what translations link to and stress tables exist for. */
 fun interface BelarusianWordIndex {
     /**
      * The entry each of [keys] ([wordKey]s) is a headword of: its Бел-Рус entry, else its ТСБМ entry; the lowest id
