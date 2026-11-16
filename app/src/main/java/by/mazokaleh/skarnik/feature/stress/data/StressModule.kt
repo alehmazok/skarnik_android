@@ -4,7 +4,6 @@ import by.mazokaleh.skarnik.BuildConfig
 import by.mazokaleh.skarnik.feature.stress.domain.AdminStress
 import by.mazokaleh.skarnik.feature.stress.domain.StarnikStress
 import by.mazokaleh.skarnik.feature.stress.domain.StressBackend
-import by.mazokaleh.skarnik.feature.stress.domain.StressWordIndex
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -25,7 +24,4 @@ object StressModule {
     @AdminStress
     fun provideAdmin(client: OkHttpClient, json: Json): StressBackend =
         AdminStressBackend(client, json, BuildConfig.API_BASE_URL.trimEnd('/').toHttpUrl())
-
-    @Provides
-    fun provideWordIndex(impl: ObjectBoxStressWordIndex): StressWordIndex = impl
 }

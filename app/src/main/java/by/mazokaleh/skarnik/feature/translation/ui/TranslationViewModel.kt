@@ -66,9 +66,9 @@ class TranslationViewModel @AssistedInject constructor(
     private val history: HistoryRepository,
     private val bookmarks: BookmarksRepository,
     private val analytics: Analytics,
-    private val shouldAskForReview: ShouldAskForReviewUseCase,
-    private val stressCandidates: GetStressCandidatesUseCase
+    private val shouldAskForReview: ShouldAskForReviewUseCase
 ) : ViewModel() {
+    private val stressCandidates = GetStressCandidatesUseCase(words)
     private val _uiState = MutableStateFlow<TranslationUiState>(TranslationUiState.Loading(route.word))
     val uiState: StateFlow<TranslationUiState> = _uiState.asStateFlow()
 

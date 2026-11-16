@@ -13,11 +13,11 @@ import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
 import by.mazokaleh.skarnik.feature.review.domain.FakeReviewSettings
 import by.mazokaleh.skarnik.feature.review.domain.ShouldAskForReviewUseCase
-import by.mazokaleh.skarnik.feature.stress.domain.GetStressCandidatesUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.RemoteTranslationSource
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.feature.translation.domain.TranslationEntry
+import by.mazokaleh.skarnik.feature.translation.domain.WordRepository
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -57,7 +57,12 @@ class TranslationViewModelTest {
 
     private fun viewModel(route: TranslationRoute = this.route) = TranslationViewModel(
         route = route,
-        words = { dictionary, id -> word.takeIf { it.dictionary == dictionary && it.wordId == id } },
+        words = object : WordRepository {
+            override suspend fun find(dictionary: Dictionary, wordId: Long) =
+                word.takeIf { it.dictionary == dictionary && it.wordId == wordId }
+
+            override suspend fun knownWords(lwords: Set<String>) = lwords
+        },
         getTranslation = GetTranslationUseCase(
             local = { _, _ -> null },
             api = { dictionary, id -> api.fetch(dictionary, id) },
@@ -74,8 +79,7 @@ class TranslationViewModelTest {
         },
         bookmarks = bookmarks,
         analytics = analytics,
-        shouldAskForReview = ShouldAskForReviewUseCase(review),
-        stressCandidates = GetStressCandidatesUseCase { it }
+        shouldAskForReview = ShouldAskForReviewUseCase(review)
     )
 
     @Test
