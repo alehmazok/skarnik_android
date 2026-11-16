@@ -6,6 +6,7 @@ import by.mazokaleh.skarnik.core.database.SkarnikDatabase
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxSearchWord_
 import by.mazokaleh.skarnik.core.database.entity.ObjectboxTranslationWord
 import by.mazokaleh.skarnik.core.model.Dictionary
+import by.mazokaleh.skarnik.feature.stress.data.ObjectBoxStressWordIndex
 import by.mazokaleh.skarnik.feature.translation.domain.TranslationEntry
 import io.objectbox.query.QueryBuilder.StringOrder
 import java.io.File
@@ -20,10 +21,14 @@ import org.junit.ClassRule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 
-/** Word lookup on the real bundled index, and the offline-dictionary store with Flutter's key format. */
+/**
+ * Word lookup and the stress-candidate check on the real bundled index, and the offline-dictionary store with
+ * Flutter's key format.
+ */
 class ObjectBoxTranslationDataTest {
     private val words = ObjectBoxWordRepository(database, Dispatchers.Unconfined)
     private val local = ObjectBoxLocalTranslationSource(database, Dispatchers.Unconfined)
+    private val stressIndex = ObjectBoxStressWordIndex(database, Dispatchers.Unconfined)
 
     @Test
     fun `finds a word of the index by dictionary and id`() = runTest {
@@ -44,6 +49,13 @@ class ObjectBoxTranslationDataTest {
     @Test
     fun `a word from another dictionary or a missing id is not found`() = runTest {
         assertNull(words.find(Dictionary.BelRus, Long.MAX_VALUE))
+    }
+
+    @Test
+    fun `stress candidates are known only as Бел-Рус or ТСБМ headwords`() = runTest {
+        val known = stressIndex.knownWords(setOf("прывітанне", "привет", "прывітаннем"))
+
+        assertEquals(setOf("прывітанне"), known)
     }
 
     @Test

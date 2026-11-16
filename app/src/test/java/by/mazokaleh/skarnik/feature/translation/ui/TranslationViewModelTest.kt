@@ -13,6 +13,7 @@ import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
 import by.mazokaleh.skarnik.feature.review.domain.FakeReviewSettings
 import by.mazokaleh.skarnik.feature.review.domain.ShouldAskForReviewUseCase
+import by.mazokaleh.skarnik.feature.stress.domain.GetStressCandidatesUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.RemoteTranslationSource
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
@@ -73,7 +74,8 @@ class TranslationViewModelTest {
         },
         bookmarks = bookmarks,
         analytics = analytics,
-        shouldAskForReview = ShouldAskForReviewUseCase(review)
+        shouldAskForReview = ShouldAskForReviewUseCase(review),
+        stressCandidates = GetStressCandidatesUseCase { it }
     )
 
     @Test
