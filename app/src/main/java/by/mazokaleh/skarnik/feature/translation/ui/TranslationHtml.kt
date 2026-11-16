@@ -119,6 +119,30 @@ fun translationHtmlToAnnotatedString(
 /** A headword-coloured run of the builder's text, with its `data-word` if it has one. */
 private data class HeadwordRun(val range: IntRange, val dataWord: String?)
 
+/** Adds a [WORD_LINK_ANNOTATION] over each word of [headwordRuns] that [wordLinks] has. */
+private fun AnnotatedString.Builder.addWordLinks(
+    plain: CharSequence,
+    headwordRuns: List<HeadwordRun>,
+    wordLinks: Map<String, WordLink>
+) {
+    headwordRuns.forEach { run ->
+        val text = plain.substring(run.range.first, run.range.last + 1)
+        val parts = if (run.dataWord != null) {
+            val word = text.trim()
+            val from = text.indexOf(word)
+            listOf((from until from + word.length) to run.dataWord).filter { word.isNotEmpty() }
+        } else {
+            headwordRunParts(text)
+        }
+        parts.forEach { (range, word) ->
+            val link = wordLinks[wordKey(word)] ?: return@forEach
+            val start = run.range.first + range.first
+            val end = start + range.last - range.first + 1
+            addStringAnnotation(WORD_LINK_ANNOTATION, link.path, start, end)
+        }
+    }
+}
+
 private class HtmlTextBuilder(
     private val colors: TranslationColors,
     private val abbreviations: AbbreviationScheme?,
@@ -147,7 +171,7 @@ private class HtmlTextBuilder(
     fun build(html: String): AnnotatedString {
         Jsoup.parseBodyFragment(html).body().childNodes().forEach(::appendNode)
         abbreviations?.let { builder.addAbbreviations(plain, runs, it) }
-        addWordLinks()
+        if (headwordRuns.isNotEmpty()) builder.addWordLinks(plain, headwordRuns, wordLinks)
         val text = builder.toAnnotatedString()
         val end = text.text.indexOfLast { !it.isWhitespace() } + 1
         return if (end == text.length) text else text.subSequence(0, end)
@@ -268,25 +292,6 @@ private class HtmlTextBuilder(
             runs[runs.lastIndex] = (last.first.first..range.last) to place
         } else {
             runs += range to place
-        }
-    }
-
-    private fun addWordLinks() {
-        headwordRuns.forEach { run ->
-            val text = plain.substring(run.range.first, run.range.last + 1)
-            val parts = if (run.dataWord != null) {
-                val word = text.trim()
-                val from = text.indexOf(word)
-                listOf((from until from + word.length) to run.dataWord).filter { word.isNotEmpty() }
-            } else {
-                headwordRunParts(text)
-            }
-            parts.forEach { (range, word) ->
-                val link = wordLinks[wordKey(word)] ?: return@forEach
-                val start = run.range.first + range.first
-                val end = start + range.last - range.first + 1
-                builder.addStringAnnotation(WORD_LINK_ANNOTATION, link.path, start, end)
-            }
         }
     }
 
