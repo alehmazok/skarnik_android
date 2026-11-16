@@ -74,9 +74,9 @@ tags:
     timeout: 10000
 # The oldest release is at the bottom: scroll to it, since newer notes push it below the fold.
 - scrollUntilVisible:
-    element: "Версія 4.0.0"
+    element: "Цалкам новая праграма"
     timeout: 20000
-- assertVisible: "Цалкам новая праграма"
+- assertVisible: "Версія 4.0.0"
 - takeScreenshot: settings-whats-new
 - back
 
