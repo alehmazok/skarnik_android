@@ -2,6 +2,7 @@ package by.mazokaleh.skarnik.feature.stress.domain
 
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.Word
+import by.mazokaleh.skarnik.core.model.WordLink
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlinx.coroutines.test.runTest
@@ -10,10 +11,10 @@ import org.junit.Test
 /** The rules of skarnik_ios `SKSkarnikTranslation.belWords`. */
 class StressCandidatesTest {
     private val asked = mutableListOf<Set<String>>()
-    private var known: Set<String> = setOf("абдымкі", "рука", "рукаў", "ве́чар", "янтар", "бурштын", "лодар", "гультай")
-    private val candidates = GetStressCandidatesUseCase { lwords ->
-        asked += lwords
-        lwords intersect known
+    private var known: Set<String> = setOf("абдымкі", "рука", "рукаў", "вечар", "янтар", "бурштын", "лодар", "гультай")
+    private val candidates = GetStressCandidatesUseCase { keys ->
+        asked += keys
+        keys.filter { it in known }.associateWith { WordLink(Dictionary.BelRus, 1) }
     }
 
     private fun word(dictionary: Dictionary, text: String) = Word(dictionary, 1, text, text.take(1), text, null)

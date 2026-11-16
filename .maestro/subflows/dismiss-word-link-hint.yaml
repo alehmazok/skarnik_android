@@ -1,0 +1,9 @@
+# The first translation with tappable Belarusian words shows a one-time hint (parity 2.6b). Close it when it shows,
+# so screenshots and later taps see the plain translation.
+appId: by.mazokaleh.skarnik.debug
+---
+- runFlow:
+    when:
+      visible: "Зразумела"
+    commands:
+      - tapOn: "Зразумела"

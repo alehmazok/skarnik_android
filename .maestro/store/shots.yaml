@@ -66,6 +66,7 @@ name: Store screenshots - take screens
       id: translation_text
     timeout: 30000
 - waitForAnimationToEnd
+- runFlow: ../subflows/dismiss-word-link-hint.yaml
 - takeScreenshot: ${PASS}-3-translation
 - back
 

@@ -31,6 +31,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -103,9 +104,13 @@ fun TranslationScreen(
     onStress: (word: String) -> Unit,
     viewModel: TranslationViewModel = hiltViewModel<TranslationViewModel, TranslationViewModel.Factory>(
         creationCallback = { it.create(route) }
-    )
+    ),
+    hintViewModel: WordLinkHintViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val hintVisible by hintViewModel.visible.collectAsStateWithLifecycle()
+    // Leaving the screen ends the hint: it was saved as shown when it appeared.
+    DisposableEffect(hintViewModel) { onDispose { hintViewModel.onHintDone(byTap = false) } }
     val snackbarHostState = remember { SnackbarHostState() }
     val reviewPrompt = rememberReviewPromptState()
     TranslationEffects(viewModel, route.redirectedFrom, snackbarHostState, onRedirect, reviewPrompt::ask)
@@ -124,6 +129,13 @@ fun TranslationScreen(
         },
         onRetry = viewModel::retry,
         onStress = onStress,
+        hintVisible = hintVisible,
+        onWordLinksShown = hintViewModel::onWordLinksShown,
+        onHintDone = hintViewModel::onHintDone,
+        onWordLink = { span ->
+            viewModel.onWordLinkClicked(span.word, span.link)
+            onOpenWord(span.link)
+        },
         onLink = { href ->
             val link = WordLink.parse(href)
             when {
@@ -196,7 +208,11 @@ private fun TranslationContent(
     onShare: (Translation) -> Unit,
     onRetry: () -> Unit,
     onStress: (String) -> Unit,
-    onLink: (String) -> Unit
+    onLink: (String) -> Unit,
+    hintVisible: Boolean = false,
+    onWordLinksShown: () -> Unit = {},
+    onHintDone: (byTap: Boolean) -> Unit = {},
+    onWordLink: (WordLinkSpan) -> Unit = {}
 ) {
     // M3: the bar takes the scrolled-under colour once content slides beneath it, and shows the word once the
     // headline has scrolled out of view.
@@ -233,7 +249,16 @@ private fun TranslationContent(
                 when (uiState) {
                     is TranslationUiState.Loading -> LoadingContent(uiState.word, onTitlePlaced)
                     is TranslationUiState.Error -> ErrorContent(uiState.word, onTitlePlaced, onRetry)
-                    is TranslationUiState.Loaded -> LoadedContent(uiState, onTitlePlaced, onStress, onLink)
+                    is TranslationUiState.Loaded -> LoadedContent(
+                        uiState = uiState,
+                        onTitlePlaced = onTitlePlaced,
+                        onStress = onStress,
+                        onLink = onLink,
+                        hintVisible = hintVisible,
+                        onWordLinksShown = onWordLinksShown,
+                        onHintDone = onHintDone,
+                        onWordLink = onWordLink
+                    )
                 }
             }
         }
@@ -278,7 +303,11 @@ private fun LoadedContent(
     uiState: TranslationUiState.Loaded,
     onTitlePlaced: (Int) -> Unit,
     onStress: (String) -> Unit,
-    onLink: (String) -> Unit
+    onLink: (String) -> Unit,
+    hintVisible: Boolean,
+    onWordLinksShown: () -> Unit,
+    onHintDone: (byTap: Boolean) -> Unit,
+    onWordLink: (WordLinkSpan) -> Unit
 ) {
     val translation = uiState.translation
     SelectionContainer {
@@ -299,7 +328,12 @@ private fun LoadedContent(
             TranslationText(
                 html = translation.html,
                 abbreviations = Abbreviations.of(translation.word.dictionary),
-                onLink = onLink
+                onLink = onLink,
+                wordLinks = uiState.wordLinks,
+                onWordLink = onWordLink,
+                hintVisible = hintVisible,
+                onWordLinksShown = onWordLinksShown,
+                onHintDone = onHintDone
             )
         }
     }

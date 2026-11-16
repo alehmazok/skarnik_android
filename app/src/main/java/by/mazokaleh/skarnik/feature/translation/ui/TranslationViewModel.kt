@@ -12,6 +12,7 @@ import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksRepository
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
 import by.mazokaleh.skarnik.feature.review.domain.ShouldAskForReviewUseCase
 import by.mazokaleh.skarnik.feature.stress.domain.GetStressCandidatesUseCase
+import by.mazokaleh.skarnik.feature.translation.domain.FindWordLinksUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import by.mazokaleh.skarnik.feature.translation.domain.TranslationResult
@@ -34,11 +35,15 @@ sealed interface TranslationUiState {
     /** [word] is known when the screen was opened from a list; links and redirects open by id only. */
     data class Loading(val word: String?) : TranslationUiState
 
-    /** [stressCandidates]: the words the «На́ціск» button offers; empty hides it. */
+    /**
+     * [stressCandidates]: the words the «На́ціск» button offers; empty hides it. [wordLinks]: the words of the
+     * translation that open their own entry, by `wordKey`.
+     */
     data class Loaded(
         val translation: Translation,
         val bookmarked: Boolean,
-        val stressCandidates: List<String> = emptyList()
+        val stressCandidates: List<String> = emptyList(),
+        val wordLinks: Map<String, WordLink> = emptyMap()
     ) : TranslationUiState
 
     data class Error(val word: String?) : TranslationUiState
@@ -69,6 +74,7 @@ class TranslationViewModel @AssistedInject constructor(
     private val shouldAskForReview: ShouldAskForReviewUseCase
 ) : ViewModel() {
     private val stressCandidates = GetStressCandidatesUseCase(words)
+    private val findWordLinks = FindWordLinksUseCase(words)
     private val _uiState = MutableStateFlow<TranslationUiState>(TranslationUiState.Loading(route.word))
     val uiState: StateFlow<TranslationUiState> = _uiState.asStateFlow()
 
@@ -102,6 +108,12 @@ class TranslationViewModel @AssistedInject constructor(
         }
     }
 
+    /** A Belarusian [word] of the translation was tapped; the screen opens [target]. */
+    fun onWordLinkClicked(word: String, target: WordLink) {
+        val loaded = _uiState.value as? TranslationUiState.Loaded ?: return
+        analytics.log(AnalyticsEvent.TranslationWordClicked(loaded.translation.word, word, target))
+    }
+
     /** The share sheet opens with this translation's link. */
     fun onShare(translation: Translation) {
         analytics.log(AnalyticsEvent.Share(translation.shareUrl))
@@ -132,10 +144,11 @@ class TranslationViewModel @AssistedInject constructor(
                 }
                 val bookmarked = suspendRunCatching { bookmarks.isBookmarked(word) }.getOrDefault(false)
                 val candidates = stressCandidates(word, result.translation.html)
+                val links = findWordLinks(word, result.translation.html)
                 analytics.log(AnalyticsEvent.TranslationViewed(result.translation))
                 // Counted after a translation loads, as in Flutter; not awaited by the screen.
                 viewModelScope.launch { if (shouldAskForReview()) _events.send(TranslationEvent.AskForReview) }
-                TranslationUiState.Loaded(result.translation, bookmarked, candidates)
+                TranslationUiState.Loaded(result.translation, bookmarked, candidates, links)
             }
         }
     }
