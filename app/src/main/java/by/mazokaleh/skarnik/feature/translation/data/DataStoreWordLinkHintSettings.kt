@@ -13,9 +13,8 @@ import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
 /** New in the native app, so nothing to migrate from Flutter. */
-class DataStoreWordLinkHintSettings @Inject constructor(
-    private val settings: DataStore<Preferences>
-) : WordLinkHintSettings {
+class DataStoreWordLinkHintSettings @Inject constructor(private val settings: DataStore<Preferences>) :
+    WordLinkHintSettings {
     override suspend fun isHintShown(): Boolean = settings.data.first()[SHOWN] == true
 
     override suspend fun markHintShown() {

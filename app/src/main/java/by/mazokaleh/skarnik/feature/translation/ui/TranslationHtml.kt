@@ -229,7 +229,10 @@ private class HtmlTextBuilder(
     /** Appends the children of [element], noting it as a [HeadwordRun] when its words may be linked. */
     private fun appendChildren(element: Element, isLink: Boolean) {
         val dataWord = element.attr("data-word").trim().takeIf { it.isNotEmpty() }
-        val headword = wordLinks.isNotEmpty() && !isLink && linkDepth == 0 && headwordDepth == 0 &&
+        val headword = wordLinks.isNotEmpty() &&
+            !isLink &&
+            linkDepth == 0 &&
+            headwordDepth == 0 &&
             (dataWord != null || element.isHeadwordColoured())
         val start = plain.length
         if (isLink) linkDepth++
