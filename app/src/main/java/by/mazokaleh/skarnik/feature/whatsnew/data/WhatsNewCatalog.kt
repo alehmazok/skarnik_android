@@ -18,6 +18,11 @@ object WhatsNewCatalog {
                     R.drawable.ic_chat_bubble_outline,
                     R.string.whats_new_4_1_0_abbreviations_title,
                     R.string.whats_new_4_1_0_abbreviations_text
+                ),
+                WhatsNewItem(
+                    R.drawable.ic_link,
+                    R.string.whats_new_4_1_0_word_links_title,
+                    R.string.whats_new_4_1_0_word_links_text
                 )
             )
         ),
