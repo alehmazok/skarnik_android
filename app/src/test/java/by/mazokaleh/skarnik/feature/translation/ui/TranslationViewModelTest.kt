@@ -193,7 +193,7 @@ class TranslationViewModelTest {
 
     @Test
     fun `a redirect asks to open the target and is not saved to history`() = runTest {
-        api = RemoteTranslationSource { _, _ -> TranslationEntry(null, null, "https://skarnik.by/tsbm/3528") }
+        api = RemoteTranslationSource { _, _ -> TranslationEntry(null, null, "https://skarnik.app/r/tsbm/3528") }
         val viewModel = viewModel()
 
         viewModel.events.test {
@@ -266,7 +266,7 @@ class TranslationViewModelTest {
 
     @Test
     fun `errors and redirects are not counted as views`() = runTest {
-        api = RemoteTranslationSource { _, _ -> TranslationEntry(null, null, "https://skarnik.by/tsbm/3528") }
+        api = RemoteTranslationSource { _, _ -> TranslationEntry(null, null, "https://skarnik.app/r/tsbm/3528") }
         viewModel()
         api = RemoteTranslationSource { _, _ -> throw IOException("offline") }
         viewModel()

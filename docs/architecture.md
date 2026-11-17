@@ -88,7 +88,7 @@ Navigation Compose with type-safe routes (`@Serializable` objects/classes). Targ
   nested `NavHost` per list (`navigation/TranslationPane.kt`: placeholder → translation → links and stress
   screens); the open row is highlighted. Below 840 dp a tap opens the word full screen; a word still open when the
   window narrows takes the list's place until back.
-- Deep links `skarnik.by/<dict>/<id>` and `skarnik.app/r/<dict>/<id>` open Translation.
+- Deep links `skarnik.app/r/<dict>/<id>` open Translation.
 
 ## Local storage
 
@@ -138,7 +138,7 @@ flowchart LR
 - `TranslationRoute(langId, wordId, word?, saveToHistory, redirectedFrom?)`; the ViewModel is assisted-injected
   with the route. It looks the word up in the index (so links and redirects open by id), runs the chain, saves
   the word to history (unless opened from history/bookmarks) and reads the bookmark state.
-- Any source may answer with `redirect_to` (a `WordLink`: `skarnik.by/<dict>/<id>`, `skarnik.app/r/...` or a bare
+- Any source may answer with `redirect_to` (a `WordLink`: `skarnik.app/r/...`, `/<dict>/<id>` on any host or a bare
   path); the target replaces the alias in the back stack and shows «Перанакіравана з «…»».
 - Both network sources go through one OkHttp client; a network interceptor makes successful GETs fresh in a
   20 MB disk cache (`cache/http`) for Remote Config's `http_cache_duration_in_hours` (24 h by default). The app

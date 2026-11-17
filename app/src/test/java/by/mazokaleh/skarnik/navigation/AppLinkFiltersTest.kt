@@ -58,14 +58,9 @@ class AppLinkFiltersTest {
     }
 
     @Test
-    fun `claims the share link and every legacy site dictionary`() {
+    fun `claims only the share link`() {
         val claimed = filters.flatMap { f -> f.hosts.flatMap { h -> f.prefixes.map { "$h$it" } } }.toSet()
-        Dictionary.entries.forEach {
-            assertTrue("skarnik.by/${it.path}/" in claimed, it.path)
-            assertTrue("www.skarnik.by/${it.path}/" in claimed, it.path)
-        }
-        assertTrue("skarnik.app/r/" in claimed)
-        assertTrue("www.skarnik.app/r/" in claimed)
+        assertEquals(setOf("skarnik.app/r/", "www.skarnik.app/r/"), claimed)
     }
 
     @Test

@@ -102,7 +102,7 @@ class TranslationHtmlTest {
 
     @Test
     fun `links report their href when clicked`() {
-        val text = render("""<i>смотрите</i> <a href="http://www.skarnik.by/rusbel/47880">нерв</a>""")
+        val text = render("""<i>смотрите</i> <a href="http://example.org/rusbel/47880">нерв</a>""")
 
         val links = text.getLinkAnnotations(0, text.length)
         assertEquals(1, links.size)
@@ -110,7 +110,7 @@ class TranslationHtmlTest {
         assertEquals("нерв", text.text.substring(link.start, link.end))
         val clickable = link.item as LinkAnnotation.Clickable
         clickable.linkInteractionListener!!.onClick(clickable)
-        assertEquals(listOf("http://www.skarnik.by/rusbel/47880"), clicked)
+        assertEquals(listOf("http://example.org/rusbel/47880"), clicked)
     }
 
     @Test
