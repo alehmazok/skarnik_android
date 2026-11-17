@@ -1,14 +1,19 @@
 package by.mazokaleh.skarnik.core.config
 
+import android.util.Log
 import by.mazokaleh.skarnik.core.common.IoDispatcher
 import by.mazokaleh.skarnik.core.common.await
+import com.google.firebase.remoteconfig.ConfigUpdate
+import com.google.firebase.remoteconfig.ConfigUpdateListener
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigException
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigValue
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration
@@ -25,7 +30,14 @@ interface RemoteConfig {
     /** How long fetched translations and stress tables are served from the HTTP cache. */
     val httpCacheLifetime: Duration
 
-    /** Fetches new values and activates them at once, as Flutter did. Throws when the fetch fails. */
+    /** Where a translation shows the link to the same word in the other dictionary (Бел-Рус ⇄ ТСБМ); an A/B test. */
+    val dictionaryLinkPlacement: DictionaryLinkPlacement
+
+    /**
+     * Fetches new values and activates them at once, as Flutter did, and from then on activates values published in
+     * the console as they arrive (real-time updates), so they don't wait for the 12-hour throttle and a cold start.
+     * Throws when the fetch fails; real-time updates are registered even then.
+     */
     suspend fun fetchAndActivate()
 }
 
@@ -39,16 +51,42 @@ class FirebaseAppRemoteConfig @Inject constructor(@IoDispatcher private val ioDi
     override val httpCacheLifetime: Duration
         get() = httpCacheLifetimeOf(config.getValue(HTTP_CACHE_DURATION_IN_HOURS))
 
+    /** Read when a translation loads, so a new value applies from the next word opened. */
+    override val dictionaryLinkPlacement: DictionaryLinkPlacement
+        get() = dictionaryLinkPlacementOf(config.getValue(DICTIONARY_LINK_PLACEMENT))
+
+    private val listening = AtomicBoolean(false)
+
     override suspend fun fetchAndActivate() {
         withContext(ioDispatcher) {
             config.setConfigSettingsAsync(SETTINGS).await()
+            listenForUpdates()
             config.fetchAndActivate().await()
         }
     }
 
+    /** Once per process: the backend pushes a change as soon as it is published, and it applies at once. */
+    private fun listenForUpdates() {
+        if (!listening.compareAndSet(false, true)) return
+        config.addOnConfigUpdateListener(object : ConfigUpdateListener {
+            override fun onUpdate(configUpdate: ConfigUpdate) {
+                config.activate()
+            }
+
+            override fun onError(error: FirebaseRemoteConfigException) {
+                Log.w(TAG, "Remote Config real-time updates failed", error)
+            }
+        })
+    }
+
     companion object {
+        private const val TAG = "RemoteConfig"
+
         /** Flutter's parameter name (`AppConfig.httpCacheDurationInHours`); the Firebase app is shared. */
         const val HTTP_CACHE_DURATION_IN_HOURS = "http_cache_duration_in_hours"
+
+        /** New in the native apps (skarnik_ios reads the same parameter): `header`, `footer` or `none`. */
+        const val DICTIONARY_LINK_PLACEMENT = "dictionary_link_placement"
 
         /** Flutter's default for the parameter. */
         val DEFAULT_HTTP_CACHE_LIFETIME: Duration = 24.hours
@@ -71,6 +109,30 @@ internal fun httpCacheLifetimeOf(value: FirebaseRemoteConfigValue): Duration {
     if (value.source == FirebaseRemoteConfig.VALUE_SOURCE_STATIC) return default
     val hours = runCatching { value.asLong() }.getOrNull()
     return if (hours == null || hours < 0) default else hours.hours
+}
+
+/** The variants of the `dictionary_link_placement` experiment, by their Remote Config value. */
+enum class DictionaryLinkPlacement(val configValue: String) {
+    /** A chip under the headword, beside «На́ціск». */
+    Header("header"),
+
+    /** A row after the translation. */
+    Footer("footer"),
+
+    /** No link: the experiment's control group. */
+    None("none");
+
+    companion object {
+        /** What the app shows before the first fetch, without an experiment, or for a value it does not know. */
+        val DEFAULT = Header
+    }
+}
+
+/** The placement from the parameter's value; a missing (static), empty or unknown value means the default. */
+internal fun dictionaryLinkPlacementOf(value: FirebaseRemoteConfigValue): DictionaryLinkPlacement {
+    if (value.source == FirebaseRemoteConfig.VALUE_SOURCE_STATIC) return DictionaryLinkPlacement.DEFAULT
+    val raw = value.asString().trim().lowercase()
+    return DictionaryLinkPlacement.entries.firstOrNull { it.configValue == raw } ?: DictionaryLinkPlacement.DEFAULT
 }
 
 @Module

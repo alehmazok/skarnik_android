@@ -1,0 +1,57 @@
+# Dictionary link: a Бел-Рус entry links to the same word in ТСБМ. Works with the `header` and `footer` placements
+# (not `none`). Needs network: the translations come from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: Open the same word in the other dictionary
+tags:
+  - translation
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/decline-analytics.yaml
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+# «прывітанне» is belrus/76967 and tsbm/65172.
+- launchApp:
+    arguments:
+      word_link: "https://skarnik.app/r/belrus/76967"
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 60000
+- takeScreenshot: dictionary-link
+# The placement comes from Remote Config (`dictionary_link_placement`), which the debug app fetches like any other,
+# so the flow follows whichever variant it got: the chip under the headword, or the card after the translation.
+# The chip and the card merge their labels into one node with no text in the uiautomator dump: matched by id only.
+- runFlow:
+    when:
+      visible:
+        id: translation_dictionary_link_chip
+    commands:
+      - tapOn:
+          id: translation_dictionary_link_chip
+      # Loaded, so the ТСБМ entry's own chip (back to Бел-Рус) is there and the next step is skipped.
+      - extendedWaitUntil:
+          visible: "Тлумачэнне слова"
+          timeout: 30000
+- runFlow:
+    when:
+      notVisible:
+        id: translation_dictionary_link_chip
+    commands:
+      - scrollUntilVisible:
+          element:
+            id: translation_dictionary_link_row
+          direction: DOWN
+          timeout: 20000
+      - tapOn:
+          id: translation_dictionary_link_row
+- extendedWaitUntil:
+    visible: "Тлумачэнне слова"
+    timeout: 30000
+- takeScreenshot: dictionary-link-opened
+- back
+- extendedWaitUntil:
+    visible: "Пераклад на рускую мову"
+    timeout: 10000

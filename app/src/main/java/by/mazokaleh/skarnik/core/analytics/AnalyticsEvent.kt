@@ -90,6 +90,22 @@ sealed class AnalyticsEvent(val name: String) {
             "target_word_id" to target.wordId
         )
     }
+
+    /**
+     * The link to the same word in the other dictionary (Бел-Рус ⇄ ТСБМ) was tapped (new, not in Flutter). The goal
+     * event of the `dictionary_link_placement` experiment; [placement] is its Remote Config value.
+     */
+    data class DictionaryLinkClicked(val from: Word, val target: WordLink, val placement: String) :
+        AnalyticsEvent("dictionary_link_clicked") {
+        override val params: Map<String, Any> = mapOf(
+            "word" to from.word,
+            "dict_name" to from.dictionary.analyticsName,
+            "dict_path" to from.dictionary.path,
+            "target_dict_path" to target.dictionary.path,
+            "target_word_id" to target.wordId,
+            "placement" to placement
+        )
+    }
 }
 
 /** Flutter's `Dictionary` enum names, which the existing reports group by. */

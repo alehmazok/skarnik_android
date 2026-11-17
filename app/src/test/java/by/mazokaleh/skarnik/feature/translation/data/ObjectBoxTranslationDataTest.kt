@@ -60,6 +60,28 @@ class ObjectBoxTranslationDataTest {
     }
 
     @Test
+    fun `the same word is found in the other dictionary, the lowest id of homonyms`() = runTest {
+        val tsbm = assertNotNull(words.sameWord("прывітанне", Dictionary.Tsbm))
+        assertEquals(Dictionary.Tsbm, tsbm.dictionary)
+        assertEquals("прывітанне", words.find(Dictionary.Tsbm, tsbm.wordId)?.lword)
+        val belRus = assertNotNull(words.sameWord("прывітанне", Dictionary.BelRus))
+        assertEquals("прывітанне", words.find(Dictionary.BelRus, belRus.wordId)?.lword)
+
+        // «рваць» has two ТСБМ entries.
+        val homonyms = stores.searchBox
+            .query(
+                ObjectboxSearchWord_.lword.equal("рваць", StringOrder.CASE_SENSITIVE)
+                    .and(ObjectboxSearchWord_.langId.equal(Dictionary.Tsbm.langId))
+            )
+            .build()
+            .use { query -> query.find().map { it.wordId } }
+        assertEquals(2, homonyms.size)
+        assertEquals(homonyms.min(), words.sameWord("рваць", Dictionary.Tsbm)?.wordId)
+
+        assertNull(words.sameWord("привет", Dictionary.Tsbm))
+    }
+
+    @Test
     fun `reads a downloaded entry by langId and wordId`() = runTest {
         stores.translationBox.put(
             ObjectboxTranslationWord(

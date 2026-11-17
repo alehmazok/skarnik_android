@@ -3,6 +3,8 @@ package by.mazokaleh.skarnik.feature.translation.ui
 import app.cash.turbine.test
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.analytics.FakeAnalytics
+import by.mazokaleh.skarnik.core.config.DictionaryLinkPlacement
+import by.mazokaleh.skarnik.core.config.FakeRemoteConfig
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.core.model.SavedWordsPage
@@ -13,6 +15,7 @@ import by.mazokaleh.skarnik.feature.favorites.domain.BookmarksSortOrder
 import by.mazokaleh.skarnik.feature.history.domain.HistoryRepository
 import by.mazokaleh.skarnik.feature.review.domain.FakeReviewSettings
 import by.mazokaleh.skarnik.feature.review.domain.ShouldAskForReviewUseCase
+import by.mazokaleh.skarnik.feature.translation.domain.DictionaryLink
 import by.mazokaleh.skarnik.feature.translation.domain.GetTranslationUseCase
 import by.mazokaleh.skarnik.feature.translation.domain.RemoteTranslationSource
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
@@ -41,6 +44,8 @@ class TranslationViewModelTest {
     private val bookmarks = FakeBookmarks()
     private val analytics = FakeAnalytics()
     private val review = FakeReviewSettings()
+    private val remoteConfig = FakeRemoteConfig()
+    private val tsbm = mapOf("бурштын" to WordLink(Dictionary.Tsbm, 10976))
     private var api: RemoteTranslationSource = RemoteTranslationSource { _, _ ->
         TranslationEntry(stress = null, html = "янтарь", redirectTo = null)
     }
@@ -63,6 +68,9 @@ class TranslationViewModelTest {
 
             override suspend fun belarusianWords(keys: Set<String>) =
                 keys.associateWith { WordLink(Dictionary.BelRus, it.length.toLong()) }
+
+            override suspend fun sameWord(lword: String, dictionary: Dictionary) =
+                tsbm[lword].takeIf { dictionary == Dictionary.Tsbm }
         },
         getTranslation = GetTranslationUseCase(
             local = { _, _ -> null },
@@ -80,7 +88,8 @@ class TranslationViewModelTest {
         },
         bookmarks = bookmarks,
         analytics = analytics,
-        shouldAskForReview = ShouldAskForReviewUseCase(review)
+        shouldAskForReview = ShouldAskForReviewUseCase(review),
+        remoteConfig = remoteConfig
     )
 
     @Test
@@ -125,6 +134,34 @@ class TranslationViewModelTest {
             AnalyticsEvent.TranslationWordClicked(word, "янтар", WordLink(Dictionary.BelRus, 5)),
             analytics.events.last()
         )
+    }
+
+    @Test
+    fun `links the same word in ТСБМ where the experiment places it and logs a tap`() = runTest {
+        remoteConfig.dictionaryLinkPlacement = DictionaryLinkPlacement.Footer
+        val viewModel = viewModel()
+        val loaded = assertIs<TranslationUiState.Loaded>(viewModel.uiState.value)
+
+        assertEquals(
+            DictionaryLink(WordLink(Dictionary.Tsbm, 10976), DictionaryLinkPlacement.Footer),
+            loaded.dictionaryLink
+        )
+
+        viewModel.onDictionaryLinkClicked()
+
+        assertEquals(
+            AnalyticsEvent.DictionaryLinkClicked(word, WordLink(Dictionary.Tsbm, 10976), "footer"),
+            analytics.events.last()
+        )
+    }
+
+    @Test
+    fun `the control group gets no dictionary link`() = runTest {
+        remoteConfig.dictionaryLinkPlacement = DictionaryLinkPlacement.None
+
+        val loaded = assertIs<TranslationUiState.Loaded>(viewModel().uiState.value)
+
+        assertEquals(null, loaded.dictionaryLink)
     }
 
     @Test
