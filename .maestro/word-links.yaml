@@ -1,0 +1,34 @@
+# Word links: a tap on a Belarusian word of a Рус-Бел translation opens its Бел-Рус entry. Needs network: the
+# translation comes from the admin API (or Supabase).
+appId: by.mazokaleh.skarnik.debug
+name: Open a Belarusian word from a translation
+tags:
+  - translation
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/decline-analytics.yaml
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+# «вопрос» (rusbel/10423) translates as «пытанне», «запытанне».
+- launchApp:
+    arguments:
+      word_link: "https://skarnik.app/r/rusbel/10423"
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 60000
+- takeScreenshot: word-links
+- tapOn:
+    id: translation_word_link
+    text: "пытанне"
+- extendedWaitUntil:
+    visible: "Пераклад на рускую мову"
+    timeout: 30000
+- takeScreenshot: word-link-opened
+- back
+- extendedWaitUntil:
+    visible: "Пераклад на беларускую мову"
+    timeout: 10000

@@ -50,10 +50,13 @@ class ObjectBoxTranslationDataTest {
     }
 
     @Test
-    fun `stress candidates are known only as Бел-Рус or ТСБМ headwords`() = runTest {
-        val known = words.knownWords(setOf("прывітанне", "привет", "прывітаннем"))
+    fun `Belarusian words are found only as Бел-Рус or ТСБМ headwords`() = runTest {
+        val found = words.belarusianWords(setOf("прывітанне", "привет", "прывітаннем"))
 
-        assertEquals(setOf("прывітанне"), known)
+        assertEquals(setOf("прывітанне"), found.keys)
+        val link = assertNotNull(found["прывітанне"])
+        val word = assertNotNull(words.find(link.dictionary, link.wordId))
+        assertEquals("прывітанне", word.lword)
     }
 
     @Test

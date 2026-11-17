@@ -3,6 +3,7 @@ package by.mazokaleh.skarnik.core.analytics
 import by.mazokaleh.skarnik.BuildConfig
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.Word
+import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.search.domain.SearchWord
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 import kotlin.test.assertEquals
@@ -84,5 +85,22 @@ class AnalyticsEventTest {
             AnalyticsEvent.OfflineDictionaryDownloadClicked(Dictionary.Tsbm).params
         )
         assertEquals(mapOf("word" to "пара"), AnalyticsEvent.StressClicked("пара").params)
+    }
+
+    @Test
+    fun `word link events`() {
+        val event = AnalyticsEvent.TranslationWordClicked(word, "янтар", WordLink(Dictionary.BelRus, 7))
+
+        assertEquals("translation_word_clicked", event.name)
+        assertEquals(
+            mapOf(
+                "word" to "янтар",
+                "dict_name" to word.dictionary.analyticsName,
+                "dict_path" to word.dictionary.path,
+                "target_dict_path" to "belrus",
+                "target_word_id" to 7L
+            ),
+            event.params
+        )
     }
 }

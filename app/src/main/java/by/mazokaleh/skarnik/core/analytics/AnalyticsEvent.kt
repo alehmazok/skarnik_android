@@ -3,6 +3,7 @@ package by.mazokaleh.skarnik.core.analytics
 import by.mazokaleh.skarnik.BuildConfig
 import by.mazokaleh.skarnik.core.model.Dictionary
 import by.mazokaleh.skarnik.core.model.Word
+import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.search.domain.SearchWord
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
 
@@ -76,6 +77,18 @@ sealed class AnalyticsEvent(val name: String) {
     /** The «На́ціск» screen opened for [word]. */
     data class StressClicked(val word: String) : AnalyticsEvent("stress_clicked") {
         override val params: Map<String, Any> = mapOf("word" to word)
+    }
+
+    /** A Belarusian [word] in the translation of [from] was tapped and opened [target] (new, not in Flutter). */
+    data class TranslationWordClicked(val from: Word, val word: String, val target: WordLink) :
+        AnalyticsEvent("translation_word_clicked") {
+        override val params: Map<String, Any> = mapOf(
+            "word" to word,
+            "dict_name" to from.dictionary.analyticsName,
+            "dict_path" to from.dictionary.path,
+            "target_dict_path" to target.dictionary.path,
+            "target_word_id" to target.wordId
+        )
     }
 }
 

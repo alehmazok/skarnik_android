@@ -61,7 +61,8 @@ class TranslationViewModelTest {
             override suspend fun find(dictionary: Dictionary, wordId: Long) =
                 word.takeIf { it.dictionary == dictionary && it.wordId == wordId }
 
-            override suspend fun knownWords(lwords: Set<String>) = lwords
+            override suspend fun belarusianWords(keys: Set<String>) =
+                keys.associateWith { WordLink(Dictionary.BelRus, it.length.toLong()) }
         },
         getTranslation = GetTranslationUseCase(
             local = { _, _ -> null },
@@ -102,6 +103,28 @@ class TranslationViewModelTest {
         val loaded = assertIs<TranslationUiState.Loaded>(viewModel().uiState.value)
 
         assertEquals(listOf("бурштын", "янтар"), loaded.stressCandidates)
+    }
+
+    @Test
+    fun `links the other Belarusian words of the translation and logs a tap`() = runTest {
+        api = RemoteTranslationSource { _, _ ->
+            TranslationEntry(stress = null, html = "<font color=\"#831b03\">янтар, бурштын</font>", redirectTo = null)
+        }
+        val viewModel = viewModel()
+        val loaded = assertIs<TranslationUiState.Loaded>(viewModel.uiState.value)
+
+        // The fake index gives each word the id of its length; «бурштын» (7) is not this entry (27890).
+        assertEquals(
+            mapOf("янтар" to WordLink(Dictionary.BelRus, 5), "бурштын" to WordLink(Dictionary.BelRus, 7)),
+            loaded.wordLinks
+        )
+
+        viewModel.onWordLinkClicked("янтар", WordLink(Dictionary.BelRus, 5))
+
+        assertEquals(
+            AnalyticsEvent.TranslationWordClicked(word, "янтар", WordLink(Dictionary.BelRus, 5)),
+            analytics.events.last()
+        )
     }
 
     @Test

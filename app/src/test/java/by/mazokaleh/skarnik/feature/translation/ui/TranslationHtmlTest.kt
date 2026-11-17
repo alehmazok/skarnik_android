@@ -6,6 +6,8 @@ import androidx.compose.ui.text.LinkAnnotation
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.TextUnit
+import by.mazokaleh.skarnik.core.model.Dictionary
+import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
 import by.mazokaleh.skarnik.feature.translation.domain.TsbmAbbreviations
 import kotlin.test.assertEquals
@@ -176,5 +178,39 @@ class TranslationHtmlTest {
         assertEquals("творны склон", spans[0].expansion)
         assertEquals("адценне значэння", spans[2].expansion)
         assertTrue(spans[5].expansion.startsWith("Якуб Колас:"), spans[5].expansion)
+    }
+
+    @Test
+    fun `marks the known words of headword-coloured runs as word links`() {
+        val links = mapOf("янтар" to WordLink(Dictionary.BelRus, 10), "бурштын" to WordLink(Dictionary.BelRus, 20))
+        val text = translationHtmlToAnnotatedString(
+            """янтарь — <font color="#831b03">Я́нтар, <b>бурштын</b>, цельпука</font> """ +
+                """<a href="/belrus/20"><font color="#831b03">бурштын</font></a>""",
+            colors,
+            wordLinks = links
+        ) { clicked += it }
+
+        val spans = text.wordLinkSpans()
+
+        assertEquals(listOf("Я́нтар", "бурштын"), spans.map { it.word })
+        assertEquals(listOf(WordLink(Dictionary.BelRus, 10), WordLink(Dictionary.BelRus, 20)), spans.map { it.link })
+        assertEquals("Я́нтар", text.text.substring(spans[0].start, spans[0].end))
+    }
+
+    @Test
+    fun `a data-word run is one word link`() {
+        val links = mapOf("янтар" to WordLink(Dictionary.BelRus, 10))
+        val text = translationHtmlToAnnotatedString(
+            """<font color="#831b03" data-word="янтар"> я́нтар </font>""",
+            colors,
+            wordLinks = links
+        ) { clicked += it }
+
+        assertEquals(listOf("я́нтар"), text.wordLinkSpans().map { it.word })
+    }
+
+    @Test
+    fun `no word links without the map`() {
+        assertTrue(render("""<font color="#831b03">янтар</font>""").wordLinkSpans().isEmpty())
     }
 }

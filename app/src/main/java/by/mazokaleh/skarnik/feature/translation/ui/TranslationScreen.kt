@@ -124,6 +124,10 @@ fun TranslationScreen(
         },
         onRetry = viewModel::retry,
         onStress = onStress,
+        onWordLink = { span ->
+            viewModel.onWordLinkClicked(span.word, span.link)
+            onOpenWord(span.link)
+        },
         onLink = { href ->
             val link = WordLink.parse(href)
             when {
@@ -196,7 +200,8 @@ private fun TranslationContent(
     onShare: (Translation) -> Unit,
     onRetry: () -> Unit,
     onStress: (String) -> Unit,
-    onLink: (String) -> Unit
+    onLink: (String) -> Unit,
+    onWordLink: (WordLinkSpan) -> Unit = {}
 ) {
     // M3: the bar takes the scrolled-under colour once content slides beneath it, and shows the word once the
     // headline has scrolled out of view.
@@ -233,7 +238,13 @@ private fun TranslationContent(
                 when (uiState) {
                     is TranslationUiState.Loading -> LoadingContent(uiState.word, onTitlePlaced)
                     is TranslationUiState.Error -> ErrorContent(uiState.word, onTitlePlaced, onRetry)
-                    is TranslationUiState.Loaded -> LoadedContent(uiState, onTitlePlaced, onStress, onLink)
+                    is TranslationUiState.Loaded -> LoadedContent(
+                        uiState = uiState,
+                        onTitlePlaced = onTitlePlaced,
+                        onStress = onStress,
+                        onLink = onLink,
+                        onWordLink = onWordLink
+                    )
                 }
             }
         }
@@ -278,7 +289,8 @@ private fun LoadedContent(
     uiState: TranslationUiState.Loaded,
     onTitlePlaced: (Int) -> Unit,
     onStress: (String) -> Unit,
-    onLink: (String) -> Unit
+    onLink: (String) -> Unit,
+    onWordLink: (WordLinkSpan) -> Unit
 ) {
     val translation = uiState.translation
     SelectionContainer {
@@ -299,7 +311,9 @@ private fun LoadedContent(
             TranslationText(
                 html = translation.html,
                 abbreviations = Abbreviations.of(translation.word.dictionary),
-                onLink = onLink
+                onLink = onLink,
+                wordLinks = uiState.wordLinks,
+                onWordLink = onWordLink
             )
         }
     }

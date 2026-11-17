@@ -14,8 +14,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.em
+import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.translation.domain.AbbreviationScheme
 import by.mazokaleh.skarnik.feature.translation.domain.TextPlace
+import by.mazokaleh.skarnik.feature.translation.domain.headwordRunParts
+import by.mazokaleh.skarnik.feature.translation.domain.isHeadwordColoured
+import by.mazokaleh.skarnik.feature.translation.domain.wordKey
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.jsoup.nodes.Node
@@ -85,6 +89,12 @@ data class AbbreviationSpan(val start: Int, val end: Int, val abbreviation: Stri
 /** String annotation on every abbreviation; its item is the expansion. */
 const val ABBREVIATION_ANNOTATION = "abbreviation"
 
+/** A Belarusian word in the rendered text, from [start] to [end] (exclusive), that opens [link]. */
+data class WordLinkSpan(val start: Int, val end: Int, val word: String, val link: WordLink)
+
+/** String annotation on every word that opens its own entry; its item is the entry's path (`/belrus/123`). */
+const val WORD_LINK_ANNOTATION = "word_link"
+
 /**
  * Converts a translation's HTML into styled text: colours, bold, italic, underline, line breaks and links
  * (reported to [onLink] with their `href`). Unknown tags keep their text and drop their styling. `<font size>` is
@@ -94,17 +104,49 @@ const val ABBREVIATION_ANNOTATION = "abbreviation"
  * With [abbreviations], the abbreviations it finds in each kind of text ([TextPlace]: labels, plain text,
  * citations and their sources; never in headwords or links) carry an [ABBREVIATION_ANNOTATION] with their full
  * text (see [abbreviationSpans]).
+ *
+ * With [wordLinks] (by `wordKey`), the single words of headword-coloured runs (`#831b03`) that it has, or the whole
+ * run by its `data-word`, carry a [WORD_LINK_ANNOTATION] with their entry (see [wordLinkSpans]); never inside links.
  */
 fun translationHtmlToAnnotatedString(
     html: String,
     colors: TranslationColors,
     abbreviations: AbbreviationScheme? = null,
+    wordLinks: Map<String, WordLink> = emptyMap(),
     onLink: (String) -> Unit
-): AnnotatedString = HtmlTextBuilder(colors, abbreviations, onLink).build(html)
+): AnnotatedString = HtmlTextBuilder(colors, abbreviations, wordLinks, onLink).build(html)
+
+/** A headword-coloured run of the builder's text, with its `data-word` if it has one. */
+private data class HeadwordRun(val range: IntRange, val dataWord: String?)
+
+/** Adds a [WORD_LINK_ANNOTATION] over each word of [headwordRuns] that [wordLinks] has. */
+private fun AnnotatedString.Builder.addWordLinks(
+    plain: CharSequence,
+    headwordRuns: List<HeadwordRun>,
+    wordLinks: Map<String, WordLink>
+) {
+    headwordRuns.forEach { run ->
+        val text = plain.substring(run.range.first, run.range.last + 1)
+        val parts = if (run.dataWord != null) {
+            val word = text.trim()
+            val from = text.indexOf(word)
+            listOf((from until from + word.length) to run.dataWord).filter { word.isNotEmpty() }
+        } else {
+            headwordRunParts(text)
+        }
+        parts.forEach { (range, word) ->
+            val link = wordLinks[wordKey(word)] ?: return@forEach
+            val start = run.range.first + range.first
+            val end = start + range.last - range.first + 1
+            addStringAnnotation(WORD_LINK_ANNOTATION, link.path, start, end)
+        }
+    }
+}
 
 private class HtmlTextBuilder(
     private val colors: TranslationColors,
     private val abbreviations: AbbreviationScheme?,
+    private val wordLinks: Map<String, WordLink>,
     private val onLink: (String) -> Unit
 ) {
     private val builder = AnnotatedString.Builder()
@@ -120,9 +162,16 @@ private class HtmlTextBuilder(
     /** True while the current line holds nothing or only non-breaking spaces (an indent). */
     private var atLineStart = true
 
+    private val headwordRuns = mutableListOf<HeadwordRun>()
+
+    /** How many links and headword-coloured runs enclose the current node: words are linked only at 0. */
+    private var linkDepth = 0
+    private var headwordDepth = 0
+
     fun build(html: String): AnnotatedString {
         Jsoup.parseBodyFragment(html).body().childNodes().forEach(::appendNode)
         abbreviations?.let { builder.addAbbreviations(plain, runs, it) }
+        if (headwordRuns.isNotEmpty()) builder.addWordLinks(plain, headwordRuns, wordLinks)
         val text = builder.toAnnotatedString()
         val end = text.text.indexOfLast { !it.isWhitespace() } + 1
         return if (end == text.length) text else text.subSequence(0, end)
@@ -166,7 +215,7 @@ private class HtmlTextBuilder(
             builder.pushLink(link)
         }
         if (style != null) builder.pushStyle(style)
-        element.childNodes().forEach(::appendNode)
+        appendChildren(element, isLink = href != null)
         if (style != null) builder.pop()
         if (href != null) builder.pop()
         if (change is PlaceChange.To) {
@@ -175,6 +224,25 @@ private class HtmlTextBuilder(
                 runs += (start until plain.length) to TextPlace.Source
             }
         }
+    }
+
+    /** Appends the children of [element], noting it as a [HeadwordRun] when its words may be linked. */
+    private fun appendChildren(element: Element, isLink: Boolean) {
+        val dataWord = element.attr("data-word").trim().takeIf { it.isNotEmpty() }
+        val headword = wordLinks.isNotEmpty() &&
+            !isLink &&
+            linkDepth == 0 &&
+            headwordDepth == 0 &&
+            (dataWord != null || element.isHeadwordColoured())
+        val start = plain.length
+        if (isLink) linkDepth++
+        if (headword) headwordDepth++
+        element.childNodes().forEach(::appendNode)
+        if (headword) {
+            headwordDepth--
+            if (plain.length > start) headwordRuns += HeadwordRun(start until plain.length, dataWord)
+        }
+        if (isLink) linkDepth--
     }
 
     /** [TextPlace.Plain] outside any coloured element; null inside a link, headword or hidden text. */
@@ -191,14 +259,8 @@ private class HtmlTextBuilder(
             else -> null
         }
         classStyleOf(element, colors)?.let { style = (style ?: SpanStyle()).merge(it) }
-        colorOf(element)?.let { style = (style ?: SpanStyle()).copy(color = it) }
+        colorOf(element, colors)?.let { style = (style ?: SpanStyle()).copy(color = it) }
         return style
-    }
-
-    private fun colorOf(element: Element): Color? {
-        val raw = rawColorOf(element)
-        if (raw.isBlank()) return null
-        return colors.of(HtmlColorRole.of(raw) ?: HtmlColorRole.Plain)
     }
 
     /**
@@ -276,6 +338,12 @@ private fun classStyleOf(element: Element, colors: TranslationColors): SpanStyle
 
 private const val QUESTION_SIZE = 0.875f
 
+private fun colorOf(element: Element, colors: TranslationColors): Color? {
+    val raw = rawColorOf(element)
+    if (raw.isBlank()) return null
+    return colors.of(HtmlColorRole.of(raw) ?: HtmlColorRole.Plain)
+}
+
 private fun rawColorOf(element: Element): String = element.attr("color").ifBlank {
     CSS_COLOR.find(element.attr("style"))?.groupValues?.get(1).orEmpty()
 }
@@ -315,6 +383,17 @@ private fun AnnotatedString.Builder.addAbbreviations(
         }
     }
 }
+
+/** The words marked by [translationHtmlToAnnotatedString] as links to their entries, in text order. */
+fun AnnotatedString.wordLinkSpans(): List<WordLinkSpan> =
+    getStringAnnotations(WORD_LINK_ANNOTATION, 0, length).mapNotNull { annotation ->
+        WordLink.parse(annotation.item)?.let {
+            WordLinkSpan(annotation.start, annotation.end, text.substring(annotation.start, annotation.end), it)
+        }
+    }
+
+private val WordLink.path: String
+    get() = "/${dictionary.path}/$wordId"
 
 /** The abbreviations marked by [translationHtmlToAnnotatedString], in text order. */
 fun AnnotatedString.abbreviationSpans(): List<AbbreviationSpan> =
