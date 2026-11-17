@@ -5,7 +5,7 @@ import android.content.Intent
 import by.mazokaleh.skarnik.MainActivity
 import by.mazokaleh.skarnik.core.model.WordLink
 
-/** Intents that open a word in [MainActivity]: widget taps and app links (`skarnik.by`, `skarnik.app`; parity 9.1). */
+/** Intents that open a word in [MainActivity]: widget taps and app links (`skarnik.app/r/`; parity 9.1). */
 object WordLinkIntents {
     /** A word link (`https://skarnik.app/r/<dict>/<id>`) as a string extra. */
     const val EXTRA_WORD_LINK = "word_link"

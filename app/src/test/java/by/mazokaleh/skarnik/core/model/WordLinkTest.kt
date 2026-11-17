@@ -6,11 +6,11 @@ import org.junit.Test
 
 class WordLinkTest {
     @Test
-    fun `parses skarnik by, skarnik app and bare paths`() {
+    fun `parses skarnik app, legacy translation links and bare paths`() {
         val expected = WordLink(Dictionary.RusBel, 47880)
         listOf(
-            "http://www.skarnik.by/rusbel/47880",
-            "https://skarnik.by/rusbel/47880/",
+            "http://www.example.org/rusbel/47880",
+            "https://example.org/rusbel/47880/",
             "https://skarnik.app/r/rusbel/47880",
             "https://www.skarnik.app/r/rusbel/47880?utm=share",
             "/rusbel/47880",
@@ -28,8 +28,8 @@ class WordLinkTest {
     fun `rejects other sites and unknown dictionaries`() {
         listOf(
             "http://by-mova.livejournal.com/1012016.html",
-            "http://evil.com/rusbel/1",
-            "http://www.skarnik.by/unknown/1",
+            "http://example.org/unknown/1",
+            "http://example.org/a/rusbel/1",
             "/rusbel/abc",
             ""
         ).forEach { assertNull(WordLink.parse(it), it) }

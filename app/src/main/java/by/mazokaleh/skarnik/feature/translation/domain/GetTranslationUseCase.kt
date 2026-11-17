@@ -24,7 +24,7 @@ sealed interface TranslationResult {
 
 /**
  * The local store (offline dictionaries), then Supabase, then the admin API: the same order in every Skarnik
- * app (Aleh, 2026-11-05; Flutter asked the admin API before Supabase). The skarnik.by page scrape that came
+ * app (Aleh, 2026-11-05; Flutter asked the admin API before Supabase). The website page scrape that came
  * last in Flutter is dropped (parity 2.2). A source that answers with a redirect ends the chain. Throws when
  * every source fails.
  */

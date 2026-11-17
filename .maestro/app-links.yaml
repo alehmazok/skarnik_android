@@ -1,16 +1,16 @@
-# App links (parity 9.1): a skarnik.by link starts the app on that word; a skarnik.app share link opens over a
+# App links (parity 9.1): a skarnik.app share link starts the app on that word; another opens over the
 # running app. The debug app is not verified for the link hosts, so approve them once after installing, as CI does:
 #   adb shell pm set-app-links-user-selection --user 0 --package by.mazokaleh.skarnik.debug true all
 # Needs network: translations come from the admin API (or Supabase).
 appId: by.mazokaleh.skarnik.debug
-name: Open words from skarnik.by and skarnik.app links
+name: Open words from skarnik.app links
 tags:
   - links
 ---
 - clearState
-# Cold start from a legacy site link (Russian-Belarusian «нерв»).
+# Cold start from a share link (Russian-Belarusian «нерв»).
 - openLink:
-    link: "https://www.skarnik.by/rusbel/47880"
+    link: "https://skarnik.app/r/rusbel/47880"
 # The consent dialog shows over the opened word.
 - runFlow: subflows/decline-analytics.yaml
 - extendedWaitUntil:

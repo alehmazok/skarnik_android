@@ -24,7 +24,7 @@ fun wordKey(text: String): String = text.replace(STRESS_MARK, "").lowercase()
 
 /**
  * The Belarusian single words in a Бел-Рус or Рус-Бел translation, de-duplicated, before the index check (ТСБМ: none):
- * - `<font color="#831b03">` (scraped skarnik.by markup) or `<font|span style="color: #831b03">` (entries edited in
+ * - `<font color="#831b03">` (legacy markup) or `<font|span style="color: #831b03">` (entries edited in
  *   skarnik_admin's TinyMCE), split at commas;
  * - for Рус-Бел, the entry's `data-word` attributes instead, when it has any (skarnik_admin's `find_inner_stress`).
  *

@@ -40,7 +40,7 @@ enum class HtmlColorRole(vararg val hexes: String) {
 
     Muted("5f5f5f", "151b54"),
 
-    /** Spacers drawn in the page background colour on skarnik.by; Flutter kept them invisible too. */
+    /** Spacers drawn in the page background colour in the legacy markup; Flutter kept them invisible too. */
     Hidden("ffffff");
 
     companion object {
