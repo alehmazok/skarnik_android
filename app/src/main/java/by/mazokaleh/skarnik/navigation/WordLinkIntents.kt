@@ -24,4 +24,7 @@ object WordLinkIntents {
         val link = intent.getStringExtra(EXTRA_WORD_LINK) ?: intent.dataString
         return link?.let(WordLink::parse)
     }
+
+    /** Whether [intent] came from the widget (its extra) rather than an app link. */
+    fun isFromWidget(intent: Intent): Boolean = intent.hasExtra(EXTRA_WORD_LINK)
 }

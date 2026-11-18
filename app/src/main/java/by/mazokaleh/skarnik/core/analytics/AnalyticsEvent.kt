@@ -106,6 +106,33 @@ sealed class AnalyticsEvent(val name: String) {
             "placement" to placement
         )
     }
+
+    /**
+     * A word opened from outside the app: a widget tap or a `skarnik.app/r/` link. skarnik_ios logs both under this
+     * name with `word`, `word_id`, `lang_id` and `app_state`, so the reports combine; [source] is new and tells them
+     * apart. [word] is empty when the bundled index lacks the word.
+     */
+    data class WidgetDeepLink(val link: WordLink, val word: String, val appState: AppState, val source: Source) :
+        AnalyticsEvent("widget_deep_link") {
+        override val params: Map<String, Any> = mapOf(
+            "word" to word,
+            "word_id" to link.wordId,
+            "lang_id" to link.dictionary.langId,
+            "app_state" to appState.analyticsName,
+            "source" to source.analyticsName
+        )
+
+        /** [ColdStart]: the activity was created for the link; [Background]: it was already running. */
+        enum class AppState(val analyticsName: String) {
+            ColdStart("cold_start"),
+            Background("background")
+        }
+
+        enum class Source(val analyticsName: String) {
+            Widget("widget"),
+            AppLink("app_link")
+        }
+    }
 }
 
 /** Flutter's `Dictionary` enum names, which the existing reports group by. */

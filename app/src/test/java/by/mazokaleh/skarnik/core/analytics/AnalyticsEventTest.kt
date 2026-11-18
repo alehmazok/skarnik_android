@@ -121,4 +121,31 @@ class AnalyticsEventTest {
             event.params
         )
     }
+
+    @Test
+    fun `widget deep link has skarnik_ios's parameters plus source`() {
+        val event = AnalyticsEvent.WidgetDeepLink(
+            WordLink(Dictionary.BelRus, 27890),
+            "бурштын",
+            AnalyticsEvent.WidgetDeepLink.AppState.ColdStart,
+            AnalyticsEvent.WidgetDeepLink.Source.Widget
+        )
+
+        assertEquals("widget_deep_link", event.name)
+        assertEquals(
+            mapOf(
+                "word" to "бурштын",
+                "word_id" to 27890L,
+                "lang_id" to 1L,
+                "app_state" to "cold_start",
+                "source" to "widget"
+            ),
+            event.params
+        )
+        assertEquals(
+            "background",
+            AnalyticsEvent.WidgetDeepLink.AppState.Background.analyticsName
+        )
+        assertEquals("app_link", AnalyticsEvent.WidgetDeepLink.Source.AppLink.analyticsName)
+    }
 }

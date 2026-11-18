@@ -19,8 +19,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.lifecycleScope
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
+import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent.WidgetDeepLink
 import by.mazokaleh.skarnik.core.common.withAppLocale
 import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.WordLink
@@ -28,6 +30,7 @@ import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
 import by.mazokaleh.skarnik.feature.consent.ui.AnalyticsConsentHost
 import by.mazokaleh.skarnik.feature.whatsnew.ui.WhatsNewHost
+import by.mazokaleh.skarnik.navigation.LogWordLinkOpenedUseCase
 import by.mazokaleh.skarnik.navigation.SkarnikNavHost
 import by.mazokaleh.skarnik.navigation.WordLinkIntents
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
@@ -37,6 +40,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.launch
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -45,6 +49,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var analytics: Analytics
+
+    @Inject
+    lateinit var logWordLinkOpened: LogWordLinkOpenedUseCase
 
     /** Words to open, from the widget and app links. Buffered until the navigation graph collects them. */
     private val wordLinks = Channel<WordLink>(Channel.BUFFERED)
@@ -59,7 +66,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // A recreated activity (rotation, process death) already handled its intent.
         if (savedInstanceState == null) {
-            openWordFrom(intent)
+            openWordFrom(intent, WidgetDeepLink.AppState.ColdStart)
             analytics.log(AnalyticsEvent.AppOpen)
         }
         setContent {
@@ -101,11 +108,18 @@ class MainActivity : ComponentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        openWordFrom(intent)
+        openWordFrom(intent, WidgetDeepLink.AppState.Background)
     }
 
-    private fun openWordFrom(intent: Intent) {
-        WordLinkIntents.wordLink(intent)?.let { wordLinks.trySend(it) }
+    private fun openWordFrom(intent: Intent, appState: WidgetDeepLink.AppState) {
+        val link = WordLinkIntents.wordLink(intent) ?: return
+        wordLinks.trySend(link)
+        val source = if (WordLinkIntents.isFromWidget(intent)) {
+            WidgetDeepLink.Source.Widget
+        } else {
+            WidgetDeepLink.Source.AppLink
+        }
+        lifecycleScope.launch { logWordLinkOpened(link, appState, source) }
     }
 
     private companion object {
