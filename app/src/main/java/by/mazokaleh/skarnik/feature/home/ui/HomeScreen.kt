@@ -32,6 +32,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import by.mazokaleh.skarnik.R
+import by.mazokaleh.skarnik.core.analytics.Screen
 import by.mazokaleh.skarnik.core.model.SavedWord
 import by.mazokaleh.skarnik.core.ui.WindowWidthClass
 import by.mazokaleh.skarnik.feature.favorites.ui.BookmarksScreen
@@ -39,6 +40,7 @@ import by.mazokaleh.skarnik.feature.history.ui.HistoryScreen
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationRoute
 import by.mazokaleh.skarnik.feature.vocabulary.ui.VocabularyScreen
 import by.mazokaleh.skarnik.navigation.ListDetailLayout
+import by.mazokaleh.skarnik.navigation.TrackScreenView
 import by.mazokaleh.skarnik.navigation.rememberTranslationPaneState
 import kotlinx.serialization.Serializable
 
@@ -62,6 +64,14 @@ enum class HomeTab(
     Vocabulary(R.string.tab_dictionary, R.drawable.ic_book_outlined, R.drawable.ic_book, "home_tab_dictionary")
 }
 
+/** Each tab is its own screen in the `screen_view` reports. */
+private val HomeTab.screen: Screen
+    get() = when (this) {
+        HomeTab.History -> Screen.History
+        HomeTab.Bookmarks -> Screen.Favorites
+        HomeTab.Vocabulary -> Screen.Vocabulary
+    }
+
 /**
  * The top-level screen with the navigation bar, or a navigation rail from 600 dp. Each tab keeps its scroll
  * position, ViewModel and the word open beside it while another tab shows; back on another tab returns to History
@@ -72,6 +82,7 @@ fun HomeScreen(onSearchClick: () -> Unit, onSettingsClick: () -> Unit, onOpenTra
     var tab by rememberSaveable { mutableStateOf(HomeTab.History) }
     val tabStates = rememberSaveableStateHolder()
     BackHandler(enabled = tab != HomeTab.History) { tab = HomeTab.History }
+    TrackScreenView(tab.screen)
 
     BoxWithConstraints {
         val widthClass = WindowWidthClass.of(maxWidth)

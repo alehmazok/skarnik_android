@@ -30,7 +30,8 @@ the SDK deactivated.
   `setAnalyticsCollectionEnabled` when it changes and again at every app start. The dialog cannot be dismissed
   with back or a tap outside; declining is as easy as allowing. The Settings switch is the same answer.
 - **Anonymous.** Advertising-id collection and automatic screen views are off in the manifest: the dialog
-  promises anonymous statistics, and Flutter already turned screen views off.
+  promises anonymous statistics, and Flutter already turned screen views off. Since #83 the app logs
+  `screen_view` itself, with a screen name only ([ADR 0015](0015-screen-views.md)).
 - **No advertising-id permission** (issue #47, the counterpart of skarnik_ios#65). Firebase Analytics merges
   `com.google.android.gms.permission.AD_ID`, `ACCESS_ADSERVICES_AD_ID` and `ACCESS_ADSERVICES_ATTRIBUTION` into the
   app; the manifest removes all three with `tools:node="remove"`, Google's documented way (Android has no

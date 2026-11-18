@@ -6,10 +6,13 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.composable
 import androidx.navigation.toRoute
+import by.mazokaleh.skarnik.core.analytics.Screen
+import by.mazokaleh.skarnik.navigation.TrackScreenView
 
 /** The stress lookup and table screens, opened with [StressRoute] from a translation. */
 fun NavGraphBuilder.stressDestinations(navController: NavHostController) {
     composable<StressRoute> { entry ->
+        TrackScreenView(Screen.Stress)
         StressScreen(
             route = entry.toRoute(),
             onBack = dropUnlessResumed { navController.popBackStack() },
@@ -26,6 +29,7 @@ fun NavGraphBuilder.stressDestinations(navController: NavHostController) {
         )
     }
     composable<StressTableRoute> { entry ->
+        TrackScreenView(Screen.StressTable)
         StressTableScreen(
             route = entry.toRoute(),
             onBack = dropUnlessResumed { navController.popBackStack() }

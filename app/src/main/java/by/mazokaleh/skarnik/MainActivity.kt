@@ -11,6 +11,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -23,6 +24,7 @@ import androidx.lifecycle.lifecycleScope
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent.WidgetDeepLink
+import by.mazokaleh.skarnik.core.analytics.ScreenViewTracker
 import by.mazokaleh.skarnik.core.common.withAppLocale
 import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.WordLink
@@ -30,6 +32,7 @@ import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
 import by.mazokaleh.skarnik.feature.consent.ui.AnalyticsConsentHost
 import by.mazokaleh.skarnik.feature.whatsnew.ui.WhatsNewHost
+import by.mazokaleh.skarnik.navigation.LocalScreenViewTracker
 import by.mazokaleh.skarnik.navigation.LogWordLinkOpenedUseCase
 import by.mazokaleh.skarnik.navigation.SkarnikNavHost
 import by.mazokaleh.skarnik.navigation.WordLinkIntents
@@ -49,6 +52,9 @@ class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var analytics: Analytics
+
+    @Inject
+    lateinit var screenViewTracker: ScreenViewTracker
 
     @Inject
     lateinit var logWordLinkOpened: LogWordLinkOpenedUseCase
@@ -98,7 +104,9 @@ class MainActivity : ComponentActivity() {
         SkarnikTheme(themeMode = appearance.themeMode, useDynamicColor = appearance.dynamicColor) {
             // Exposes Modifier.testTag values as resource ids, so Maestro flows can select by tag.
             Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
-                SkarnikNavHost(wordLinks = wordLinkFlow)
+                CompositionLocalProvider(LocalScreenViewTracker provides screenViewTracker) {
+                    SkarnikNavHost(wordLinks = wordLinkFlow)
+                }
                 AnalyticsConsentHost()
                 WhatsNewHost()
             }

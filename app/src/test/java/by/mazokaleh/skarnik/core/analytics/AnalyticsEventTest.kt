@@ -148,4 +148,29 @@ class AnalyticsEventTest {
         )
         assertEquals("app_link", AnalyticsEvent.WidgetDeepLink.Source.AppLink.analyticsName)
     }
+
+    @Test
+    fun `screen_view has Firebase's recommended parameters`() {
+        val event = AnalyticsEvent.ScreenView(Screen.Favorites)
+
+        assertEquals("screen_view", event.name)
+        assertEquals(mapOf("screen_name" to "favorites", "screen_class" to "HomeRoute"), event.params)
+    }
+
+    @Test
+    fun `screen names are stable and unique`() {
+        assertEquals(
+            listOf(
+                "history",
+                "favorites",
+                "vocabulary",
+                "search",
+                "translation",
+                "stress",
+                "stress_table",
+                "settings"
+            ),
+            Screen.entries.map { it.screenName }
+        )
+    }
 }
