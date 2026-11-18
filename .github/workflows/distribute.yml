@@ -220,9 +220,9 @@ jobs:
       - name: No Sentry mapping upload
         if: env.HAS_SENTRY_AUTH_TOKEN != 'true'
         run: |
-          echo "::warning::R8 mapping not sent to Sentry: add the SENTRY_AUTH_TOKEN repository secret (README)."
+          echo "::warning::R8 mapping not sent to Sentry: add the SENTRY_AUTH_TOKEN repository secret (docs/releasing.md)."
 
       - name: Missing secrets
         if: env.HAS_SIGNING_KEY != 'true' || env.HAS_FIREBASE_CREDENTIALS != 'true'
         run: |
-          echo "::warning::Not uploaded: add ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS and FIREBASE_SERVICE_ACCOUNT_JSON repository secrets (README, Release build)."
+          echo "::warning::Not uploaded: add ANDROID_KEYSTORE_BASE64, ANDROID_STORE_PASSWORD, ANDROID_KEY_PASSWORD, ANDROID_KEY_ALIAS and FIREBASE_SERVICE_ACCOUNT_JSON repository secrets (docs/releasing.md)."
