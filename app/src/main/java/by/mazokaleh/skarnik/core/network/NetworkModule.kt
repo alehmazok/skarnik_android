@@ -31,12 +31,11 @@ object NetworkModule {
     /** One client for the whole app. The disk cache is created lazily by OkHttp, off the main thread. */
     @Provides
     @Singleton
-    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient =
-        OkHttpClient.Builder()
-            .cache(Cache(File(context.cacheDir, CACHE_DIR), CACHE_SIZE_BYTES))
-            .addNetworkInterceptor(CacheLifetimeInterceptor(CACHE_LIFETIME))
-            .callTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
-            .build()
+    fun provideOkHttpClient(@ApplicationContext context: Context): OkHttpClient = OkHttpClient.Builder()
+        .cache(Cache(File(context.cacheDir, CACHE_DIR), CACHE_SIZE_BYTES))
+        .addNetworkInterceptor(CacheLifetimeInterceptor(CACHE_LIFETIME))
+        .callTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+        .build()
 
     @Provides
     @Singleton
