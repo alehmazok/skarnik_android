@@ -19,6 +19,7 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationRail
 import androidx.compose.material3.NavigationRailItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -34,6 +35,7 @@ import androidx.compose.ui.res.stringResource
 import by.mazokaleh.skarnik.R
 import by.mazokaleh.skarnik.core.analytics.Screen
 import by.mazokaleh.skarnik.core.model.SavedWord
+import by.mazokaleh.skarnik.core.ui.LocalAppSnackbarHostState
 import by.mazokaleh.skarnik.core.ui.WindowWidthClass
 import by.mazokaleh.skarnik.feature.favorites.ui.BookmarksScreen
 import by.mazokaleh.skarnik.feature.history.ui.HistoryScreen
@@ -89,6 +91,8 @@ fun HomeScreen(onSearchClick: () -> Unit, onSettingsClick: () -> Unit, onOpenTra
         val hasRail = widthClass.hasNavigationRail
         Scaffold(
             bottomBar = { if (!hasRail) HomeNavigationBar(tab, onSelect = { tab = it }) },
+            // App-wide messages (a downloaded update), above the navigation bar as M3 places snackbars.
+            snackbarHost = { SnackbarHost(LocalAppSnackbarHostState.current) },
             // Each tab's own Scaffold handles the status bar; the navigation bar takes the bottom inset.
             contentWindowInsets = WindowInsets(0)
         ) { padding ->

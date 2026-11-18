@@ -51,6 +51,7 @@ by.mazokaleh.skarnik
     ├── settings/          Settings screen (offline, appearance, history, contact, About sheet), settings button
     ├── stress/            «На́ціск»: stress candidates, starnik.by → skarnik_admin lookup, stress table
     ├── widget/            «Слова дня» Glance widget, hourly refresh worker, word picker
+    ├── update/            Google Play in-app updates: flexible prompt, immediate below a minimum, restart snackbar
 ```
 
 Each feature uses `data/` (repository implementations, DTOs), `domain/` (use cases, feature models, only
@@ -221,6 +222,12 @@ once, so a new widget gets a word right away. After a refresh it calls `updateAl
 `WordOfTheDayWidget.provideGlance` reads the current word through a Hilt entry point. A tap starts
 `MainActivity` with `WordLinkIntents.EXTRA_WORD_LINK`; the activity passes the parsed `WordLink` to the NavHost
 (`WordLinkEffect`), which opens the translation over the start screen. App links (9.1) will feed the same path.
+
+`feature/update` ([ADR 0016](adr/0016-in-app-updates.md)). `AppUpdateHost` at the app root asks
+`AppUpdateViewModel` to check Play (`PlayAppUpdates`) at each `ON_RESUME` once consent is answered;
+`ChooseAppUpdateUseCase` picks the flow (immediate below Remote Config `min_supported_version_code`, else
+flexible once per available `versionCode`). The host starts it with an Activity Result launcher and shows the
+restart snackbar in `LocalAppSnackbarHostState`, which the home screen's Scaffold displays above its navigation bar.
 
 ## Analytics and crash reporting
 

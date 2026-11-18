@@ -6,6 +6,7 @@ import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.search.domain.SearchWord
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
+import by.mazokaleh.skarnik.feature.update.domain.AppUpdateType
 import kotlin.test.assertEquals
 import org.junit.Test
 
@@ -172,5 +173,18 @@ class AnalyticsEventTest {
             ),
             Screen.entries.map { it.screenName }
         )
+    }
+
+    @Test
+    fun `app update events`() {
+        val shown = AnalyticsEvent.AppUpdatePromptShown(AppUpdateType.Flexible, 180)
+        assertEquals("app_update_prompt_shown", shown.name)
+        assertEquals(mapOf("update_type" to "flexible", "available_version_code" to 180L), shown.params)
+        assertEquals("app_update_accepted", AnalyticsEvent.AppUpdateAccepted(AppUpdateType.Immediate, 180).name)
+        assertEquals(
+            mapOf("update_type" to "immediate", "available_version_code" to 180L),
+            AnalyticsEvent.AppUpdateDismissed(AppUpdateType.Immediate, 180).params
+        )
+        assertEquals("app_update_restart_clicked", AnalyticsEvent.AppUpdateRestartClicked.name)
     }
 }

@@ -24,6 +24,7 @@ detekt = "1.23.8"
 firebase-appdistribution = "5.3.1"
 firebase-bom = "35.2.0"
 play-review = "2.0.2"
+play-app-update = "2.1.0"
 sentry = "8.64.0"
 benchmark = "1.5.0"
 profileinstaller = "1.4.1"
@@ -73,6 +74,8 @@ firebase-config = { module = "com.google.firebase:firebase-config" }
 
 # Not review-ktx: its Kotlin helpers reference a Play services annotation that R8 cannot find.
 play-review = { module = "com.google.android.play:review", version.ref = "play-review" }
+# In-app updates (docs/adr/0016). Plain artifact, as for review: core/common/TaskAwait.kt covers its Tasks.
+play-app-update = { module = "com.google.android.play:app-update", version.ref = "play-app-update" }
 
 # Crash reporting (docs/adr/0008): the Android SDK with its NDK part, so native crashes (ObjectBox) are reported too.
 sentry-android = { module = "io.sentry:sentry-android", version.ref = "sentry" }
