@@ -35,10 +35,8 @@ class LogWordLinkOpenedUseCaseTest {
         )
 
         assertEquals(
-            listOf(
-                WidgetDeepLink(link, "бурштын", WidgetDeepLink.AppState.ColdStart, WidgetDeepLink.Source.Widget)
-            ),
-            analytics.events
+            WidgetDeepLink(link, "бурштын", WidgetDeepLink.AppState.ColdStart, WidgetDeepLink.Source.Widget),
+            analytics.events.single()
         )
     }
 
@@ -47,8 +45,8 @@ class LogWordLinkOpenedUseCaseTest {
         useCase { _, _ -> null }(link, WidgetDeepLink.AppState.Background, WidgetDeepLink.Source.AppLink)
 
         assertEquals(
-            listOf(WidgetDeepLink(link, "", WidgetDeepLink.AppState.Background, WidgetDeepLink.Source.AppLink)),
-            analytics.events
+            WidgetDeepLink(link, "", WidgetDeepLink.AppState.Background, WidgetDeepLink.Source.AppLink),
+            analytics.events.single()
         )
     }
 
