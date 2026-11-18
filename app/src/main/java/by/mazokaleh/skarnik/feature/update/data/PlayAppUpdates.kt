@@ -16,6 +16,8 @@ import com.google.android.play.core.appupdate.AppUpdateInfo
 import com.google.android.play.core.appupdate.AppUpdateManagerFactory
 import com.google.android.play.core.appupdate.AppUpdateOptions
 import com.google.android.play.core.install.InstallStateUpdatedListener
+import com.google.android.play.core.install.model.AppUpdateType.FLEXIBLE
+import com.google.android.play.core.install.model.AppUpdateType.IMMEDIATE
 import com.google.android.play.core.install.model.InstallStatus
 import com.google.android.play.core.install.model.UpdateAvailability
 import dagger.Binds
@@ -29,7 +31,6 @@ import javax.inject.Singleton
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import com.google.android.play.core.install.model.AppUpdateType as PlayUpdateType
 
 /** Play In-App Updates (`com.google.android.play:app-update`). Play runs its calls on its own threads. */
 @Singleton
@@ -76,15 +77,15 @@ class PlayAppUpdates @Inject constructor(@ApplicationContext private val context
 
         val AppUpdateType.playType: Int
             get() = when (this) {
-                AppUpdateType.Flexible -> PlayUpdateType.FLEXIBLE
-                AppUpdateType.Immediate -> PlayUpdateType.IMMEDIATE
+                AppUpdateType.Flexible -> FLEXIBLE
+                AppUpdateType.Immediate -> IMMEDIATE
             }
 
         fun AppUpdateInfo.toStatus() = AppUpdateStatus(
             available = updateAvailability() == UpdateAvailability.UPDATE_AVAILABLE,
             availableVersionCode = availableVersionCode().toLong(),
-            flexibleAllowed = isUpdateTypeAllowed(PlayUpdateType.FLEXIBLE),
-            immediateAllowed = isUpdateTypeAllowed(PlayUpdateType.IMMEDIATE),
+            flexibleAllowed = isUpdateTypeAllowed(FLEXIBLE),
+            immediateAllowed = isUpdateTypeAllowed(IMMEDIATE),
             inProgress = updateAvailability() == UpdateAvailability.DEVELOPER_TRIGGERED_UPDATE_IN_PROGRESS,
             downloaded = installStatus() == InstallStatus.DOWNLOADED
         )
