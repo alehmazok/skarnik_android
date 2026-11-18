@@ -88,8 +88,9 @@
         </receiver>
 
         <!-- Analytics (docs/adr/0007): off until the user allows it in the consent dialog; AnalyticsConsent turns it
-             on. Debug builds are deactivated for good. No screen views (as Flutter) and no advertising id (see the
-             removed permissions above): the consent text promises anonymous statistics. -->
+             on. Debug builds are deactivated for good. No automatic screen views (they would only see MainActivity;
+             the app logs screen_view itself, docs/adr/0015) and no advertising id (see the removed permissions
+             above): the consent text promises anonymous statistics. -->
         <meta-data
             android:name="firebase_analytics_collection_enabled"
             android:value="false" />

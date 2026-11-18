@@ -19,6 +19,15 @@ sealed class AnalyticsEvent(val name: String) {
         override val params: Map<String, Any> = emptyMap()
     }
 
+    /**
+     * Firebase's recommended `screen_view`, logged by hand since automatic screen reporting only sees the one
+     * activity ([ScreenViewTracker]).
+     */
+    data class ScreenView(val screen: Screen) : AnalyticsEvent("screen_view") {
+        override val params: Map<String, Any> =
+            mapOf("screen_name" to screen.screenName, "screen_class" to screen.screenClass)
+    }
+
     /** Logged when the results of [query] stayed on screen for a moment (see SearchViewModel). */
     data class SearchPerformed(val query: String, val resultCount: Int, val usedPrepositionFallback: Boolean) :
         AnalyticsEvent("search_performed") {

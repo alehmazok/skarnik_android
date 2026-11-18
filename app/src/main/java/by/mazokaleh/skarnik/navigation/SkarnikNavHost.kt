@@ -14,6 +14,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.toRoute
+import by.mazokaleh.skarnik.core.analytics.Screen
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.ui.WindowWidthClass
 import by.mazokaleh.skarnik.feature.home.ui.HomeRoute
@@ -44,6 +45,7 @@ fun SkarnikNavHost(wordLinks: Flow<WordLink> = emptyFlow()) {
         }
         searchDestination(navController)
         composable<SettingsRoute> {
+            TrackScreenView(Screen.Settings)
             SettingsScreen(onBack = dropUnlessResumed { navController.popBackStack() })
         }
         translationDestination(navController)
@@ -53,6 +55,7 @@ fun SkarnikNavHost(wordLinks: Flow<WordLink> = emptyFlow()) {
 
 private fun NavGraphBuilder.searchDestination(navController: NavHostController) {
     composable<SearchRoute> { entry ->
+        TrackScreenView(Screen.Search)
         BoxWithConstraints {
             ListDetailLayout(
                 widthClass = WindowWidthClass.of(maxWidth),
@@ -83,6 +86,7 @@ internal fun NavGraphBuilder.translationDestination(
     firstWordHasBack: State<Boolean>? = null
 ) {
     composable<TranslationRoute> { entry ->
+        TrackScreenView(Screen.Translation)
         val isFirstInPane = remember(entry) {
             navController.previousBackStackEntry?.destination?.hasRoute<TranslationPlaceholderRoute>() == true
         }
