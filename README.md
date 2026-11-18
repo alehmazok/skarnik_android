@@ -13,8 +13,62 @@
   </a>
 </div>
 
-See [CLAUDE.md](CLAUDE.md) for the project rules and [docs/](docs/) for architecture, decisions and the
-feature parity register.
+## About
+
+Skarnik is a Belarusian–Russian, Russian–Belarusian and Belarusian explanatory (ТСБМ) dictionary. Search works
+offline. Translations come from the downloaded offline dictionary first, then Supabase, then the Skarnik admin API.
+
+This app is the native rewrite of the earlier Flutter app and ships as an update of the same Play listing
+(`by.mazokaleh.skarnik`). It opens the Flutter app's data in place, so users keep their history, bookmarks and
+downloaded dictionaries.
+
+## Features
+
+- Search across all three dictionaries, offline, with letter substitution (и→і, е→ё, щ→ў, ъ→‘), a fuzzy fallback
+  for misspelled words, and extra Belarusian letter buttons above the keyboard
+- Offline dictionaries: download any of the three for reading translations without a connection
+- Translations with tappable links: Belarusian words open their own entry, and abbreviations («разг.», «муж.»)
+  show their full text in a tooltip
+- A link between the same headword in Бел-Рус and ТСБМ
+- «Націск»: stress tables for a word, from starnik.by with the Skarnik admin API as fallback
+- History and Закладкі (bookmarks), sorted by date added or alphabetically
+- Dictionary tab: browse each dictionary alphabetically
+- «Слова дня» (Word of the Day) home screen widget
+- Opens skarnik.app share links (App Links) and shares words as skarnik.app links
+- Wide screens and foldables: the list and the word side by side
+- Material You colours or the Skarnik brand palette; system, light or dark theme
+- «Што новага» (What's new) after each update
+- Firebase Analytics only after the user's consent; Sentry crash reporting in release builds
+
+## Tech stack
+
+- Kotlin, Jetpack Compose with Material 3, single Activity, Navigation Compose with type-safe routes
+- Hilt (KSP) for dependency injection, Coroutines and Flow
+- ObjectBox for the search index, history and offline dictionaries (the Flutter app's stores)
+- OkHttp with a disk cache; Supabase over PostgREST without its SDK; kotlinx.serialization
+- jsoup to turn translation HTML into Compose text
+- DataStore for settings, WorkManager for downloads, Glance for the widget
+- Firebase Analytics and Remote Config, Sentry
+- Tests: JUnit, Turbine, [Maestro](https://maestro.mobile.dev) end-to-end flows
+
+## Project layout
+
+```
+app/src/main/java/by/mazokaleh/skarnik/
+├── core/                    shared code: database, network, analytics, models
+├── feature/<name>/          one package per feature: data/, domain/, ui/
+├── navigation/              NavHost, routes, list–detail layout
+└── ui/theme/                Material 3 theme
+baselineprofile/             Baseline Profile generator and startup benchmark
+.maestro/                    end-to-end flows
+docs/                        architecture, decisions, feature parity, releasing
+```
+
+- [docs/architecture.md](docs/architecture.md): how the app is built
+- [docs/adr/](docs/adr/README.md): decisions and why
+- [docs/parity.md](docs/parity.md): what was ported from the Flutter app and how it differs
+- [docs/releasing.md](docs/releasing.md): release builds, Google Play, tester builds, secrets
+- [CLAUDE.md](CLAUDE.md): project rules for contributors
 
 ## Build and run
 
@@ -27,9 +81,10 @@ Everything below works from a terminal (or the VS Code terminal); Android Studio
   [command-line tools](https://developer.android.com/studio#command-line-tools-only):
 
   ```bash
-  sdkmanager "platform-tools" "emulator" "platforms;android-37" "build-tools;36.0.0" \
-    "system-images;android-35;google_apis;arm64-v8a"   # use x86_64 on an Intel machine
+  sdkmanager "platform-tools" "emulator" "system-images;android-35;google_apis;arm64-v8a"   # x86_64 on Intel
   ```
+
+  Gradle downloads the SDK platform and build tools the build needs on the first run.
 
 - The SDK location and tools on `PATH`, for example in `~/.zshrc`:
 
@@ -81,8 +136,6 @@ App logs: `adb logcat --pid=$(adb shell pidof by.mazokaleh.skarnik.debug)`.
 
 ### Checks and tests
 
-These are the same commands CI runs:
-
 ```bash
 ./gradlew ktlintCheck detekt lintDebug   # static checks
 ./gradlew ktlintFormat                   # auto-fix ktlint findings
@@ -91,8 +144,8 @@ These are the same commands CI runs:
 
 Reports land in `app/build/reports/` (lint, detekt, ktlint, tests). Unit tests need no emulator.
 
-CI also fails if the build changes `app/objectbox-models/default.json`; check with
-`git diff -- app/objectbox-models/` after building (see [ADR 0001](docs/adr/0001-objectbox-on-flutter-stores.md)).
+The build must not change `app/objectbox-models/default.json`; check with `git diff -- app/objectbox-models/`
+after building (see [ADR 0001](docs/adr/0001-objectbox-on-flutter-stores.md)).
 
 ### End-to-end flows (Maestro)
 
@@ -114,35 +167,25 @@ maestro test .maestro/smoke.yaml        # one flow
 Flows start from a cleared app state, so they wipe the debug app's history and bookmarks. Screenshots are
 saved to `~/.maestro/tests/`. How to write flows: [.maestro/README.md](.maestro/README.md).
 
-### Release build
+### CI
 
-`./gradlew assembleRelease` builds a minified APK. It is signed with the Play upload key when `key.properties`
-exists in the repository root (gitignored; keys `storePassword`, `keyPassword`, `keyAlias`, `storeFile`
-relative to `app/`); otherwise it is unsigned.
+GitHub Actions ([.github/workflows/ci.yml](.github/workflows/ci.yml)) runs on every pull request and every push
+to `main`: the static checks, the unit tests, a check that `app/objectbox-models/default.json` is unchanged, and
+every Maestro flow on an Android emulator, the phone flows in `.maestro/` and the wide-screen flows in
+`.maestro/wide/`. Release and tester builds are described in [docs/releasing.md](docs/releasing.md).
 
-`./gradlew bundleRelease -Pskarnik.versionCode=<code>` builds the AAB for Google Play
-(`app/build/outputs/bundle/release/app-release.aab`); the version code must be higher than every build already on
-Play. In CI: Actions → Play release bundle → Run workflow
-([.github/workflows/play-bundle.yml](.github/workflows/play-bundle.yml)) builds the signed AAB with the secrets below,
-uploads its R8 mapping to Sentry and keeps the AAB and `mapping.txt` as the `skarnik-play-<code>` artifact for 90 days.
+## Related projects
 
-### Tester builds (Firebase App Distribution)
+- [skarnik_ios](https://github.com/alehmazok/skarnik_ios): the native iOS app
+- [skarnik.app](https://github.com/alehmazok/skarnik.app): the website, share links and the installable web app
+- [skarnik_admin](https://github.com/alehmazok/skarnik_admin): the admin backend and API for the dictionary data
 
-Every merge to `main` builds a signed release APK and uploads it to the Firebase App Distribution group
-`internal` of the `skarnik-app` project ([.github/workflows/distribute.yml](.github/workflows/distribute.yml),
-[ADR 0005](docs/adr/0005-firebase-app-distribution.md)). Run it by hand from Actions → Firebase App
-Distribution → Run workflow. It needs these repository secrets (Settings → Secrets and variables → Actions):
+## Privacy and contact
 
-| Secret | Value |
-|---|---|
-| `ANDROID_KEYSTORE_BASE64` | The upload keystore, `base64 -i upload.keystore` |
-| `ANDROID_STORE_PASSWORD` | Keystore password |
-| `ANDROID_KEY_ALIAS` | Key alias |
-| `ANDROID_KEY_PASSWORD` | Key password |
-| `FIREBASE_SERVICE_ACCOUNT_JSON` | JSON key of a `skarnik-app` service account with the *Firebase App Distribution Admin* role |
-| `SENTRY_DSN` | DSN of the Android project in the Sentry org `skarnik`; turns crash reporting on in the release build |
-| `SENTRY_AUTH_TOKEN` | Sentry auth token with `project:releases` scope; uploads the R8 mapping so stack traces are readable |
+The privacy policy is at [skarnik.app/privacy](https://skarnik.app/privacy). Questions and feedback go to the
+Skarnik developer at [skarnikapp@gmail.com](mailto:skarnikapp@gmail.com), or through «Напісаць распрацоўшчыкам»
+in the app's settings.
 
-The project slug for the mapping upload is the repository variable `SENTRY_PROJECT` (default `skarnik_android`).
-Without these secrets the workflow still builds, and warns that nothing was uploaded. To upload from a local machine:
-`./gradlew assembleRelease appDistributionUploadRelease --serviceCredentialsFile=/path/to/key.json`.
+## License
+
+[MIT](LICENSE)
