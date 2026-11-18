@@ -109,6 +109,10 @@
     <string name="review_app_gallery_message">Падабаецца «Скарнік»? Калі ласка, пакіньце водгук у AppGallery!</string>
     <string name="review_app_gallery_open">Адкрыць AppGallery</string>
     <string name="review_later">Пазней</string>
+
+    <!-- In-app updates: the snackbar after a flexible update has downloaded. -->
+    <string name="app_update_downloaded">Абнаўленне гатова</string>
+    <string name="app_update_restart">Перазапусціць</string>
     <string name="settings_about">Пра Скарнік</string>
     <string name="settings_whats_new">Што новага</string>
     <string name="settings_no_app">Няма праграмы, каб гэта адкрыць.</string>

@@ -292,6 +292,7 @@ dependencies {
     implementation(libs.firebase.analytics)
     implementation(libs.firebase.config)
     implementation(libs.play.review)
+    implementation(libs.play.app.update)
     implementation(libs.sentry.android)
     implementation(libs.androidx.profileinstaller)
     baselineProfile(project(":baselineprofile"))

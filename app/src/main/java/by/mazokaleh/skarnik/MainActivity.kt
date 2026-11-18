@@ -10,6 +10,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
@@ -30,7 +31,9 @@ import by.mazokaleh.skarnik.core.crash.logError
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.settings.Appearance
 import by.mazokaleh.skarnik.core.settings.AppearanceSettings
+import by.mazokaleh.skarnik.core.ui.LocalAppSnackbarHostState
 import by.mazokaleh.skarnik.feature.consent.ui.AnalyticsConsentHost
+import by.mazokaleh.skarnik.feature.update.ui.AppUpdateHost
 import by.mazokaleh.skarnik.feature.whatsnew.ui.WhatsNewHost
 import by.mazokaleh.skarnik.navigation.LocalScreenViewTracker
 import by.mazokaleh.skarnik.navigation.LogWordLinkOpenedUseCase
@@ -104,11 +107,16 @@ class MainActivity : ComponentActivity() {
         SkarnikTheme(themeMode = appearance.themeMode, useDynamicColor = appearance.dynamicColor) {
             // Exposes Modifier.testTag values as resource ids, so Maestro flows can select by tag.
             Box(Modifier.fillMaxSize().semantics { testTagsAsResourceId = true }) {
-                CompositionLocalProvider(LocalScreenViewTracker provides screenViewTracker) {
+                val appSnackbar = remember { SnackbarHostState() }
+                CompositionLocalProvider(
+                    LocalScreenViewTracker provides screenViewTracker,
+                    LocalAppSnackbarHostState provides appSnackbar
+                ) {
                     SkarnikNavHost(wordLinks = wordLinkFlow)
                 }
                 AnalyticsConsentHost()
                 WhatsNewHost()
+                AppUpdateHost(appSnackbar)
             }
         }
     }

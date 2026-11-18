@@ -22,13 +22,19 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
 /**
- * Values the app takes from Firebase Remote Config (parity 8.8). Reads never fail and fall back to the built-in
+ * Values the app takes from Firebase Remote Config (parity 8.8, 8.13). Reads never fail and fall back to the built-in
  * defaults. Flutter's `http_cache_duration_in_hours` is not read: the HTTP cache lifetime is a constant
  * ([by.mazokaleh.skarnik.core.network.NetworkModule]).
  */
 interface RemoteConfig {
     /** Where a translation shows the link to the same word in the other dictionary (Бел-Рус ⇄ ТСБМ); an A/B test. */
     val dictionaryLinkPlacement: DictionaryLinkPlacement
+
+    /**
+     * Builds below this `versionCode` get Play's immediate (blocking) update flow instead of the flexible one
+     * (docs/adr/0016). 0, the default, never blocks.
+     */
+    val minSupportedVersionCode: Long
 
     /**
      * Fetches new values and activates them at once, as Flutter did, and from then on activates values published in
@@ -47,6 +53,10 @@ class FirebaseAppRemoteConfig @Inject constructor(@IoDispatcher private val ioDi
     /** Read when a translation loads, so a new value applies from the next word opened. */
     override val dictionaryLinkPlacement: DictionaryLinkPlacement
         get() = dictionaryLinkPlacementOf(config.getValue(DICTIONARY_LINK_PLACEMENT))
+
+    /** Read each time the app checks for an update, when it comes to the front. */
+    override val minSupportedVersionCode: Long
+        get() = minSupportedVersionCodeOf(config.getValue(MIN_SUPPORTED_VERSION_CODE))
 
     private val listening = AtomicBoolean(false)
 
@@ -78,6 +88,9 @@ class FirebaseAppRemoteConfig @Inject constructor(@IoDispatcher private val ioDi
         /** New in the native apps (skarnik_ios reads the same parameter): `header`, `footer` or `none`. */
         const val DICTIONARY_LINK_PLACEMENT = "dictionary_link_placement"
 
+        /** Android only (the App Store has no in-app updates): a `versionCode`, such as `171`. */
+        const val MIN_SUPPORTED_VERSION_CODE = "min_supported_version_code"
+
         // Flutter's settings: a fetch waits up to a minute and runs at most every 12 hours.
         private val SETTINGS = FirebaseRemoteConfigSettings.Builder()
             .setFetchTimeoutInSeconds(1.minutes.inWholeSeconds)
@@ -108,6 +121,12 @@ internal fun dictionaryLinkPlacementOf(value: FirebaseRemoteConfigValue): Dictio
     if (value.source == FirebaseRemoteConfig.VALUE_SOURCE_STATIC) return DictionaryLinkPlacement.DEFAULT
     val raw = value.asString().trim().lowercase()
     return DictionaryLinkPlacement.entries.firstOrNull { it.configValue == raw } ?: DictionaryLinkPlacement.DEFAULT
+}
+
+/** The minimum `versionCode`; a missing (static), empty or non-numeric value means 0, so nothing is blocked. */
+internal fun minSupportedVersionCodeOf(value: FirebaseRemoteConfigValue): Long {
+    if (value.source == FirebaseRemoteConfig.VALUE_SOURCE_STATIC) return 0L
+    return value.asString().trim().toLongOrNull()?.coerceAtLeast(0L) ?: 0L
 }
 
 @Module

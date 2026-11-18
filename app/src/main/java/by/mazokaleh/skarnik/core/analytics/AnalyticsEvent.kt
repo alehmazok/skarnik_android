@@ -6,6 +6,7 @@ import by.mazokaleh.skarnik.core.model.Word
 import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.feature.search.domain.SearchWord
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
+import by.mazokaleh.skarnik.feature.update.domain.AppUpdateType
 
 /**
  * An analytics event with Flutter's name and parameters, so the Firebase reports continue across the update.
@@ -117,6 +118,32 @@ sealed class AnalyticsEvent(val name: String) {
     }
 
     /**
+     * Play's update prompt was shown (new, not in Flutter; docs/adr/0016). [type] is `flexible` or `immediate`;
+     * [availableVersionCode] is the Play version on offer. The accepted and dismissed events carry the same params.
+     */
+    data class AppUpdatePromptShown(val type: AppUpdateType, val availableVersionCode: Long) :
+        AnalyticsEvent("app_update_prompt_shown") {
+        override val params: Map<String, Any> = appUpdateParams(type, availableVersionCode)
+    }
+
+    /** The user chose to update in Play's prompt: a flexible download starts, or the immediate flow installs. */
+    data class AppUpdateAccepted(val type: AppUpdateType, val availableVersionCode: Long) :
+        AnalyticsEvent("app_update_accepted") {
+        override val params: Map<String, Any> = appUpdateParams(type, availableVersionCode)
+    }
+
+    /** The user closed Play's prompt without updating. */
+    data class AppUpdateDismissed(val type: AppUpdateType, val availableVersionCode: Long) :
+        AnalyticsEvent("app_update_dismissed") {
+        override val params: Map<String, Any> = appUpdateParams(type, availableVersionCode)
+    }
+
+    /** «Перазапусціць» was tapped on the snackbar after a flexible download, which installs the update. */
+    data object AppUpdateRestartClicked : AnalyticsEvent("app_update_restart_clicked") {
+        override val params: Map<String, Any> = emptyMap()
+    }
+
+    /**
      * A word opened from outside the app: a widget tap or a `skarnik.app/r/` link. skarnik_ios logs both under this
      * name with `word`, `word_id`, `lang_id` and `app_state`, so the reports combine; [source] is new and tells them
      * apart. [word] is empty when the bundled index lacks the word.
@@ -168,6 +195,9 @@ private fun wordParams(dictionary: Dictionary, wordId: Long, word: String): Map<
     "dict_name" to dictionary.analyticsName,
     "dict_path" to dictionary.path
 )
+
+private fun appUpdateParams(type: AppUpdateType, availableVersionCode: Long): Map<String, Any> =
+    mapOf("update_type" to type.analyticsName, "available_version_code" to availableVersionCode)
 
 /** Flutter logged the admin API address of the word whatever source answered. */
 private fun apiUrl(dictionary: Dictionary, wordId: Long): String =

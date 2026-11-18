@@ -23,3 +23,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | [0013](0013-dictionary-link-experiment.md) | Dictionary link placement: one Remote Config string for a Firebase A/B test (`header`/`footer`/`none`) | Accepted |
 | [0014](0014-fixed-http-cache-lifetime.md) | HTTP cache lifetime: a 24-hour constant, not Flutter's Remote Config parameter | Accepted |
 | [0015](0015-screen-views.md) | Screen views: `screen_view` logged by hand from navigation destinations and tabs, automatic reporting off | Accepted |
+| [0016](0016-in-app-updates.md) | In-app updates: Play's flexible flow once per available version, immediate below Remote Config `min_supported_version_code` | Accepted |
