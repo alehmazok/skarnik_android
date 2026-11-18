@@ -26,13 +26,17 @@ suspend fun OkHttpClient.fetchString(request: Request): String = fetch(request) 
 suspend fun <T> OkHttpClient.fetch(request: Request, read: (Response) -> T): T = try {
     call(request, read)
 } catch (e: IOException) {
-    if (e is HttpException || cache == null || request.method != "GET") throw e
+    if (!canServeStale(request, e)) throw e
     try {
         call(request.newBuilder().cacheControl(CacheControl.FORCE_CACHE).build(), read)
     } catch (ignored: IOException) {
         throw e
     }
 }
+
+/** Only a GET through a cache, and only when the server gave no answer: an HTTP error status is never masked. */
+private fun OkHttpClient.canServeStale(request: Request, error: IOException): Boolean =
+    error !is HttpException && cache != null && request.method == "GET"
 
 private suspend fun <T> OkHttpClient.call(request: Request, read: (Response) -> T): T =
     suspendCancellableCoroutine { continuation ->
