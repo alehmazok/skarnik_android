@@ -3,6 +3,7 @@ package by.mazokaleh.skarnik.core.network
 import java.io.IOException
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
+import okhttp3.CacheControl
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -17,8 +18,27 @@ suspend fun OkHttpClient.fetchString(request: Request): String = fetch(request) 
 
 /**
  * Like [fetchString], but [read] gets the whole successful response (headers and body), on OkHttp's thread.
+ *
+ * Stale on error: when a GET fails without an HTTP answer (offline, timeout, DNS), it is retried once from the
+ * HTTP cache only, so a word opened before shows even after its 24 h lifetime. Without a cached copy, or for an
+ * HTTP error status, the original exception is thrown.
  */
-suspend fun <T> OkHttpClient.fetch(request: Request, read: (Response) -> T): T =
+suspend fun <T> OkHttpClient.fetch(request: Request, read: (Response) -> T): T = try {
+    call(request, read)
+} catch (e: IOException) {
+    if (!canServeStale(request, e)) throw e
+    try {
+        call(request.newBuilder().cacheControl(CacheControl.FORCE_CACHE).build(), read)
+    } catch (ignored: IOException) {
+        throw e
+    }
+}
+
+/** Only a GET through a cache, and only when the server gave no answer: an HTTP error status is never masked. */
+private fun OkHttpClient.canServeStale(request: Request, error: IOException): Boolean =
+    error !is HttpException && cache != null && request.method == "GET"
+
+private suspend fun <T> OkHttpClient.call(request: Request, read: (Response) -> T): T =
     suspendCancellableCoroutine { continuation ->
         val call = newCall(request)
         continuation.invokeOnCancellation { call.cancel() }

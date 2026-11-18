@@ -141,8 +141,9 @@ flowchart LR
 - Any source may answer with `redirect_to` (a `WordLink`: `skarnik.app/r/...`, `/<dict>/<id>` on any host or a bare
   path); the target replaces the alias in the back stack and shows «Перанакіравана з «…»».
 - Both network sources go through one OkHttp client; a network interceptor makes successful GETs fresh in a
-  20 MB disk cache (`cache/http`) for a fixed 24 h ([ADR 0014](adr/0014-fixed-http-cache-lifetime.md)). The app
-  fetches Remote Config at every start without waiting for it (`core/config/RemoteConfig`).
+  20 MB disk cache (`cache/http`) for a fixed 24 h ([ADR 0014](adr/0014-fixed-http-cache-lifetime.md)). When a GET fails
+  without an HTTP answer, `fetch` retries it once from the cache only (`FORCE_CACHE`), so words opened before
+  still show offline after their 24 h. The app fetches Remote Config at every start without waiting for it (`core/config/RemoteConfig`).
 - `translationHtmlToAnnotatedString` parses the HTML with jsoup and maps legacy colours to colour-scheme roles;
   links are `LinkAnnotation`s. The text is selectable.
 - History and bookmark writes live in `feature/history/data` and `feature/favorites/data`; the tabs that list
