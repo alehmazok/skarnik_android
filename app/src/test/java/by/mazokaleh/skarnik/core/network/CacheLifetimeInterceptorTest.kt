@@ -20,17 +20,18 @@ class CacheLifetimeInterceptorTest {
     val tmp = TemporaryFolder()
 
     private val server = MockWebServer()
-    private var lifetime = 24.hours
     private lateinit var client: OkHttpClient
 
     @Before
     fun setUp() {
         server.start()
-        client = OkHttpClient.Builder()
-            .cache(Cache(tmp.newFolder("http"), 1024L * 1024))
-            .addNetworkInterceptor(CacheLifetimeInterceptor { lifetime })
-            .build()
+        client = clientWith(24.hours)
     }
+
+    private fun clientWith(lifetime: Duration) = OkHttpClient.Builder()
+        .cache(Cache(tmp.newFolder(), 1024L * 1024))
+        .addNetworkInterceptor(CacheLifetimeInterceptor(lifetime))
+        .build()
 
     @After
     fun tearDown() {
@@ -61,27 +62,13 @@ class CacheLifetimeInterceptorTest {
 
     @Test
     fun `a lifetime of zero turns caching off`() = runTest {
-        lifetime = Duration.ZERO
+        client.cache?.close()
+        client = clientWith(Duration.ZERO)
         server.enqueue(MockResponse.Builder().body("first").build())
         server.enqueue(MockResponse.Builder().body("second").build())
         val request = Request.Builder().url(server.url("/api/words/belrus/1/")).build()
 
         assertEquals("first", client.fetchString(request))
         assertEquals("second", client.fetchString(request))
-    }
-
-    @Test
-    fun `a new lifetime applies to the next response`() = runTest {
-        lifetime = Duration.ZERO
-        server.enqueue(MockResponse.Builder().body("first").build())
-        server.enqueue(MockResponse.Builder().body("second").build())
-        server.enqueue(MockResponse.Builder().body("third").build())
-        val request = Request.Builder().url(server.url("/api/words/belrus/1/")).build()
-
-        assertEquals("first", client.fetchString(request))
-        lifetime = 1.hours
-        assertEquals("second", client.fetchString(request))
-        assertEquals("second", client.fetchString(request))
-        assertEquals(2, server.requestCount)
     }
 }

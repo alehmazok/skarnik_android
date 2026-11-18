@@ -21,3 +21,4 @@ Template: **Status** (Proposed / Accepted / Superseded by NNNN), **Context**, **
 | [0011](0011-whats-new.md) | What's new: release notes bundled in the app, a sheet once after an update, detected by package install times | Accepted |
 | [0012](0012-edge-to-edge-play-warning.md) | Edge-to-edge: keep androidx `enableEdgeToEdge()` despite Play's deprecated-API warning | Accepted |
 | [0013](0013-dictionary-link-experiment.md) | Dictionary link placement: one Remote Config string for a Firebase A/B test (`header`/`footer`/`none`) | Accepted |
+| [0014](0014-fixed-http-cache-lifetime.md) | HTTP cache lifetime: a 24-hour constant, not Flutter's Remote Config parameter | Accepted |

@@ -22,7 +22,7 @@ Options considered:
 ## Decision
 
 - **OkHttp only**, one app-wide client with a 20 MB disk cache and a network interceptor that makes successful
-  GETs fresh for 24 h (Remote Config takes over the lifetime in parity 8.8). Calls are suspend functions over
+  GETs fresh for 24 h (Remote Config took over the lifetime in parity 8.8; a constant again since ADR 0014). Calls are suspend functions over
   `enqueue`, so cancelling the screen cancels the request. kotlinx.serialization decodes the JSON. No Retrofit:
   for two fixed GETs it would only forward calls.
 - **Supabase over PostgREST** with the publishable key in the `apikey`/`Authorization` headers, filtered by
