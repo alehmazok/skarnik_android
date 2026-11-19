@@ -20,7 +20,7 @@ class PartOfSpeechTest {
             "Predicatives" to R.string.stress_part_predicatives,
             "Prepositions" to R.string.stress_part_prepositions,
             "Pronouns" to R.string.stress_part_pronouns,
-            "Verbs" to R.string.stress_part_verbs,
+            "Verbs" to R.string.stress_part_verbs
         )
         expected.forEach { (tableName, res) -> assertEquals(res, partOfSpeechRes(tableName), tableName) }
     }
