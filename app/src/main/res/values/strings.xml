@@ -137,8 +137,9 @@
     <string name="stress_part_interjections">Выклічнік</string>
     <string name="stress_part_nouns">Назоўнік</string>
     <string name="stress_part_numerals">Лічэбнік</string>
-    <string name="stress_part_particles">Частка</string>
+    <string name="stress_part_particles">Часціца</string>
     <string name="stress_part_participles">Дзеепрыметнік</string>
+    <string name="stress_part_predicatives">Прэдыкатыў</string>
     <string name="stress_part_prepositions">Прыназоўнік</string>
     <string name="stress_part_pronouns">Займеннік</string>
     <string name="stress_part_verbs">Дзеяслоў</string>
