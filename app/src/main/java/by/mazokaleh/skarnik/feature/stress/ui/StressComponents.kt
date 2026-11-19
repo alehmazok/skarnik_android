@@ -42,7 +42,7 @@ internal fun partOfSpeech(tableName: String?): String? {
 }
 
 @StringRes
-private fun partOfSpeechRes(tableName: String): Int? = when (tableName) {
+internal fun partOfSpeechRes(tableName: String): Int? = when (tableName) {
     "Adjectives" -> R.string.stress_part_adjectives
     "Adverbs" -> R.string.stress_part_adverbs
     "Conjunctions" -> R.string.stress_part_conjunctions
@@ -51,6 +51,7 @@ private fun partOfSpeechRes(tableName: String): Int? = when (tableName) {
     "Numerals" -> R.string.stress_part_numerals
     "Particles" -> R.string.stress_part_particles
     "Participles" -> R.string.stress_part_participles
+    "Predicatives" -> R.string.stress_part_predicatives
     "Prepositions" -> R.string.stress_part_prepositions
     "Pronouns" -> R.string.stress_part_pronouns
     "Verbs" -> R.string.stress_part_verbs
