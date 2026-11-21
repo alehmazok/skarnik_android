@@ -1,0 +1,71 @@
+# Stress homonyms: search «пара», open its ТСБМ entry, tap «На́ціск» and get the picker grouped by stress
+# («па́ра» / «пара́»), then pick a meaning and read its stress table with the meaning in the header.
+# Needs network: the entries and meanings come from starnik.by.
+appId: by.mazokaleh.skarnik.debug
+name: Stress homonym picker
+tags:
+  - stress
+---
+- launchApp:
+    clearState: true
+- runFlow: subflows/decline-analytics.yaml
+# First launch unpacks the search index.
+- extendedWaitUntil:
+    visible:
+      id: history_empty
+    timeout: 60000
+- tapOn:
+    id: home_search
+- inputText: пара
+- extendedWaitUntil:
+    visible:
+      id: search_result
+    timeout: 10000
+- hideKeyboard
+# The ТСБМ row: a ТСБМ headword is its own stress candidate, so the chip opens the lookup straight away.
+- tapOn: Тлумачэнне слова
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 30000
+- tapOn:
+    id: translation_stress
+- extendedWaitUntil:
+    visible:
+      id: stress_back
+    timeout: 10000
+- extendedWaitUntil:
+    notVisible:
+      id: stress_loading
+    timeout: 30000
+# «па́ра» and «пара́» stress differently, so the picker groups them into sections.
+- extendedWaitUntil:
+    visible:
+      id: stress_picker_section
+    timeout: 30000
+- assertVisible:
+    id: stress_choice
+- assertNotVisible:
+    id: stress_picker_banner
+- takeScreenshot: stress-homonyms-picker
+- tapOn:
+    id: stress_choice
+    index: 0
+- extendedWaitUntil:
+    notVisible:
+      id: stress_loading
+    timeout: 30000
+- extendedWaitUntil:
+    visible:
+      id: stress_cell
+    timeout: 30000
+- assertVisible:
+    id: stress_meaning
+- assertVisible:
+    id: stress_word
+- assertNotVisible:
+    id: stress_error
+- takeScreenshot: stress-homonyms-table
+- back
+- assertVisible:
+    id: stress_picker_section
