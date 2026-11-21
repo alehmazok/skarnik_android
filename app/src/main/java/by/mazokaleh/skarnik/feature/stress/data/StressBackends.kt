@@ -31,7 +31,8 @@ class StarnikStressBackend(private val client: OkHttpClient, private val json: J
                 lemma = it.lemma,
                 word = it.word,
                 tableName = it.tableName,
-                source = StressSource.Starnik
+                source = StressSource.Starnik,
+                meaning = it.meaning?.trim()?.ifEmpty { null }
             )
         }
     }
@@ -92,7 +93,8 @@ internal data class StarnikWordDto(
     val id: Long,
     val lemma: String,
     val word: String,
-    @SerialName("table_name") val tableName: String? = null
+    @SerialName("table_name") val tableName: String? = null,
+    val meaning: String? = null
 )
 
 @Serializable

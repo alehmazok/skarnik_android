@@ -8,8 +8,11 @@ import by.mazokaleh.skarnik.feature.stress.domain.StressResolver
 import by.mazokaleh.skarnik.feature.stress.domain.StressRow
 import by.mazokaleh.skarnik.feature.stress.domain.StressSource
 import by.mazokaleh.skarnik.feature.stress.domain.StressWordEntry
+import by.mazokaleh.skarnik.feature.stress.domain.stressPickerSections
 import java.io.IOException
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -55,50 +58,114 @@ class StressViewModelsTest {
         Dispatchers.resetMain()
     }
 
+    private fun lookup() = StressLookupViewModel(resolver, analytics)
+
     @Test
-    fun `several matches are listed`() = runTest {
+    fun `several matches open the picker`() = runTest {
         words = pair
 
-        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
+        val viewModel = lookup()
+        viewModel.lookup("пара")
 
-        assertEquals(StressUiState.Choose(pair), viewModel.uiState.value)
+        assertEquals(StressPicker("пара", stressPickerSections(pair)), viewModel.uiState.value.picker)
+        assertNull(viewModel.uiState.value.loadingWord)
     }
 
     @Test
     fun `a single match opens its table`() = runTest {
         words = pair.take(1)
 
-        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
-
-        viewModel.openTable.test { assertEquals(pair.first(), awaitItem()) }
-        assertEquals(StressUiState.Loading, viewModel.uiState.value)
+        val viewModel = lookup()
+        viewModel.events.test {
+            viewModel.lookup("пара")
+            assertEquals(StressLookupEvent.OpenTable(pair.first()), awaitItem())
+        }
+        assertNull(viewModel.uiState.value.picker)
     }
 
     @Test
-    fun `opening the screen logs stress_clicked once, not on retry`() = runTest {
+    fun `picking a row closes the sheet and opens one table`() = runTest {
+        words = pair
+        val viewModel = lookup()
+        viewModel.lookup("пара")
+
+        viewModel.events.test {
+            viewModel.choose(pair[1])
+            viewModel.choose(pair[0])
+            assertEquals(StressLookupEvent.OpenTable(pair[1]), awaitItem())
+            expectNoEvents()
+        }
+        assertNull(viewModel.uiState.value.picker)
+    }
+
+    @Test
+    fun `dismissing the sheet opens nothing`() = runTest {
+        words = pair
+        val viewModel = lookup()
+        viewModel.lookup("пара")
+
+        viewModel.events.test {
+            viewModel.dismissPicker()
+            expectNoEvents()
+        }
+        assertNull(viewModel.uiState.value.picker)
+    }
+
+    @Test
+    fun `a lookup logs stress_clicked, a retry does not`() = runTest {
         failure = IOException("offline")
-        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
-        viewModel.retry()
+        val viewModel = lookup()
+        viewModel.lookup("пара")
+        viewModel.retry("пара")
 
         assertEquals(listOf<AnalyticsEvent>(AnalyticsEvent.StressClicked("пара")), analytics.events)
     }
 
     @Test
     fun `no match is not found`() = runTest {
-        assertEquals(StressUiState.NotFound, StressViewModel(StressRoute("пара"), resolver, analytics).uiState.value)
+        val viewModel = lookup()
+        viewModel.events.test {
+            viewModel.lookup("пара")
+            assertEquals(StressLookupEvent.NotFound, awaitItem())
+        }
     }
 
     @Test
     fun `an error can be retried`() = runTest {
         failure = IOException("offline")
-        val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
-        assertEquals(StressUiState.Error, viewModel.uiState.value)
+        val viewModel = lookup()
+        viewModel.events.test {
+            viewModel.lookup("пара")
+            assertEquals(StressLookupEvent.Failed("пара"), awaitItem())
+        }
 
         failure = null
         words = pair
-        viewModel.retry()
+        viewModel.retry("пара")
 
-        assertEquals(StressUiState.Choose(pair), viewModel.uiState.value)
+        assertEquals(stressPickerSections(pair), viewModel.uiState.value.picker?.sections)
+    }
+
+    @Test
+    fun `the chip shows progress while the word is looked up`() = runTest {
+        val gate = CompletableDeferred<Unit>()
+        val slow = object : StressBackend {
+            override suspend fun resolveWordList(word: String): List<StressWordEntry> {
+                gate.await()
+                return pair
+            }
+
+            override suspend fun stressTable(id: Long): List<StressRow> = emptyList()
+        }
+        val viewModel = StressLookupViewModel(StressResolver(slow, slow), analytics)
+
+        viewModel.lookup("пара")
+        viewModel.lookup("пара")
+        assertEquals("пара", viewModel.uiState.value.loadingWord)
+
+        gate.complete(Unit)
+        assertNull(viewModel.uiState.value.loadingWord)
+        assertEquals(1, analytics.events.size)
     }
 
     @Test
@@ -128,5 +195,19 @@ class StressViewModelsTest {
         viewModel.retry()
 
         assertEquals(StressTableUiState.Loaded(rows), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `the table route carries the full meaning`() {
+        val entry = pair.first().copy(meaning = "два аднолькавыя прадметы")
+
+        assertEquals("два аднолькавыя прадметы", StressTableRoute(entry).meaning)
+    }
+
+    @Test
+    fun `no meanings is flagged for the picker`() {
+        assertEquals(true, StressPicker("пара", stressPickerSections(pair)).noMeanings)
+        val withMeaning = listOf(pair[0].copy(meaning = "адно"), pair[1])
+        assertEquals(false, StressPicker("пара", stressPickerSections(withMeaning)).noMeanings)
     }
 }

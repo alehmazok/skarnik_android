@@ -65,7 +65,11 @@ import by.mazokaleh.skarnik.core.model.WordLink
 import by.mazokaleh.skarnik.core.settings.ThemeMode
 import by.mazokaleh.skarnik.feature.review.ui.ReviewPromptDialog
 import by.mazokaleh.skarnik.feature.review.ui.rememberReviewPromptState
+import by.mazokaleh.skarnik.feature.stress.domain.StressWordEntry
 import by.mazokaleh.skarnik.feature.stress.ui.StressButton
+import by.mazokaleh.skarnik.feature.stress.ui.StressLookupEffects
+import by.mazokaleh.skarnik.feature.stress.ui.StressLookupViewModel
+import by.mazokaleh.skarnik.feature.stress.ui.StressPickerSheet
 import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
 import by.mazokaleh.skarnik.feature.translation.domain.DictionaryLink
 import by.mazokaleh.skarnik.feature.translation.domain.Translation
@@ -104,16 +108,22 @@ fun TranslationScreen(
     onBack: (() -> Unit)?,
     onOpenWord: (WordLink) -> Unit,
     onRedirect: (target: WordLink, fromWord: String) -> Unit,
-    onStress: (word: String) -> Unit,
+    onOpenStressTable: (StressWordEntry) -> Unit,
     viewModel: TranslationViewModel = hiltViewModel<TranslationViewModel, TranslationViewModel.Factory>(
         creationCallback = { it.create(route) }
-    )
+    ),
+    stressLookup: StressLookupViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val stressState by stressLookup.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     val reviewPrompt = rememberReviewPromptState()
     TranslationEffects(viewModel, route.redirectedFrom, snackbarHostState, onRedirect, reviewPrompt::ask)
+    StressLookupEffects(stressLookup, snackbarHostState, onOpenStressTable)
     ReviewPromptDialog(reviewPrompt)
+    stressState.picker?.let { picker ->
+        StressPickerSheet(picker, onChoose = stressLookup::choose, onDismiss = stressLookup::dismissPicker)
+    }
 
     val context = LocalContext.current
     val uriHandler = LocalUriHandler.current
@@ -127,7 +137,8 @@ fun TranslationScreen(
             context.shareTranslation(it)
         },
         onRetry = viewModel::retry,
-        onStress = onStress,
+        onStress = stressLookup::lookup,
+        stressLoading = stressState.loadingWord != null,
         onDictionaryLink = { link ->
             viewModel.onDictionaryLinkClicked()
             onOpenWord(link.target)
@@ -210,7 +221,8 @@ private fun TranslationContent(
     onStress: (String) -> Unit,
     onLink: (String) -> Unit,
     onWordLink: (WordLinkSpan) -> Unit = {},
-    onDictionaryLink: (DictionaryLink) -> Unit = {}
+    onDictionaryLink: (DictionaryLink) -> Unit = {},
+    stressLoading: Boolean = false
 ) {
     // M3: the bar takes the scrolled-under colour once content slides beneath it, and shows the word once the
     // headline has scrolled out of view.
@@ -251,6 +263,7 @@ private fun TranslationContent(
                         uiState = uiState,
                         onTitlePlaced = onTitlePlaced,
                         onStress = onStress,
+                        stressLoading = stressLoading,
                         onLink = onLink,
                         onWordLink = onWordLink,
                         onDictionaryLink = onDictionaryLink
@@ -299,6 +312,7 @@ private fun LoadedContent(
     uiState: TranslationUiState.Loaded,
     onTitlePlaced: (Int) -> Unit,
     onStress: (String) -> Unit,
+    stressLoading: Boolean,
     onLink: (String) -> Unit,
     onWordLink: (WordLinkSpan) -> Unit,
     onDictionaryLink: (DictionaryLink) -> Unit
@@ -317,7 +331,7 @@ private fun LoadedContent(
             Spacer(Modifier.height(4.dp))
             Title(translation.title, onTitlePlaced)
             DisableSelection {
-                HeaderActions(uiState.stressCandidates, link, onStress, onDictionaryLink)
+                HeaderActions(uiState.stressCandidates, stressLoading, link, onStress, onDictionaryLink)
             }
             Spacer(Modifier.height(16.dp))
             TranslationText(
@@ -345,6 +359,7 @@ private fun LoadedContent(
 @Composable
 private fun HeaderActions(
     stressCandidates: List<String>,
+    stressLoading: Boolean,
     link: DictionaryLink?,
     onStress: (String) -> Unit,
     onDictionaryLink: (DictionaryLink) -> Unit
@@ -352,7 +367,7 @@ private fun HeaderActions(
     val headerLink = link?.takeIf { it.placement == DictionaryLinkPlacement.Header }
     if (stressCandidates.isEmpty() && headerLink == null) return
     FlowRow(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        StressButton(stressCandidates, onStress)
+        StressButton(stressCandidates, onStress, loading = stressLoading)
         if (headerLink != null) {
             DictionaryLinkChip(headerLink.target.dictionary, onClick = { onDictionaryLink(headerLink) })
         }

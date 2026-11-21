@@ -41,7 +41,10 @@ import by.mazokaleh.skarnik.feature.translation.ui.rememberTranslationColors
 import by.mazokaleh.skarnik.feature.translation.ui.translationHtmlToAnnotatedString
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
 
-/** A stress table (Flutter's `StressTablePage`): the stressed word, its part of speech and the table. */
+/**
+ * A stress table (Flutter's `StressTablePage`): the stressed word (stressed vowel in the accent colour), its part
+ * of speech, its meaning when starnik.by has one, and the table.
+ */
 @Composable
 fun StressTableScreen(
     route: StressTableRoute,
@@ -88,6 +91,7 @@ private fun StressTableContent(
 
 @Composable
 private fun Header(route: StressTableRoute) {
+    val accent = MaterialTheme.colorScheme.primary
     Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
         partOfSpeech(route.tableName)?.let {
             Text(
@@ -99,11 +103,23 @@ private fun Header(route: StressTableRoute) {
             Spacer(Modifier.height(4.dp))
         }
         SelectionContainer {
-            Text(
-                text = route.word,
-                modifier = Modifier.testTag(StressTestTags.WORD),
-                style = MaterialTheme.typography.headlineMedium
-            )
+            Column {
+                Text(
+                    text = remember(route.word, accent) { highlightStress(route.word, accent) },
+                    modifier = Modifier.testTag(StressTestTags.WORD),
+                    style = MaterialTheme.typography.headlineMedium
+                )
+                // The full meaning; the picker cuts it to two lines.
+                route.meaning?.let {
+                    Spacer(Modifier.height(8.dp))
+                    Text(
+                        text = it,
+                        modifier = Modifier.testTag(StressTestTags.MEANING),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
         }
     }
 }
@@ -159,7 +175,7 @@ private fun StressTablePreview() {
     )
     SkarnikTheme {
         StressTableContent(
-            StressTableRoute(1, StressSource.Admin, "рука́", "Nouns"),
+            StressTableRoute(1, StressSource.Starnik, "рука́", "Nouns", "частка цела ад пляча да пальцаў"),
             StressTableUiState.Loaded(rows),
             {},
             {}

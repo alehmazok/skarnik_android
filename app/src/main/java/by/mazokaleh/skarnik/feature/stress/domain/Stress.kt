@@ -14,13 +14,17 @@ enum class StressSource {
     Admin
 }
 
-/** A dictionary form that has a stress table. [lemma] is unstressed (matched against the query), [word] stressed. */
+/**
+ * A dictionary form that has a stress table. [lemma] is unstressed (matched against the query), [word] stressed.
+ * [meaning] is starnik.by's short definition that tells homonyms apart; skarnik_admin has none.
+ */
 data class StressWordEntry(
     val id: Long,
     val lemma: String,
     val word: String,
     val tableName: String?,
-    val source: StressSource
+    val source: StressSource,
+    val meaning: String? = null
 )
 
 /** One row of a stress table; both cells are HTML. */

@@ -23,6 +23,11 @@ object WhatsNewCatalog {
                     R.drawable.ic_link,
                     R.string.whats_new_4_1_0_word_links_title,
                     R.string.whats_new_4_1_0_word_links_text
+                ),
+                WhatsNewItem(
+                    R.drawable.ic_book_outlined,
+                    R.string.whats_new_4_1_0_stress_picker_title,
+                    R.string.whats_new_4_1_0_stress_picker_text
                 )
             )
         ),

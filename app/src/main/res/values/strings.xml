@@ -128,7 +128,15 @@
     <string name="stress_title">На́ціск</string>
     <!-- The same word without the accent mark, for TalkBack. -->
     <string name="stress_title_spoken">Націск</string>
-    <string name="stress_choose_word">Выберыце слова:</string>
+    <string name="stress_choose_word">Выберыце слова</string>
+    <string name="stress_same_stress">Націск аднолькавы ва ўсіх словах. Выберыце, каб убачыць формы.</string>
+    <string name="stress_no_meanings">Тлумачэнняў для гэтых слоў няма.</string>
+    <plurals name="stress_meaning_count">
+        <item quantity="one">%1$d значэнне</item>
+        <item quantity="few">%1$d значэнні</item>
+        <item quantity="many">%1$d значэнняў</item>
+        <item quantity="other">%1$d значэння</item>
+    </plurals>
     <string name="stress_not_found">Інфармацыя аб націску для гэтага слова не знойдзена.</string>
     <string name="stress_error">Адбылася памылка падчас загрузцы інфармацыі аб націску.</string>
     <string name="stress_part_adjectives">Прыметнік</string>
@@ -158,6 +166,8 @@
     <string name="whats_new_4_1_0_abbreviations_text">Скарачэнні ў слоўніках, напрыклад «разг.», «жен.» альбо «Колас.». Націсніце на скарачэнне, каб убачыць яго цалкам.</string>
     <string name="whats_new_4_1_0_word_links_title">Пераход па словах</string>
     <string name="whats_new_4_1_0_word_links_text">Падкрэсленае беларускае слова можна націснуць, каб адкрыць яго уласны пераклад.</string>
+    <string name="whats_new_4_1_0_stress_picker_title">Выбар слова для націску</string>
+    <string name="whats_new_4_1_0_stress_picker_text">Калі ў слова некалькі значэнняў, напрыклад «па́ра» і «пара́», «На́ціск» адразу паказвае, дзе націск, а значэнне дапамагае выбраць патрэбнае слова.</string>
     <string name="whats_new_4_0_3_talkback_title">Зручней з TalkBack</string>
     <string name="whats_new_4_0_3_talkback_text">Змяняць літару ў слоўніках цяпер можна жэстамі ўверх і ўніз.</string>
     <string name="whats_new_4_0_3_fixes_title">Выпраўленні</string>

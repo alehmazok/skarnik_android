@@ -31,15 +31,13 @@ tags:
 - takeScreenshot: stress-translation-chip
 - tapOn:
     id: translation_stress
-- extendedWaitUntil:
-    visible:
-      id: stress_back
-    timeout: 10000
+# The chip shows a spinner while the word is looked up.
 - extendedWaitUntil:
     notVisible:
-      id: stress_loading
+      id: translation_stress_loading
     timeout: 30000
-# Homographs show a list first; one match opens its table directly.
+- waitForAnimationToEnd
+# Homonyms open the picker sheet first; one match opens its table directly.
 - runFlow:
     when:
       visible:

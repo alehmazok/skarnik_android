@@ -25,7 +25,12 @@ import by.mazokaleh.skarnik.R
 object StressTestTags {
     const val BACK = "stress_back"
     const val LOADING = "stress_loading"
+    const val PICKER = "stress_picker"
     const val CHOICE = "stress_choice"
+    const val SECTION = "stress_picker_section"
+    const val BANNER = "stress_picker_banner"
+    const val NO_MEANINGS = "stress_no_meanings"
+    const val MEANING = "stress_meaning"
     const val WORD = "stress_word"
     const val PART_OF_SPEECH = "stress_part_of_speech"
     const val CELL = "stress_cell"
