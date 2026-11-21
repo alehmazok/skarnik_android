@@ -30,7 +30,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
@@ -68,7 +67,7 @@ import by.mazokaleh.skarnik.feature.review.ui.ReviewPromptDialog
 import by.mazokaleh.skarnik.feature.review.ui.rememberReviewPromptState
 import by.mazokaleh.skarnik.feature.stress.domain.StressWordEntry
 import by.mazokaleh.skarnik.feature.stress.ui.StressButton
-import by.mazokaleh.skarnik.feature.stress.ui.StressLookupEvent
+import by.mazokaleh.skarnik.feature.stress.ui.StressLookupEffects
 import by.mazokaleh.skarnik.feature.stress.ui.StressLookupViewModel
 import by.mazokaleh.skarnik.feature.stress.ui.StressPickerSheet
 import by.mazokaleh.skarnik.feature.translation.domain.Abbreviations
@@ -206,42 +205,6 @@ private fun TranslationEffects(
                 resources.getString(R.string.translation_redirected_from, from),
                 duration = SnackbarDuration.Long
             )
-        }
-    }
-}
-
-/**
- * «На́ціск» results that leave the sheet: the table to open, or a snackbar when nothing is found or the lookup
- * failed (with «Паўтарыць»). skarnik_ios shows alerts; M3 uses a snackbar for a short message with one action.
- */
-@Composable
-private fun StressLookupEffects(
-    stressLookup: StressLookupViewModel,
-    snackbarHostState: SnackbarHostState,
-    onOpenStressTable: (StressWordEntry) -> Unit
-) {
-    val resources = LocalResources.current
-    val currentOnOpenStressTable by rememberUpdatedState(onOpenStressTable)
-    LaunchedEffect(stressLookup) {
-        stressLookup.events.collect { event ->
-            when (event) {
-                is StressLookupEvent.OpenTable -> currentOnOpenStressTable(event.entry)
-                StressLookupEvent.NotFound -> {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    launch { snackbarHostState.showSnackbar(resources.getString(R.string.stress_not_found)) }
-                }
-                is StressLookupEvent.Failed -> {
-                    snackbarHostState.currentSnackbarData?.dismiss()
-                    launch {
-                        val result = snackbarHostState.showSnackbar(
-                            message = resources.getString(R.string.stress_error),
-                            actionLabel = resources.getString(R.string.action_retry),
-                            duration = SnackbarDuration.Long
-                        )
-                        if (result == SnackbarResult.ActionPerformed) stressLookup.retry(event.word)
-                    }
-                }
-            }
         }
     }
 }
