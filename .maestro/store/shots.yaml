@@ -113,8 +113,9 @@ name: Store screenshots - take screens
     id: translation_stress
 - extendedWaitUntil:
     notVisible:
-      id: stress_loading
+      id: translation_stress_loading
     timeout: 30000
+- waitForAnimationToEnd
 - runFlow:
     when:
       visible:

@@ -10,7 +10,7 @@ enum class Screen(val screenName: String, val screenClass: String) {
     Vocabulary("vocabulary", "HomeRoute"),
     Search("search", "SearchRoute"),
     Translation("translation", "TranslationRoute"),
-    Stress("stress", "StressRoute"),
+    Stress("stress", "StressPickerSheet"),
     StressTable("stress_table", "StressTableRoute"),
     Settings("settings", "SettingsRoute")
 }

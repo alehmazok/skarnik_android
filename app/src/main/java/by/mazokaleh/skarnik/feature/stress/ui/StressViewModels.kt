@@ -15,6 +15,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -22,12 +23,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
-
-/** Looks up the stress tables of [word] (a candidate from a translation). */
-@Serializable
-data class StressRoute(val word: String)
 
 /**
  * One stress table. [word] (stressed), [tableName] and the full [meaning] (the picker cuts it to two lines) head
@@ -44,71 +42,83 @@ data class StressTableRoute(
     constructor(entry: StressWordEntry) : this(entry.id, entry.source, entry.word, entry.tableName, entry.meaning)
 }
 
-sealed interface StressUiState {
-    data object Loading : StressUiState
+/**
+ * The homonym picker sheet: several entries match (homonyms such as «па́ра» / «пара́»), and the user picks one by
+ * stressed form ([sections]) and meaning.
+ */
+data class StressPicker(val word: String, val sections: List<StressPickerSection>) {
+    /** No entry has a meaning (always so for skarnik_admin): the sheet says so under the list. */
+    val noMeanings: Boolean get() = sections.all { section -> section.meaningCount == 0 }
+}
 
-    /**
-     * Several entries match (homonyms such as «па́ра» / «пара́»): the user picks one, by stressed form ([sections])
-     * and meaning.
-     */
-    data class Choose(val sections: List<StressPickerSection>) : StressUiState {
-        /** No entry has a meaning (always so for skarnik_admin): the picker says so under the list. */
-        val noMeanings: Boolean get() = sections.all { section -> section.meaningCount == 0 }
-    }
+/** [loadingWord] is being looked up (the chip shows progress); [picker] is the open homonym sheet, if any. */
+data class StressLookupUiState(val loadingWord: String? = null, val picker: StressPicker? = null)
 
-    data object NotFound : StressUiState
+sealed interface StressLookupEvent {
+    /** The single match, or the one picked in the sheet. */
+    data class OpenTable(val entry: StressWordEntry) : StressLookupEvent
 
-    data object Error : StressUiState
+    data object NotFound : StressLookupEvent
+
+    /** Both sources failed; the snackbar offers a retry. */
+    data class Failed(val word: String) : StressLookupEvent
 }
 
 /**
- * Flutter's `StressCubit`: resolve the word; one match opens its table in place of this screen
- * ([openTable], as Flutter's `context.replace`), several are listed.
+ * «На́ціск» on a translation (Flutter's `StressCubit`, skarnik_ios `openSpellingWord`): resolves a candidate in
+ * place. One match opens its table, several open the picker sheet, nothing or an error shows a snackbar. One
+ * lookup at a time; scoped to the translation, so a picker survives rotation.
  */
-@HiltViewModel(assistedFactory = StressViewModel.Factory::class)
-class StressViewModel @AssistedInject constructor(
-    @Assisted private val route: StressRoute,
+@HiltViewModel
+class StressLookupViewModel @Inject constructor(
     private val resolver: StressResolver,
-    analytics: Analytics
+    private val analytics: Analytics
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow<StressUiState>(StressUiState.Loading)
-    val uiState: StateFlow<StressUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(StressLookupUiState())
+    val uiState: StateFlow<StressLookupUiState> = _uiState.asStateFlow()
 
-    private val _openTable = Channel<StressWordEntry>(Channel.BUFFERED)
-
-    /** The single match, to open in place of this screen. */
-    val openTable: Flow<StressWordEntry> = _openTable.receiveAsFlow()
+    private val _events = Channel<StressLookupEvent>(Channel.BUFFERED)
+    val events: Flow<StressLookupEvent> = _events.receiveAsFlow()
 
     private var loading: Job? = null
 
-    init {
-        analytics.log(AnalyticsEvent.StressClicked(route.word))
-        load()
+    /** A tap on the chip: logs `stress_clicked`, unlike [retry]. */
+    fun lookup(word: String) {
+        if (loading?.isActive == true) return
+        analytics.log(AnalyticsEvent.StressClicked(word))
+        load(word)
     }
 
-    fun retry() {
-        if (loading?.isActive != true) load()
+    fun retry(word: String) {
+        if (loading?.isActive != true) load(word)
     }
 
-    private fun load() {
-        _uiState.value = StressUiState.Loading
+    /** A row of the sheet; only the first tap counts, since the sheet closes with it. */
+    fun choose(entry: StressWordEntry) {
+        if (_uiState.value.picker == null) return
+        _uiState.update { it.copy(picker = null) }
+        _events.trySend(StressLookupEvent.OpenTable(entry))
+    }
+
+    fun dismissPicker() {
+        _uiState.update { it.copy(picker = null) }
+    }
+
+    private fun load(word: String) {
+        _uiState.update { StressLookupUiState(loadingWord = word) }
         loading = viewModelScope.launch {
-            _uiState.value = when (val result = resolver.resolveWords(route.word)) {
+            val result = resolver.resolveWords(word)
+            _uiState.update { it.copy(loadingWord = null) }
+            when (result) {
                 is StressResult.Found -> if (result.value.size == 1) {
-                    _openTable.send(result.value.single())
-                    StressUiState.Loading
+                    _events.send(StressLookupEvent.OpenTable(result.value.single()))
                 } else {
-                    StressUiState.Choose(stressPickerSections(result.value))
+                    _uiState.update { it.copy(picker = StressPicker(word, stressPickerSections(result.value))) }
                 }
-                StressResult.NotFound -> StressUiState.NotFound
-                is StressResult.Failed -> StressUiState.Error
+                StressResult.NotFound -> _events.send(StressLookupEvent.NotFound)
+                is StressResult.Failed -> _events.send(StressLookupEvent.Failed(word))
             }
         }
-    }
-
-    @AssistedFactory
-    interface Factory {
-        fun create(route: StressRoute): StressViewModel
     }
 }
 

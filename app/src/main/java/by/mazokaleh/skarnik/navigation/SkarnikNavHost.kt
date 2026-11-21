@@ -23,7 +23,7 @@ import by.mazokaleh.skarnik.feature.search.ui.SearchRoute
 import by.mazokaleh.skarnik.feature.search.ui.SearchScreen
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsRoute
 import by.mazokaleh.skarnik.feature.settings.ui.SettingsScreen
-import by.mazokaleh.skarnik.feature.stress.ui.StressRoute
+import by.mazokaleh.skarnik.feature.stress.ui.StressTableRoute
 import by.mazokaleh.skarnik.feature.stress.ui.stressDestinations
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationRoute
 import by.mazokaleh.skarnik.feature.translation.ui.TranslationScreen
@@ -105,7 +105,9 @@ internal fun NavGraphBuilder.translationDestination(
                     popUpTo<TranslationRoute> { inclusive = true }
                 }
             },
-            onStress = { word -> navController.navigateIfResumed(entry, StressRoute(word)) }
+            onOpenStressTable = { stressEntry ->
+                navController.navigateIfResumed(entry, StressTableRoute(stressEntry))
+            }
         )
     }
 }

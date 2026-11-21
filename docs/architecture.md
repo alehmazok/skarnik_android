@@ -204,8 +204,10 @@ translation screen reads downloaded words first (`ObjectBoxLocalTranslationSourc
 runs the cascade over two `StressBackend`s: `StarnikStressBackend` (JSON word list, the table scraped from the
 `/pravapis/<id>` page with jsoup) and `AdminStressBackend` (skarnik_admin JSON, whose `word`/`lemma` fields are
 swapped on reading). Entries carry their `StressSource`, because ids of the two backends are unrelated; a table
-is fetched only from the entry's source. `StressRoute(word)` resolves: one match replaces it with
-`StressTableRoute(id, source, word, tableName)`, several are listed. Table cells are rendered with the
+is fetched only from the entry's source. The chip's `StressLookupViewModel` (scoped to the translation) resolves
+the word in place: one match opens `StressTableRoute(id, source, word, tableName, meaning)`, several open
+`StressPickerSheet` (a modal bottom sheet, entries grouped by `stressPickerSections`), nothing or an error shows a
+snackbar. Table cells are rendered with the
 translation HTML converter, which also styles the tables' `pytanne` and `skarot` classes.
 
 ## Word-of-the-day widget

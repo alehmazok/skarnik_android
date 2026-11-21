@@ -25,6 +25,7 @@ import by.mazokaleh.skarnik.R
 object StressTestTags {
     const val BACK = "stress_back"
     const val LOADING = "stress_loading"
+    const val PICKER = "stress_picker"
     const val CHOICE = "stress_choice"
     const val SECTION = "stress_picker_section"
     const val BANNER = "stress_picker_banner"

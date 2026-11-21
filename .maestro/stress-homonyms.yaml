@@ -1,4 +1,4 @@
-# Stress homonyms: search «пара», open its ТСБМ entry, tap «На́ціск» and get the picker grouped by stress
+# Stress homonyms: search «пара», open its ТСБМ entry, tap «На́ціск» and get the picker sheet grouped by stress
 # («па́ра» / «пара́»), then pick a meaning and read its stress table with the meaning in the header.
 # Needs network: the entries and meanings come from starnik.by.
 appId: by.mazokaleh.skarnik.debug
@@ -30,15 +30,7 @@ tags:
     timeout: 30000
 - tapOn:
     id: translation_stress
-- extendedWaitUntil:
-    visible:
-      id: stress_back
-    timeout: 10000
-- extendedWaitUntil:
-    notVisible:
-      id: stress_loading
-    timeout: 30000
-# «па́ра» and «пара́» stress differently, so the picker groups them into sections.
+# «па́ра» and «пара́» stress differently, so the sheet groups them into sections.
 - extendedWaitUntil:
     visible:
       id: stress_picker_section
@@ -66,6 +58,25 @@ tags:
 - assertNotVisible:
     id: stress_error
 - takeScreenshot: stress-homonyms-table
+# The sheet closed when a row was picked, so back returns to the translation.
 - back
-- assertVisible:
+- extendedWaitUntil:
+    visible:
+      id: translation_text
+    timeout: 10000
+- assertNotVisible:
     id: stress_picker_section
+# Back (or a swipe down) closes the sheet without opening a table.
+- tapOn:
+    id: translation_stress
+- extendedWaitUntil:
+    visible:
+      id: stress_picker_section
+    timeout: 30000
+- back
+- extendedWaitUntil:
+    notVisible:
+      id: stress_picker_section
+    timeout: 5000
+- assertVisible:
+    id: translation_text

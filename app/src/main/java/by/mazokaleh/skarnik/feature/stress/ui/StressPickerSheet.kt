@@ -4,15 +4,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.WindowInsetsSides
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.TextAutoSize
@@ -20,102 +14,82 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
+import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import by.mazokaleh.skarnik.R
+import by.mazokaleh.skarnik.core.analytics.Screen
 import by.mazokaleh.skarnik.feature.stress.domain.StressPickerRow
 import by.mazokaleh.skarnik.feature.stress.domain.StressPickerSection
 import by.mazokaleh.skarnik.feature.stress.domain.StressSource
 import by.mazokaleh.skarnik.feature.stress.domain.StressWordEntry
 import by.mazokaleh.skarnik.feature.stress.domain.stressPickerSections
+import by.mazokaleh.skarnik.navigation.TrackScreenView
 import by.mazokaleh.skarnik.ui.theme.SkarnikTheme
+import kotlinx.coroutines.launch
 
 /**
- * Resolves a word to its stress entries (Flutter's `StressPage`). One entry replaces this screen with its
- * table ([onOpenTable] with `replace = true`); several are offered in the homonym picker and a tap opens the table
- * above it.
+ * The homonym picker (skarnik_ios#102): a modal bottom sheet over the translation, opened by «На́ціск» when the
+ * word has several entries. Entries are grouped by stressed form, each row is its meaning and part of speech; one
+ * form only (same stress everywhere, e.g. «а») shows a banner instead of section headers. A tap closes the sheet,
+ * then [onChoose] opens the table; back, a swipe down or the scrim close it without a choice ([onDismiss]).
  */
-@Composable
-fun StressScreen(
-    route: StressRoute,
-    onBack: () -> Unit,
-    onOpenTable: (entry: StressWordEntry, replace: Boolean) -> Unit,
-    viewModel: StressViewModel = hiltViewModel<StressViewModel, StressViewModel.Factory>(
-        creationCallback = { it.create(route) }
-    )
-) {
-    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val currentOnOpenTable by rememberUpdatedState(onOpenTable)
-    LaunchedEffect(viewModel) {
-        viewModel.openTable.collect { currentOnOpenTable(it, true) }
-    }
-    StressContent(uiState, onBack, onChoose = { onOpenTable(it, false) }, onRetry = viewModel::retry)
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun StressContent(
-    uiState: StressUiState,
-    onBack: () -> Unit,
-    onChoose: (StressWordEntry) -> Unit,
-    onRetry: () -> Unit
-) {
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
-    Scaffold(
-        modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = { StressTopBar(onBack, scrollBehavior) }
-    ) { padding ->
-        val modifier = Modifier.fillMaxSize().padding(padding)
-        when (uiState) {
-            StressUiState.Loading -> StressLoading(Modifier.padding(padding))
-            is StressUiState.Choose -> ChooseList(uiState, onChoose, modifier)
-            StressUiState.NotFound -> StressMessage(notFound = true, onRetry, modifier)
-            StressUiState.Error -> StressMessage(notFound = false, onRetry, modifier)
-        }
+fun StressPickerSheet(picker: StressPicker, onChoose: (StressWordEntry) -> Unit, onDismiss: () -> Unit) {
+    val sheetState = rememberModalBottomSheetState()
+    val scope = rememberCoroutineScope()
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        // The sheet is its own window, out of reach of the activity's testTagsAsResourceId, so Maestro needs it here.
+        modifier = Modifier.semantics { testTagsAsResourceId = true }.testTag(StressTestTags.PICKER),
+        sheetState = sheetState
+    ) {
+        TrackScreenView(Screen.Stress)
+        StressPickerContent(
+            picker,
+            onChoose = { entry ->
+                scope.launch { sheetState.hide() }.invokeOnCompletion { onChoose(entry) }
+            }
+        )
     }
 }
 
-/**
- * The homonym picker (skarnik_ios#102): entries grouped by stressed form, each row its meaning and part of speech.
- * One form only (same stress everywhere, e.g. «а») shows a banner instead of section headers. M3: a full screen,
- * not iOS's sheet, since loading, not found and retry already live here.
- */
 @Composable
-private fun ChooseList(choose: StressUiState.Choose, onChoose: (StressWordEntry) -> Unit, modifier: Modifier) {
-    val single = choose.sections.singleOrNull()
-    LazyColumn(modifier.windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))) {
+private fun StressPickerContent(picker: StressPicker, onChoose: (StressWordEntry) -> Unit) {
+    val single = picker.sections.singleOrNull()
+    LazyColumn(Modifier.fillMaxWidth()) {
         item(key = "header") {
             Text(
                 text = stringResource(R.string.stress_choose_word),
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 16.dp, bottom = 8.dp),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.primary
+                modifier = Modifier
+                    .padding(start = 16.dp, end = 16.dp, bottom = 8.dp)
+                    .semantics { heading() },
+                style = MaterialTheme.typography.titleLarge
             )
         }
         if (single != null) {
             item(key = "banner") { SameStressBanner(single.word) }
         }
-        choose.sections.forEach { section ->
+        picker.sections.forEach { section ->
             if (single == null) {
                 item(key = "section/${section.word}") { SectionHeader(section) }
             }
@@ -128,7 +102,7 @@ private fun ChooseList(choose: StressUiState.Choose, onChoose: (StressWordEntry)
                 ChoiceRow(row, onChoose)
             }
         }
-        if (choose.noMeanings) {
+        if (picker.noMeanings) {
             item(key = "no_meanings") {
                 Text(
                     text = stringResource(R.string.stress_no_meanings),
@@ -217,6 +191,7 @@ private fun ChoiceRow(row: StressPickerRow, onChoose: (StressWordEntry) -> Unit)
         modifier = Modifier
             .heightIn(min = 56.dp)
             .clickable { onChoose(entry) },
+        colors = ListItemDefaults.colors(containerColor = Color.Transparent),
         supportingContent = supporting?.let { { Text(it) } },
         trailingContent = row.ordinal?.let {
             {
@@ -234,22 +209,22 @@ private val BANNER_MAX_FONT = 32.sp
 
 @Preview
 @Composable
-private fun StressChoosePreview() {
+private fun StressPickerPreview() {
     val words = listOf(
         StressWordEntry(1, "пара", "па́ра", "Nouns", StressSource.Starnik, "два аднолькавыя прадметы"),
-        StressWordEntry(2, "пара", "пара́", "Nouns", StressSource.Starnik, "час, пара года"),
+        StressWordEntry(2, "пара", "пара́", "Nouns", StressSource.Starnik),
         StressWordEntry(3, "пара", "па́ра", "Nouns", StressSource.Starnik, "газападобны стан вады")
     )
-    SkarnikTheme { StressContent(StressUiState.Choose(stressPickerSections(words)), {}, {}, {}) }
+    SkarnikTheme { Surface { StressPickerContent(StressPicker("пара", stressPickerSections(words))) {} } }
 }
 
 @Preview
 @Composable
-private fun StressSameStressPreview() {
+private fun StressPickerSameStressPreview() {
     val words = listOf(
         StressWordEntry(1, "а", "а́", "Nouns", StressSource.Admin),
         StressWordEntry(2, "а", "а́", "Conjunctions", StressSource.Admin),
         StressWordEntry(3, "а", "а́", "Conjunctions", StressSource.Admin)
     )
-    SkarnikTheme { StressContent(StressUiState.Choose(stressPickerSections(words)), {}, {}, {}) }
+    SkarnikTheme { Surface { StressPickerContent(StressPicker("а", stressPickerSections(words))) {} } }
 }
