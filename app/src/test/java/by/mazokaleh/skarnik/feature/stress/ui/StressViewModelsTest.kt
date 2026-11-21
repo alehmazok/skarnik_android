@@ -8,6 +8,7 @@ import by.mazokaleh.skarnik.feature.stress.domain.StressResolver
 import by.mazokaleh.skarnik.feature.stress.domain.StressRow
 import by.mazokaleh.skarnik.feature.stress.domain.StressSource
 import by.mazokaleh.skarnik.feature.stress.domain.StressWordEntry
+import by.mazokaleh.skarnik.feature.stress.domain.stressPickerSections
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +62,7 @@ class StressViewModelsTest {
 
         val viewModel = StressViewModel(StressRoute("пара"), resolver, analytics)
 
-        assertEquals(StressUiState.Choose(pair), viewModel.uiState.value)
+        assertEquals(StressUiState.Choose(stressPickerSections(pair)), viewModel.uiState.value)
     }
 
     @Test
@@ -98,7 +99,7 @@ class StressViewModelsTest {
         words = pair
         viewModel.retry()
 
-        assertEquals(StressUiState.Choose(pair), viewModel.uiState.value)
+        assertEquals(StressUiState.Choose(stressPickerSections(pair)), viewModel.uiState.value)
     }
 
     @Test
@@ -128,5 +129,21 @@ class StressViewModelsTest {
         viewModel.retry()
 
         assertEquals(StressTableUiState.Loaded(rows), viewModel.uiState.value)
+    }
+
+    @Test
+    fun `the table route carries the full meaning`() {
+        val entry = pair.first().copy(meaning = "два аднолькавыя прадметы")
+
+        assertEquals("два аднолькавыя прадметы", StressTableRoute(entry).meaning)
+    }
+
+    @Test
+    fun `no meanings is flagged for the picker`() = runTest {
+        words = pair
+
+        val state = StressViewModel(StressRoute("пара"), resolver, analytics).uiState.value as StressUiState.Choose
+
+        assertEquals(true, state.noMeanings)
     }
 }

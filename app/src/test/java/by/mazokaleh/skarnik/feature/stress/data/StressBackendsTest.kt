@@ -59,6 +59,19 @@ class StressBackendsTest {
     }
 
     @Test
+    fun `starnik meaning is trimmed and a blank one dropped`() = runTest {
+        respond(
+            """{"word_list":[{"id":1,"lemma":"пара","word":"па́ра","meaning":"  стан вадкасці \n"},""" +
+                """{"id":2,"lemma":"пара","word":"пара́","meaning":"  "},""" +
+                """{"id":3,"lemma":"пара","word":"па́ра","meaning":null}]}"""
+        )
+
+        val words = StarnikStressBackend(client, json, baseUrl).resolveWordList("пара")
+
+        assertEquals(listOf("стан вадкасці", null, null), words.map { it.meaning })
+    }
+
+    @Test
     fun `starnik table is parsed from the page`() = runTest {
         respond(
             """<html><body><table><tr><td>не тая</td><td>табліца</td></tr></table>""" +

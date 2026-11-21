@@ -4,11 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import by.mazokaleh.skarnik.core.analytics.Analytics
 import by.mazokaleh.skarnik.core.analytics.AnalyticsEvent
+import by.mazokaleh.skarnik.feature.stress.domain.StressPickerSection
 import by.mazokaleh.skarnik.feature.stress.domain.StressResolver
 import by.mazokaleh.skarnik.feature.stress.domain.StressResult
 import by.mazokaleh.skarnik.feature.stress.domain.StressRow
 import by.mazokaleh.skarnik.feature.stress.domain.StressSource
 import by.mazokaleh.skarnik.feature.stress.domain.StressWordEntry
+import by.mazokaleh.skarnik.feature.stress.domain.stressPickerSections
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -27,17 +29,32 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class StressRoute(val word: String)
 
-/** One stress table. [word] (stressed) and [tableName] head the screen while the rows load. */
+/**
+ * One stress table. [word] (stressed), [tableName] and the full [meaning] (the picker cuts it to two lines) head
+ * the screen while the rows load.
+ */
 @Serializable
-data class StressTableRoute(val id: Long, val source: StressSource, val word: String, val tableName: String?) {
-    constructor(entry: StressWordEntry) : this(entry.id, entry.source, entry.word, entry.tableName)
+data class StressTableRoute(
+    val id: Long,
+    val source: StressSource,
+    val word: String,
+    val tableName: String?,
+    val meaning: String? = null
+) {
+    constructor(entry: StressWordEntry) : this(entry.id, entry.source, entry.word, entry.tableName, entry.meaning)
 }
 
 sealed interface StressUiState {
     data object Loading : StressUiState
 
-    /** Several forms match (homographs such as «па́ра» / «пара́»): the user picks one. */
-    data class Choose(val words: List<StressWordEntry>) : StressUiState
+    /**
+     * Several entries match (homonyms such as «па́ра» / «пара́»): the user picks one, by stressed form ([sections])
+     * and meaning.
+     */
+    data class Choose(val sections: List<StressPickerSection>) : StressUiState {
+        /** No entry has a meaning (always so for skarnik_admin): the picker says so under the list. */
+        val noMeanings: Boolean get() = sections.all { section -> section.meaningCount == 0 }
+    }
 
     data object NotFound : StressUiState
 
@@ -81,7 +98,7 @@ class StressViewModel @AssistedInject constructor(
                     _openTable.send(result.value.single())
                     StressUiState.Loading
                 } else {
-                    StressUiState.Choose(result.value)
+                    StressUiState.Choose(stressPickerSections(result.value))
                 }
                 StressResult.NotFound -> StressUiState.NotFound
                 is StressResult.Failed -> StressUiState.Error
