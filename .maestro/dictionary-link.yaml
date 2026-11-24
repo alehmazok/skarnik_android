@@ -51,7 +51,11 @@ tags:
     visible: "Тлумачэнне слова"
     timeout: 30000
 - takeScreenshot: dictionary-link-opened
+# The linked word replaced the first one: back goes to History, where the first word was opened over.
 - back
 - extendedWaitUntil:
-    visible: "Пераклад на рускую мову"
+    visible:
+      id: home_search
     timeout: 10000
+- assertNotVisible:
+    id: translation_text

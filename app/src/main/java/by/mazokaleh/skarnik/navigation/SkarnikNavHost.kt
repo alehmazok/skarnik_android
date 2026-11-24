@@ -76,10 +76,16 @@ private fun NavHostController.navigateIfResumed(entry: NavBackStackEntry, route:
     if (entry.lifecycle.currentState == Lifecycle.State.RESUMED) navigate(route)
 }
 
+/** Opens [route] in place of the translation [entry], which is on top while it is resumed. */
+private fun NavHostController.replaceIfResumed(entry: NavBackStackEntry, route: TranslationRoute) {
+    if (entry.lifecycle.currentState != Lifecycle.State.RESUMED) return
+    navigate(route) { popUpTo<TranslationRoute> { inclusive = true } }
+}
+
 /**
  * The translation screen, full screen or in a [ListDetailLayout] pane. In a pane, [firstWordHasBack] tells whether
- * the word opened from the list gets a back arrow (not while the list shows beside it); words opened from links
- * always have one.
+ * the word gets a back arrow (not while the list shows beside it). Links replace the word, so a linked word keeps
+ * the arrow of the word it replaced.
  */
 internal fun NavGraphBuilder.translationDestination(
     navController: NavHostController,
@@ -95,7 +101,9 @@ internal fun NavGraphBuilder.translationDestination(
             route = entry.toRoute(),
             onBack = if (hasBack) dropUnlessResumed { navController.popBackStack() } else null,
             onOpenWord = { link ->
-                navController.navigateIfResumed(entry, TranslationRoute(link.dictionary.langId, link.wordId))
+                // A word link or the dictionary link replaces this word (Aleh, 2026-11-24), as links do on iOS:
+                // back returns to where the first word was opened from, not through every word followed.
+                navController.replaceIfResumed(entry, TranslationRoute(link.dictionary.langId, link.wordId))
             },
             onRedirect = { target, fromWord ->
                 // The alias has nothing to show: the target replaces it, so back skips it.
